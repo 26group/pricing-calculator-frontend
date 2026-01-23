@@ -1210,6 +1210,14 @@ export default function Questions() {
   }, [responses.q2]);
 
   useEffect(() => {
+    // Focus question 2 on page load
+    const q2Button = document.querySelector('[value="micro"]');
+    if (q2Button) {
+      q2Button.focus();
+    }
+  }, []);
+
+  useEffect(() => {
     setSelectedServices((prev) => {
       const originalSegment = responses.q2;
       const segment = segmentForServices(originalSegment);
@@ -1967,8 +1975,8 @@ export default function Questions() {
                     key={option.value} 
                     value={option.value}
                     sx={{
-                      minWidth: ['q7', 'q25', 'q26b'].includes(question.id) ? '160px' : '120px',
-                      flex: ['q7', 'q25', 'q26b'].includes(question.id) ? '0 1 160px' : '0 1 120px',
+                      minWidth: ['q7', 'q25', 'q26b', 'q3b', 'q11'].includes(question.id) ? '160px' : '120px',
+                      flex: ['q7', 'q25', 'q26b', 'q3b', 'q11'].includes(question.id) ? '0 1 160px' : '0 1 120px',
                       whiteSpace: 'normal',
                       wordBreak: 'break-word',
                       py: 1.2,
@@ -2158,37 +2166,54 @@ export default function Questions() {
               </Stack>
             )}
             {question.type === 'number' && (
-              <TextField
-                type="number"
-                inputProps={{ min: 0 }}
-                value={responses[question.id]}
-                onChange={(e) => {
-                  setFocusedQuestion(question.id);
-                  handleNumberChange(question.id)(e);
-                }}
-                onFocus={() => setFocusedQuestion(question.id)}
-                label="Enter number"
-                size="small"
-                disabled={question.id !== 'q2' && !responses.q2}
+              <div 
                 onClick={question.id !== 'q2' && !responses.q2 ? () => setRequireQ2Message(true) : undefined}
-                variant="outlined"
-                sx={{
-                  maxWidth: '150px',
-                  '& .MuiOutlinedInput-root': {
-                    backgroundColor: '#ffffff',
-                    transition: 'all 0.2s ease-in-out',
-                    '&:hover': {
-                      borderColor: '#002060',
+                style={{ display: 'inline-block' }}
+              >
+                <TextField
+                  type="number"
+                  inputProps={{ min: 0 }}
+                  value={responses[question.id]}
+                  onChange={(e) => {
+                    setFocusedQuestion(question.id);
+                    handleNumberChange(question.id)(e);
+                  }}
+                  onFocus={() => setFocusedQuestion(question.id)}
+                  label="Enter number"
+                  size="small"
+                  disabled={question.id !== 'q2' && !responses.q2}
+                  variant="outlined"
+                  sx={{
+                    maxWidth: '150px',
+                    pointerEvents: question.id !== 'q2' && !responses.q2 ? 'none' : 'auto',
+                    '& .MuiOutlinedInput-root': {
+                      backgroundColor: '#ffffff',
+                      transition: 'all 0.2s ease-in-out',
+                      '&:hover': {
+                        borderColor: '#002060',
+                      },
+                      '&.Mui-focused': {
+                        boxShadow: '0 0 0 3px rgba(0, 32, 96, 0.1)',
+                      },
+                      '&.Mui-disabled': {
+                        backgroundColor: '#f5f5f5',
+                        color: '#ccc',
+                        opacity: 0.6,
+                        borderColor: '#ececec',
+                      },
                     },
-                    '&.Mui-focused': {
-                      boxShadow: '0 0 0 3px rgba(0, 32, 96, 0.1)',
+                    '& .MuiOutlinedInput-input:disabled': {
+                      WebkitTextFillColor: '#ccc',
                     },
-                    '&.Mui-disabled': {
-                      backgroundColor: '#f5f5f5',
+                    '& .MuiInputBase-input:disabled': {
+                      WebkitTextFillColor: '#ccc',
                     },
-                  },
-                }}
-              />
+                    '& .MuiFormLabel-root.Mui-disabled': {
+                      color: '#ccc',
+                    },
+                  }}
+                />
+              </div>
             )}
             {question.type === 'inputGroup' && (
               <Stack spacing={1.5}>
@@ -2222,39 +2247,55 @@ export default function Questions() {
                       }}
                     />
                   ) : (
-                    <TextField
+                    <div 
                       key={option.value}
-                      type="number"
-                      inputProps={{ min: 0 }}
-                      label={option.label}
-                      value={responses[question.id][option.value]}
-                      onChange={(e) => {
-                        setFocusedQuestion(question.id);
-                        handleInputGroupChange(question.id, option.value)(e);
-                      }}
-                      onFocus={() => setFocusedQuestion(question.id)}
-                      size="small"
-                      disabled={question.id !== 'q2' && !responses.q2}
                       onClick={question.id !== 'q2' && !responses.q2 ? () => setRequireQ2Message(true) : undefined}
-                      variant="outlined"
-                      sx={{
-                        width: '100%',
-                        maxWidth: '400px',
-                        '& .MuiOutlinedInput-root': {
-                          backgroundColor: '#ffffff',
-                          transition: 'all 0.2s ease-in-out',
-                          '&:hover': {
-                            borderColor: '#002060',
+                      style={{ display: 'block', width: '100%', maxWidth: '400px' }}
+                    >
+                      <TextField
+                        type="number"
+                        inputProps={{ min: 0 }}
+                        label={option.label}
+                        value={responses[question.id][option.value]}
+                        onChange={(e) => {
+                          setFocusedQuestion(question.id);
+                          handleInputGroupChange(question.id, option.value)(e);
+                        }}
+                        onFocus={() => setFocusedQuestion(question.id)}
+                        size="small"
+                        disabled={question.id !== 'q2' && !responses.q2}
+                        variant="outlined"
+                        sx={{
+                          width: '100%',
+                          pointerEvents: question.id !== 'q2' && !responses.q2 ? 'none' : 'auto',
+                          '& .MuiOutlinedInput-root': {
+                            backgroundColor: '#ffffff',
+                            transition: 'all 0.2s ease-in-out',
+                            '&:hover': {
+                              borderColor: '#002060',
+                            },
+                            '&.Mui-focused': {
+                              boxShadow: '0 0 0 3px rgba(0, 32, 96, 0.1)',
+                            },
+                            '&.Mui-disabled': {
+                              backgroundColor: '#f5f5f5',
+                              color: '#ccc',
+                              opacity: 0.6,
+                              borderColor: '#ececec',
+                            },
                           },
-                          '&.Mui-focused': {
-                            boxShadow: '0 0 0 3px rgba(0, 32, 96, 0.1)',
+                          '& .MuiOutlinedInput-input:disabled': {
+                            WebkitTextFillColor: '#ccc',
                           },
-                          '&.Mui-disabled': {
-                            backgroundColor: '#f5f5f5',
+                          '& .MuiInputBase-input:disabled': {
+                            WebkitTextFillColor: '#ccc',
                           },
-                        },
-                      }}
-                    />
+                          '& .MuiFormLabel-root.Mui-disabled': {
+                            color: '#ccc',
+                          },
+                        }}
+                      />
+                    </div>
                   )
                 )}
               </Stack>
