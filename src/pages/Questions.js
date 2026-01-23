@@ -1110,6 +1110,9 @@ export const segmentForServices = (segment) => {
 };
 
 const resolveBasIasService = (segment, selection) => {
+  console.log('resolveBasIasService called with:', { segment, selection });
+  console.log('selection.bas:', selection?.bas, 'selection.ias:', selection?.ias);
+  
   if (!segment) {
     return { bas: undefined, ias: undefined };
   }
@@ -1122,10 +1125,11 @@ const resolveBasIasService = (segment, selection) => {
       result.bas = serviceValues.taxServices.bas[segment];
     }
     
-    if (selection.ias) {
+    if (selection.ias === 'iasMonthly') {
       result.ias = serviceValues.taxServices.ias[segment];
     }
     
+    console.log('Resolved BAS/IAS (object format):', result);
     return result;
   }
 
@@ -1142,6 +1146,7 @@ const resolveBasIasService = (segment, selection) => {
     };
   }
 
+  console.log('No BAS/IAS selection found');
   return { bas: undefined, ias: undefined };
 };
 
@@ -1244,7 +1249,10 @@ export default function Questions() {
     }
   }, []);
 
+  const q7StringKey = useMemo(() => JSON.stringify(responses.q7), [responses.q7]);
+
   useEffect(() => {
+    console.log('Pricing calculation effect triggered', { q7: responses.q7, q2: responses.q2 });
     setSelectedServices((prev) => {
       const originalSegment = responses.q2;
       const segment = segmentForServices(originalSegment);
@@ -1258,6 +1266,8 @@ export default function Questions() {
           ? serviceValues.taxServices.fbtReturns[segment]
           : undefined;
       const { bas: basCandidate, ias: iasCandidate } = resolveBasIasService(segment, responses.q7);
+
+      console.log('After resolveBasIasService:', { basCandidate, iasCandidate });
 
       let payload = {
         payrollTaxCandidate: undefined,
@@ -1869,6 +1879,7 @@ export default function Questions() {
     responses.q25,
     responses.q26,
     responses.q26b,
+    q7StringKey,
   ]);
 
   const handleRadioChange = (questionId) => (event) => {

@@ -66,16 +66,33 @@ export const calculateTotalMonthlyPrice = (responses) => {
   }
 
   // q7: BAS/IAS
-  if (responses.q7 && responses.q7 !== '' && segment) {
-    if (responses.q7 === 'basQuarterly' || responses.q7 === 'basMonthly') {
-      const basService = serviceValuesAccounting.taxServices.bas[segment];
-      if (basService) {
-        total += basService.monthly;
+  if (responses.q7 && segment) {
+    // Handle new object format { bas: 'basQuarterly'|'basMonthly', ias: 'iasMonthly'|undefined }
+    if (typeof responses.q7 === 'object' && responses.q7 !== null) {
+      if (responses.q7.bas === 'basQuarterly' || responses.q7.bas === 'basMonthly') {
+        const basService = serviceValuesAccounting.taxServices.bas[segment];
+        if (basService) {
+          total += basService.monthly;
+        }
       }
-    } else if (responses.q7 === 'iasMonthly') {
-      const iasService = serviceValuesAccounting.taxServices.ias[segment];
-      if (iasService) {
-        total += iasService.monthly;
+      if (responses.q7.ias === 'iasMonthly') {
+        const iasService = serviceValuesAccounting.taxServices.ias[segment];
+        if (iasService) {
+          total += iasService.monthly;
+        }
+      }
+    } else if (responses.q7 !== '') {
+      // Handle old string format for backward compatibility
+      if (responses.q7 === 'basQuarterly' || responses.q7 === 'basMonthly') {
+        const basService = serviceValuesAccounting.taxServices.bas[segment];
+        if (basService) {
+          total += basService.monthly;
+        }
+      } else if (responses.q7 === 'iasMonthly') {
+        const iasService = serviceValuesAccounting.taxServices.ias[segment];
+        if (iasService) {
+          total += iasService.monthly;
+        }
       }
     }
   }
