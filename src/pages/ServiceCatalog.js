@@ -264,7 +264,7 @@ export default function ServiceCatalog() {
               <Button
                 variant="contained"
                 color="primary"
-                onClick={() => navigate('/pricing')}
+                onClick={() => navigate('/pricing-quote')}
               >
                 View Pricing
               </Button>

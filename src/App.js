@@ -12,6 +12,7 @@ import About from './pages/About';
 import Questions from './pages/Questions';
 import ServiceCatalog from './pages/ServiceCatalog';
 import Pricing from './pages/Pricing';
+import PricingQuote from './pages/PricingQuote';
 import Login from './features/auth/Login';
 import ProtectedRoute from './features/auth/ProtectedRoute';
 
@@ -109,7 +110,7 @@ function AppContent() {
         <Toolbar>
           <Button color="inherit" component={Link} to="/questions">Questions</Button>
           <Button color="inherit" component={Link} to="/services">Services</Button>
-          <Button color="inherit" component={Link} to="/pricing">Pricing</Button>
+          <Button color="inherit" component={Link} to="/pricing-quote">Pricing</Button>
           {!activeUser && <Button 
             variant="contained" 
             size="small" 
@@ -143,6 +144,7 @@ function AppContent() {
           <Route path="/questions" element={<Questions />} />
           <Route path="/services" element={<ServiceCatalog />} />
           <Route path="/pricing" element={<Pricing />} />
+          <Route path="/pricing-quote" element={<PricingQuote />} />
           <Route path="/login" element={<Login />} />
         </Routes>
       </div>
