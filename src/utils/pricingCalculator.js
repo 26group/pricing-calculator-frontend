@@ -8,6 +8,8 @@ import { serviceValuesAccounting } from '../constants/accountingServicesValues';
 export const calculateTotalMonthlyPrice = (responses) => {
   let total = 0;
 
+  console.log('calculateTotalMonthlyPrice called with responses:', responses);
+
   // Helper function to get segment for service lookup
   const getSegment = (originalSegment) => {
     if (['micro', 'small', 'medium', 'large'].includes(originalSegment)) {
@@ -288,6 +290,7 @@ export const calculateTotalMonthlyPrice = (responses) => {
     }
   }
 
+  console.log('calculateTotalMonthlyPrice returning:', Math.round(total * 100) / 100);
   return Math.round(total * 100) / 100; // Round to 2 decimal places
 };
 

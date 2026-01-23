@@ -74,6 +74,28 @@ export default function PricingQuote() {
   // Check if corporate secretarial services are included (based on q26)
   const hasCorporateSecretarial = questionResponses.q26 && questionResponses.q26 !== 'no';
 
+  // Check if financial statement services are included (based on q20, q21, q22)
+  const hasFinancialReports =
+    (questionResponses.q20 && questionResponses.q20 !== 'no') ||
+    (questionResponses.q21 && questionResponses.q21 !== 'no') ||
+    (questionResponses.q22 && questionResponses.q22 !== 'no');
+
+  // Check if tax planning services are included (based on q18, q19)
+  const hasTaxPlanning =
+    (questionResponses.q18 && questionResponses.q18 !== 'no') ||
+    (questionResponses.q19 && questionResponses.q19 !== 'no');
+
+  // Check if reporting services are included (based on q20, q21, q22)
+  const hasReporting =
+    (questionResponses.q20 && questionResponses.q20 !== 'no') ||
+    (questionResponses.q21 && questionResponses.q21 !== 'no') ||
+    (questionResponses.q22 && questionResponses.q22 !== 'no');
+
+  // Check if business meetings services are included (based on q23, q24)
+  const hasBusinessMeetings =
+    (questionResponses.q23 && questionResponses.q23 !== 'no') ||
+    (questionResponses.q24 && questionResponses.q24 !== 'no');
+
   // Compliance is ticked only if tax services values are actually used in pricing
   const complianceBronze = hasTaxServices && questionsPricing > 0 ? <CheckMark /> : <NotIncluded />;
   const complianceSilver = hasTaxServices && questionsPricing > 0 ? <CheckMark /> : <NotIncluded />;
@@ -154,25 +176,25 @@ export default function PricingQuote() {
     },
     {
       feature: 'Financial Reports\nAnnual financial statements for preparing tax returns and use with external parties like banks.',
-      bronze: <CheckMark />,
-      silver: <CheckMark />,
+      bronze: hasFinancialReports ? <CheckMark /> : <NotIncluded />,
+      silver: hasFinancialReports ? <CheckMark /> : <NotIncluded />,
       gold: <CheckMark />,
     },
     {
       feature: 'Tax Planning\nAnnual estimating and planning for tax minimisation',
-      bronze: <NotIncluded />,
+      bronze: hasTaxPlanning ? <CheckMark /> : <NotIncluded />,
       silver: <CheckMark />,
       gold: <CheckMark />,
     },
     {
       feature: 'Reporting\nWatch the numbers and know what\'s going on.',
-      bronze: <NotIncluded />,
+      bronze: hasReporting ? <CheckMark /> : <NotIncluded />,
       silver: <Typography variant="body2">Quarterly</Typography>,
       gold: <Typography variant="body2">Monthly</Typography>,
     },
     {
       feature: 'Business Meetings\nTalk about the numbers, understand the numbers or make smart decisions',
-      bronze: <NotIncluded />,
+      bronze: hasBusinessMeetings ? <CheckMark /> : <NotIncluded />,
       silver: <Typography variant="body2">Quarterly</Typography>,
       gold: <Typography variant="body2">Monthly</Typography>,
     },
@@ -253,10 +275,10 @@ export default function PricingQuote() {
             <TableRow sx={{ backgroundColor: '#f5f5f5', fontWeight: 'bold' }}>
               <TableCell sx={{ fontWeight: 'bold', fontSize: '1.1rem' }}>Price</TableCell>
               <TableCell align="center" sx={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#CD7F32' }}>
-                {bronzeMonthly > 0 ? formatCurrency(bronzeMonthly) : '$197'}
+                {formatCurrency(bronzeMonthly)}
               </TableCell>
               <TableCell align="center" sx={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#C0C0C0', filter: 'blur(4px)' }}>
-                {silverMonthly > 0 ? formatCurrency(silverMonthly) : '$397'}
+                {formatCurrency(silverMonthly)}
               </TableCell>
               <TableCell align="center" sx={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#FFD700', filter: 'blur(4px)' }}>
                 {formatCurrency(goldMonthly)}

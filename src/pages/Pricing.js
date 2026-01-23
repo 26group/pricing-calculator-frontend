@@ -251,10 +251,10 @@ export default function Pricing() {
             <TableRow sx={{ backgroundColor: '#f5f5f5', fontWeight: 'bold' }}>
               <TableCell sx={{ fontWeight: 'bold', fontSize: '1.1rem' }}>Price</TableCell>
               <TableCell align="center" sx={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#CD7F32' }}>
-                {bronzeMonthly > 0 ? formatCurrency(bronzeMonthly) : '$197'}
+                {formatCurrency(bronzeMonthly)}
               </TableCell>
               <TableCell align="center" sx={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#C0C0C0' }}>
-                {silverMonthly > 0 ? formatCurrency(silverMonthly) : '$397'}
+                {formatCurrency(silverMonthly)}
               </TableCell>
               <TableCell align="center" sx={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#FFD700' }}>
                 {formatCurrency(goldMonthly)}
