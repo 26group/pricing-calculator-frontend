@@ -1,0 +1,18 @@
+0 verbose cli /usr/local/bin/node /usr/local/bin/npm
+1 info using npm@10.9.4
+2 info using node@v22.21.0
+3 silly config load:file:/usr/local/lib/node_modules/npm/npmrc
+4 silly config load:file:/Users/phillip/Development/pricing-calculator/frontend/.npmrc
+5 silly config load:file:/Users/phillip/.npmrc
+6 silly config load:file:/usr/local/etc/npmrc
+7 verbose title npm run build
+8 verbose argv "run" "build"
+9 verbose logfile logs-max:10 dir:/Users/phillip/Development/pricing-calculator/frontend/.npm-cache/_logs/2025-10-24T01_13_33_534Z-
+10 verbose logfile /Users/phillip/Development/pricing-calculator/frontend/.npm-cache/_logs/2025-10-24T01_13_33_534Z-debug-0.log
+11 silly logfile done cleaning log files
+12 verbose cwd /Users/phillip/Development/pricing-calculator/frontend
+13 verbose os Darwin 23.4.0
+14 verbose node v22.21.0
+15 verbose npm  v10.9.4
+16 verbose exit 1
+17 verbose code 1
