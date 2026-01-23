@@ -109,12 +109,12 @@ const questionData = [
   {
     id: 'q7',
     prompt: '7. Do they want you to lodge their BAS and/or IAS?',
-    type: 'radio',
-    options: [
-      { label: 'BAS Quarterly (Micro-Small)', value: 'basQuarterly' },
+    type: 'q7-custom',
+    basOptions: [
+      { label: 'BAS Quarterly', value: 'basQuarterly', showWhen: (responses) => responses.q2 === 'micro' },
       { label: 'BAS Monthly', value: 'basMonthly' },
-      { label: 'IAS monthly reporting', value: 'iasMonthly' },
     ],
+    iasOption: { label: 'IAS monthly reporting', value: 'iasMonthly' },
   },
   {
     id: 'q8',
@@ -1114,16 +1114,30 @@ const resolveBasIasService = (segment, selection) => {
     return { bas: undefined, ias: undefined };
   }
 
+  // Handle new q7 structure (object with bas and ias properties)
+  if (typeof selection === 'object' && selection !== null) {
+    const result = {};
+    
+    if (selection.bas === 'basQuarterly' || selection.bas === 'basMonthly') {
+      result.bas = serviceValues.taxServices.bas[segment];
+    }
+    
+    if (selection.ias) {
+      result.ias = serviceValues.taxServices.ias[segment];
+    }
+    
+    return result;
+  }
+
+  // Handle old q7 structure (string values) for backward compatibility
   if (selection === 'basQuarterly' || selection === 'basMonthly') {
     return {
       bas: serviceValues.taxServices.bas[segment],
-      // ias: undefined,
     };
   }
 
   if (selection === 'iasMonthly') {
     return {
-      // bas: undefined,
       ias: serviceValues.taxServices.ias[segment],
     };
   }
@@ -1150,6 +1164,11 @@ const buildInitialState = () => {
   return flat.reduce((acc, question) => {
     if (question.type === 'radio') {
       acc[question.id] = '';
+      return acc;
+    }
+
+    if (question.type === 'q7-custom') {
+      acc[question.id] = { bas: '', ias: undefined };
       return acc;
     }
 
@@ -1188,7 +1207,15 @@ export default function Questions() {
   const storeResponses = useSelector((state) => state.responses);
   const initialState = useMemo(() => {
     const built = buildInitialState();
-    return storeResponses && Object.keys(storeResponses).length ? { ...built, ...storeResponses } : built;
+    if (storeResponses && Object.keys(storeResponses).length) {
+      const merged = { ...built, ...storeResponses };
+      // Migrate q7 from old string format to new object format if needed
+      if (typeof merged.q7 === 'string') {
+        merged.q7 = { bas: '', ias: undefined };
+      }
+      return merged;
+    }
+    return built;
   }, [storeResponses]);
   const [responses, setResponses] = useState(initialState);
   const [selectedServices, setSelectedServices] = useState({});
@@ -1928,6 +1955,130 @@ export default function Questions() {
         >
           <Stack spacing={1.5}>
             <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#1a1a1a', fontSize: '1rem' }}>{question.prompt}</Typography>
+            {question.type === 'q7-custom' && (
+              <Stack spacing={2}>
+                {/* Combined BAS and IAS Options in single button group */}
+                <ToggleButtonGroup
+                  value={[
+                    ...(responses[question.id]?.bas ? [responses[question.id].bas] : []),
+                    ...(responses[question.id]?.ias ? [responses[question.id].ias] : []),
+                  ]}
+                  onChange={(event, newValue) => {
+                    setFocusedQuestion(question.id);
+                    
+                    // Determine which button was clicked
+                    const currentSelections = [
+                      ...(responses[question.id]?.bas ? [responses[question.id].bas] : []),
+                      ...(responses[question.id]?.ias ? [responses[question.id].ias] : []),
+                    ];
+                    
+                    const basOptions = question.basOptions
+                      .filter(opt => !opt.showWhen || opt.showWhen(responses))
+                      .map(opt => opt.value);
+                    const iasValue = question.iasOption.value;
+                    
+                    let updatedBas = responses[question.id]?.bas || '';
+                    let updatedIas = responses[question.id]?.ias;
+                    
+                    // Check what changed
+                    newValue.forEach((val) => {
+                      if (basOptions.includes(val)) {
+                        updatedBas = val;
+                      } else if (val === iasValue) {
+                        updatedIas = val;
+                      }
+                    });
+                    
+                    // Check what was removed
+                    currentSelections.forEach((val) => {
+                      if (!newValue.includes(val)) {
+                        if (basOptions.includes(val)) {
+                          updatedBas = '';
+                        } else if (val === iasValue) {
+                          updatedIas = undefined;
+                        }
+                      }
+                    });
+                    
+                    const updatedValue = {
+                      ...responses[question.id],
+                      bas: updatedBas,
+                      ias: updatedIas,
+                    };
+                    setResponses({ ...responses, [question.id]: updatedValue });
+                  }}
+                  size="medium"
+                  sx={{
+                    flexWrap: 'wrap',
+                    gap: 1,
+                    display: 'flex',
+                    '& .MuiToggleButton-root': {
+                      transition: 'all 0.2s ease-in-out',
+                      border: '1px solid #d0d0d0',
+                      color: '#666',
+                      '&:hover:not(.Mui-disabled)': {
+                        backgroundColor: '#f5f5f5',
+                        borderColor: '#002060',
+                      },
+                      '&.Mui-selected': {
+                        backgroundColor: '#002060',
+                        color: '#fff',
+                        borderColor: '#002060',
+                        fontWeight: 600,
+                        '&:hover': {
+                          backgroundColor: '#001a47',
+                        },
+                      },
+                      '&.Mui-disabled': {
+                        backgroundColor: '#f5f5f5',
+                        color: '#ccc',
+                        opacity: 0.6,
+                      },
+                    },
+                  }}
+                >
+                  {/* BAS Options */}
+                  {question.basOptions.map((option) => {
+                    if (option.showWhen && !option.showWhen(responses)) {
+                      return null;
+                    }
+                    return (
+                      <ToggleButton 
+                        key={option.value} 
+                        value={option.value}
+                        sx={{
+                          minWidth: '160px',
+                          flex: '0 1 160px',
+                          whiteSpace: 'normal',
+                          wordBreak: 'break-word',
+                          py: 1.2,
+                          px: 1.5,
+                          fontSize: '0.9rem',
+                        }}
+                      >
+                        <Typography variant="body2" sx={{ fontWeight: 500 }}>{option.label}</Typography>
+                      </ToggleButton>
+                    );
+                  })}
+                  {/* IAS Option */}
+                  <ToggleButton 
+                    key={question.iasOption.value} 
+                    value={question.iasOption.value}
+                    sx={{
+                      minWidth: '160px',
+                      flex: '0 1 160px',
+                      whiteSpace: 'normal',
+                      wordBreak: 'break-word',
+                      py: 1.2,
+                      px: 1.5,
+                      fontSize: '0.9rem',
+                    }}
+                  >
+                    <Typography variant="body2" sx={{ fontWeight: 500 }}>{question.iasOption.label}</Typography>
+                  </ToggleButton>
+                </ToggleButtonGroup>
+              </Stack>
+            )}
             {question.type === 'radio' && (
               <ToggleButtonGroup
                 value={responses[question.id]}
@@ -1970,7 +2121,12 @@ export default function Questions() {
                 disabled={question.id !== 'q2' && !responses.q2}
                 onClick={question.id !== 'q2' && !responses.q2 ? () => setRequireQ2Message(true) : undefined}
               >
-                {question.options.map((option) => (
+                {question.options.map((option) => {
+                  // Check if option should be shown
+                  if (option.showWhen && !option.showWhen(responses)) {
+                    return null;
+                  }
+                  return (
                   <ToggleButton 
                     key={option.value} 
                     value={option.value}
@@ -1988,7 +2144,8 @@ export default function Questions() {
                   >
                     <Typography variant="body2" sx={{ fontWeight: 500 }}>{option.label}</Typography>
                   </ToggleButton>
-                ))}
+                );
+                })}
               </ToggleButtonGroup>
             )}
             {question.id === 'q6' && selectedServices.smsf && (
