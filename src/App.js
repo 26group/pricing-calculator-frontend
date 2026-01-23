@@ -107,22 +107,27 @@ function AppContent() {
     <>
       <AppBar position="fixed" sx={{ boxShadow: 'none' }}>
         <Toolbar>
-          <Button color="inherit" component={Link} to="/">Home</Button>
-          <Button color="inherit" component={Link} to="/about">About</Button>
           <Button color="inherit" component={Link} to="/questions">Questions</Button>
           <Button color="inherit" component={Link} to="/services">Services</Button>
           <Button color="inherit" component={Link} to="/pricing">Pricing</Button>
-          <Button 
+          {!activeUser && <Button 
             variant="contained" 
             size="small" 
             sx={{ ml: 2, backgroundColor: '#002060', '&:hover': { backgroundColor: '#001a47' } }}
             onClick={handleNewPriceClick}
           >
             New Price
-          </Button>
-          {!activeUser && <Button color="inherit" component={Link} to="/login">Login</Button>}
+          </Button>}
           {activeUser && (
             <>
+              <Button 
+                variant="contained" 
+                size="small" 
+                sx={{ ml: 2, backgroundColor: '#002060', '&:hover': { backgroundColor: '#001a47' } }}
+                onClick={handleNewPriceClick}
+              >
+                New Price
+              </Button>
               <Typography sx={{ flexGrow: 1, ml: 2 }}>{activeUser.email}</Typography>
               <Button color="inherit" onClick={() => signOut({ returnTo: window.location.origin })}>
                 Logout
