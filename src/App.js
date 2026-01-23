@@ -107,9 +107,20 @@ function AppContent() {
     <>
       <AppBar position="fixed" sx={{ boxShadow: 'none' }}>
         <Toolbar>
+          <Button color="inherit" component={Link} to="/" sx={{ display: 'none' }}>Home</Button>
+          <Button color="inherit" component={Link} to="/about" sx={{ display: 'none' }}>About</Button>
           <Button color="inherit" component={Link} to="/questions">Questions</Button>
           <Button color="inherit" component={Link} to="/services">Services</Button>
           <Button color="inherit" component={Link} to="/pricing">Pricing</Button>
+          <Button 
+            variant="contained" 
+            size="small" 
+            sx={{ ml: 2, backgroundColor: '#002060', '&:hover': { backgroundColor: '#001a47' }, display: 'none' }}
+            onClick={handleNewPriceClick}
+          >
+            New Price
+          </Button>
+          {!activeUser && <Button color="inherit" component={Link} to="/login" sx={{ display: 'none' }}>Login</Button>}
           {activeUser && (
             <>
               <Typography sx={{ flexGrow: 1, ml: 2 }}>{activeUser.email}</Typography>
