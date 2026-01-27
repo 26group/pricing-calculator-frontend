@@ -2117,7 +2117,7 @@ export default function Questions() {
                           fontSize: '0.9rem',
                         }}
                       >
-                        <Typography variant="body2" sx={{ fontWeight: 500 }}>{option.label}</Typography>
+                        <Typography variant="body2" sx={{ fontWeight: 700 }}>{option.label}</Typography>
                       </ToggleButton>
                     );
                   })}
@@ -2135,7 +2135,7 @@ export default function Questions() {
                       fontSize: '0.9rem',
                     }}
                   >
-                    <Typography variant="body2" sx={{ fontWeight: 500 }}>{question.iasOption.label}</Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 700 }}>{question.iasOption.label}</Typography>
                   </ToggleButton>
                 </ToggleButtonGroup>
               </Stack>
@@ -2203,7 +2203,7 @@ export default function Questions() {
                     disabled={question.id !== 'q2' && !responses.q2}
                     onClick={question.id !== 'q2' && !responses.q2 ? () => setRequireQ2Message(true) : undefined}
                   >
-                    <Typography variant="body2" sx={{ fontWeight: 500 }}>{option.label}</Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 700 }}>{option.label}</Typography>
                   </ToggleButton>
                 );
                 })}
