@@ -150,6 +150,7 @@ const questionData = [
     id: 'q9',
     prompt: '9. How many salaried employees do they have?',
     type: 'inputGroup',
+    showWhen: (responses) => responses.q8 === 'yes',
     options: [
       { label: 'Weekly salary', value: 'weekly', control: 'number' },
       { label: 'Fortnightly salary', value: 'fortnightly', control: 'number' },
@@ -160,6 +161,7 @@ const questionData = [
     id: 'q10',
     prompt: '10. How many timesheet employees do they have?',
     type: 'inputGroup',
+    showWhen: (responses) => responses.q8 === 'yes',
     options: [
       { label: 'Weekly timesheet', value: 'weekly', control: 'number' },
       { label: 'Fortnightly timesheet', value: 'fortnightly', control: 'number' },
@@ -170,6 +172,7 @@ const questionData = [
     id: 'q11',
     prompt: '11. Do they want you to lodge Single Touch Payroll for them?',
     type: 'radio',
+    showWhen: (responses) => responses.q8 === 'yes',
     options: [
       { label: 'Weekly', value: 'weekly' },
       { label: 'Fortnightly', value: 'fortnightly' },
@@ -1939,9 +1942,56 @@ export default function Questions() {
     }));
   };
 
+  // Calculate dynamic question numbers based on which questions are visible
+  const getQuestionNumberMapping = () => {
+    const mapping = {};
+    const parentMap = {}; // Track parent-child relationships
+    let counter = 1;
+    
+    // First pass: Only count top-level questions and track parent-child relationships
+    questionData.forEach((question) => {
+      if (!question.showWhen || question.showWhen(responses)) {
+        mapping[question.id] = counter++;
+      }
+      // Track all children with their parent's ID
+      if (question.children) {
+        question.children.forEach((child) => {
+          parentMap[child.id] = question.id;
+        });
+      }
+    });
+    
+    return { mapping, parentMap };
+  };
+
+  const { mapping: questionNumberMapping, parentMap } = useMemo(() => getQuestionNumberMapping(), [responses]);
+
   const renderQuestion = (question, depth = 0) => {
     if (question.showWhen && !question.showWhen(responses)) {
       return null;
+    }
+
+    // Extract the base prompt and replace the number with the dynamic one
+    let questionNumber = questionNumberMapping[question.id];
+    
+    // If this question doesn't have a direct mapping, it might be a sub-question
+    if (questionNumber === undefined && parentMap[question.id]) {
+      const parentId = parentMap[question.id];
+      const parentNumber = questionNumberMapping[parentId];
+      if (parentNumber !== undefined) {
+        // Extract the sub-question part (e.g., "a", "b", etc.)
+        const match = question.prompt.match(/^(\d+)\.([a-z]+)/);
+        if (match) {
+          const subPart = match[2];
+          questionNumber = `${parentNumber}.${subPart}`;
+        }
+      }
+    }
+
+    // Replace the number in the prompt
+    let promptWithDynamicNumber = question.prompt;
+    if (questionNumber !== undefined) {
+      promptWithDynamicNumber = question.prompt.replace(/^\d+\.([a-z]*)?/, `${questionNumber}.`);
     }
 
     return (
@@ -1965,7 +2015,7 @@ export default function Questions() {
           }}
         >
           <Stack spacing={1.5}>
-            <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#1a1a1a', fontSize: '1rem' }}>{question.prompt}</Typography>
+            <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#1a1a1a', fontSize: '1rem' }}>{promptWithDynamicNumber}</Typography>
             {question.type === 'q7-custom' && (
               <Stack spacing={2}>
                 {/* Combined BAS and IAS Options in single button group */}
