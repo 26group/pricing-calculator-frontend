@@ -234,7 +234,7 @@ export default function PricingQuote() {
       </Typography>
 
       <Box sx={{ position: 'relative', mb: 4 }}>
-        <TableContainer component={Paper}>
+        <TableContainer component={Paper} sx={{ userSelect: 'none' }}>
           <Table>
           <TableHead>
             <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
