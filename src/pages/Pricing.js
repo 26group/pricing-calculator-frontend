@@ -238,27 +238,9 @@ export default function Pricing() {
     },
     {
       feature: 'Access and Support\nAsk us any time any questions we are here to partner with you',
-      bronze: supportText || (
-        <Typography variant="body2">
-          Email the team
-          <br />
-          within 48 hr response
-        </Typography>
-      ),
-      silver: supportText || (
-        <Typography variant="body2">
-          Email and phone team
-          <br />
-          within 24 hr response
-        </Typography>
-      ),
-      gold: supportText || (
-        <Typography variant="body2">
-          Principal and team
-          <br />
-          same day
-        </Typography>
-      ),
+      bronze: supportText || <NotIncluded />,
+      silver: supportText || <NotIncluded />,
+      gold: supportText || <NotIncluded />,
     },
   ];
 
