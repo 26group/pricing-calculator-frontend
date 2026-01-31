@@ -115,6 +115,7 @@ const questionData = [
       { label: 'BAS Monthly', value: 'basMonthly' },
     ],
     iasOption: { label: 'IAS monthly reporting', value: 'iasMonthly' },
+    noOption: { label: 'No', value: 'no' },
   },
   {
     id: 'q8',
@@ -150,6 +151,7 @@ const questionData = [
     id: 'q9',
     prompt: '9. How many salaried employees do they have?',
     type: 'inputGroup',
+    showWhen: (responses) => responses.q8 === 'yes',
     options: [
       { label: 'Weekly salary', value: 'weekly', control: 'number' },
       { label: 'Fortnightly salary', value: 'fortnightly', control: 'number' },
@@ -160,6 +162,7 @@ const questionData = [
     id: 'q10',
     prompt: '10. How many timesheet employees do they have?',
     type: 'inputGroup',
+    showWhen: (responses) => responses.q8 === 'yes',
     options: [
       { label: 'Weekly timesheet', value: 'weekly', control: 'number' },
       { label: 'Fortnightly timesheet', value: 'fortnightly', control: 'number' },
@@ -170,6 +173,7 @@ const questionData = [
     id: 'q11',
     prompt: '11. Do they want you to lodge Single Touch Payroll for them?',
     type: 'radio',
+    showWhen: (responses) => responses.q8 === 'yes',
     options: [
       { label: 'Weekly', value: 'weekly' },
       { label: 'Fortnightly', value: 'fortnightly' },
@@ -322,6 +326,7 @@ const questionData = [
     options: [
       { label: 'Annual returns', value: 'annualReturns' },
       { label: 'Detail changes', value: 'detailChanges' },
+      { label: 'No', value: 'no' },
     ],
   },
   {
@@ -331,6 +336,7 @@ const questionData = [
     options: [
       { label: 'Basic plans', value: 'basicPlans' },
       { label: 'Longer-term & hardship plans', value: 'hardshipPlans' },
+      { label: 'No', value: 'no' },
     ],
   },
   {
@@ -338,20 +344,20 @@ const questionData = [
     prompt: '28. Do they require prior year to be lodged?',
     type: 'inputGroup',
     options: [
-      { label: 'Yes - please provide # of Business returns', value: 'business', control: 'number' },
-      { label: 'Yes - please provide # of Individuals', value: 'individuals', control: 'number' },
-      { label: 'Yes - please provide # of BAS', value: 'bas', control: 'number' },
-      { label: 'Yes - please provide # of SMSF', value: 'smsf', control: 'number' },
-      { label: 'Yes - please provide # of IAS', value: 'ias', control: 'number' },
-      { label: 'Yes - please provide # of FBT', value: 'fbt', control: 'number' },
-      { label: 'Yes - please provide # of TPAR', value: 'tpar', control: 'number' },
-      { label: 'Yes - please provide # of Workers comp', value: 'workersComp', control: 'number' },
-      { label: 'Yes - please provide # of Super lodgment', value: 'super', control: 'number' },
-      { label: 'Yes - please provide # of STP EOY', value: 'stpEoy', control: 'number' },
-      { label: 'Yes - please provide # of LSL forms', value: 'lslForms', control: 'number' },
-      { label: 'Yes - please provide # of Payroll Tax', value: 'payrollTax', control: 'number' },
-      { label: 'Yes - please provide # of ASIC', value: 'asic', control: 'number' },
-      { label: 'No', value: 'none', control: 'checkbox' },
+      { label: 'Yes - provide # of Business returns', value: 'business', control: 'number' },
+      { label: 'Yes - provide # of Individuals', value: 'individuals', control: 'number' },
+      { label: 'Yes - provide # of BAS', value: 'bas', control: 'number' },
+      { label: 'Yes - provide # of SMSF', value: 'smsf', control: 'number' },
+      { label: 'Yes - provide # of IAS', value: 'ias', control: 'number' },
+      { label: 'Yes - provide # of FBT', value: 'fbt', control: 'number' },
+      { label: 'Yes - provide # of TPAR', value: 'tpar', control: 'number' },
+      { label: 'Yes - provide # of Workers comp', value: 'workersComp', control: 'number' },
+      { label: 'Yes - provide # of Super lodgment', value: 'super', control: 'number' },
+      { label: 'Yes - provide # of STP EOY', value: 'stpEoy', control: 'number' },
+      { label: 'Yes - provide # of LSL forms', value: 'lslForms', control: 'number' },
+      { label: 'Yes - provide # of Payroll Tax', value: 'payrollTax', control: 'number' },
+      { label: 'Yes - provide # of ASIC', value: 'asic', control: 'number' },
+      { label: 'No', value: 'none', control: 'button' },
     ],
   },
 ];
@@ -1110,6 +1116,9 @@ export const segmentForServices = (segment) => {
 };
 
 const resolveBasIasService = (segment, selection) => {
+  console.log('resolveBasIasService called with:', { segment, selection });
+  console.log('selection.bas:', selection?.bas, 'selection.ias:', selection?.ias);
+  
   if (!segment) {
     return { bas: undefined, ias: undefined };
   }
@@ -1122,10 +1131,11 @@ const resolveBasIasService = (segment, selection) => {
       result.bas = serviceValues.taxServices.bas[segment];
     }
     
-    if (selection.ias) {
+    if (selection.ias === 'iasMonthly') {
       result.ias = serviceValues.taxServices.ias[segment];
     }
     
+    console.log('Resolved BAS/IAS (object format):', result);
     return result;
   }
 
@@ -1142,6 +1152,7 @@ const resolveBasIasService = (segment, selection) => {
     };
   }
 
+  console.log('No BAS/IAS selection found');
   return { bas: undefined, ias: undefined };
 };
 
@@ -1168,7 +1179,7 @@ const buildInitialState = () => {
     }
 
     if (question.type === 'q7-custom') {
-      acc[question.id] = { bas: '', ias: undefined };
+      acc[question.id] = { bas: '', ias: undefined, no: undefined };
       return acc;
     }
 
@@ -1211,7 +1222,7 @@ export default function Questions() {
       const merged = { ...built, ...storeResponses };
       // Migrate q7 from old string format to new object format if needed
       if (typeof merged.q7 === 'string') {
-        merged.q7 = { bas: '', ias: undefined };
+        merged.q7 = { bas: '', ias: undefined, no: undefined };
       }
       return merged;
     }
@@ -1244,7 +1255,10 @@ export default function Questions() {
     }
   }, []);
 
+  const q7StringKey = useMemo(() => JSON.stringify(responses.q7), [responses.q7]);
+
   useEffect(() => {
+    console.log('Pricing calculation effect triggered', { q7: responses.q7, q2: responses.q2 });
     setSelectedServices((prev) => {
       const originalSegment = responses.q2;
       const segment = segmentForServices(originalSegment);
@@ -1258,6 +1272,8 @@ export default function Questions() {
           ? serviceValues.taxServices.fbtReturns[segment]
           : undefined;
       const { bas: basCandidate, ias: iasCandidate } = resolveBasIasService(segment, responses.q7);
+
+      console.log('After resolveBasIasService:', { basCandidate, iasCandidate });
 
       let payload = {
         payrollTaxCandidate: undefined,
@@ -1869,6 +1885,7 @@ export default function Questions() {
     responses.q25,
     responses.q26,
     responses.q26b,
+    q7StringKey,
   ]);
 
   const handleRadioChange = (questionId) => (event) => {
@@ -1909,6 +1926,8 @@ export default function Questions() {
       [questionId]: {
         ...prev[questionId],
         [optionValue]: event.target.value,
+        // Deselect "No" option if a value is entered into any input field
+        ...(event.target.value && prev[questionId].none ? { none: false } : {}),
       },
     }));
   };
@@ -1928,9 +1947,56 @@ export default function Questions() {
     }));
   };
 
+  // Calculate dynamic question numbers based on which questions are visible
+  const getQuestionNumberMapping = () => {
+    const mapping = {};
+    const parentMap = {}; // Track parent-child relationships
+    let counter = 1;
+    
+    // First pass: Only count top-level questions and track parent-child relationships
+    questionData.forEach((question) => {
+      if (!question.showWhen || question.showWhen(responses)) {
+        mapping[question.id] = counter++;
+      }
+      // Track all children with their parent's ID
+      if (question.children) {
+        question.children.forEach((child) => {
+          parentMap[child.id] = question.id;
+        });
+      }
+    });
+    
+    return { mapping, parentMap };
+  };
+
+  const { mapping: questionNumberMapping, parentMap } = useMemo(() => getQuestionNumberMapping(), [responses]);
+
   const renderQuestion = (question, depth = 0) => {
     if (question.showWhen && !question.showWhen(responses)) {
       return null;
+    }
+
+    // Extract the base prompt and replace the number with the dynamic one
+    let questionNumber = questionNumberMapping[question.id];
+    
+    // If this question doesn't have a direct mapping, it might be a sub-question
+    if (questionNumber === undefined && parentMap[question.id]) {
+      const parentId = parentMap[question.id];
+      const parentNumber = questionNumberMapping[parentId];
+      if (parentNumber !== undefined) {
+        // Extract the sub-question part (e.g., "a", "b", etc.)
+        const match = question.prompt.match(/^(\d+)\.([a-z]+)/);
+        if (match) {
+          const subPart = match[2];
+          questionNumber = `${parentNumber}.${subPart}`;
+        }
+      }
+    }
+
+    // Replace the number in the prompt
+    let promptWithDynamicNumber = question.prompt;
+    if (questionNumber !== undefined) {
+      promptWithDynamicNumber = question.prompt.replace(/^\d+\.([a-z]*)?/, `${questionNumber}.`);
     }
 
     return (
@@ -1954,7 +2020,7 @@ export default function Questions() {
           }}
         >
           <Stack spacing={1.5}>
-            <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#1a1a1a', fontSize: '1rem' }}>{question.prompt}</Typography>
+            <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#1a1a1a', fontSize: '1rem' }}>{promptWithDynamicNumber}</Typography>
             {question.type === 'q7-custom' && (
               <Stack spacing={2}>
                 {/* Combined BAS and IAS Options in single button group */}
@@ -1962,6 +2028,7 @@ export default function Questions() {
                   value={[
                     ...(responses[question.id]?.bas ? [responses[question.id].bas] : []),
                     ...(responses[question.id]?.ias ? [responses[question.id].ias] : []),
+                    ...(responses[question.id]?.no ? [responses[question.id].no] : []),
                   ]}
                   onChange={(event, newValue) => {
                     setFocusedQuestion(question.id);
@@ -1970,40 +2037,60 @@ export default function Questions() {
                     const currentSelections = [
                       ...(responses[question.id]?.bas ? [responses[question.id].bas] : []),
                       ...(responses[question.id]?.ias ? [responses[question.id].ias] : []),
+                      ...(responses[question.id]?.no ? [responses[question.id].no] : []),
                     ];
                     
                     const basOptions = question.basOptions
                       .filter(opt => !opt.showWhen || opt.showWhen(responses))
                       .map(opt => opt.value);
                     const iasValue = question.iasOption.value;
+                    const noValue = question.noOption.value;
                     
                     let updatedBas = responses[question.id]?.bas || '';
                     let updatedIas = responses[question.id]?.ias;
+                    let updatedNo = responses[question.id]?.no;
                     
-                    // Check what changed
-                    newValue.forEach((val) => {
-                      if (basOptions.includes(val)) {
-                        updatedBas = val;
-                      } else if (val === iasValue) {
-                        updatedIas = val;
-                      }
-                    });
+                    // Check what was added (newly selected)
+                    const addedValues = newValue.filter(val => !currentSelections.includes(val));
                     
-                    // Check what was removed
-                    currentSelections.forEach((val) => {
-                      if (!newValue.includes(val)) {
+                    // If "No" was just selected, clear BAS and IAS
+                    if (addedValues.includes(noValue)) {
+                      updatedBas = '';
+                      updatedIas = undefined;
+                      updatedNo = noValue;
+                    } else {
+                      // Check what changed
+                      newValue.forEach((val) => {
                         if (basOptions.includes(val)) {
-                          updatedBas = '';
+                          updatedBas = val;
+                          updatedNo = undefined; // Clear "No" when BAS is selected
                         } else if (val === iasValue) {
-                          updatedIas = undefined;
+                          updatedIas = val;
+                          updatedNo = undefined; // Clear "No" when IAS is selected
+                        } else if (val === noValue) {
+                          updatedNo = val;
                         }
-                      }
-                    });
+                      });
+                      
+                      // Check what was removed
+                      currentSelections.forEach((val) => {
+                        if (!newValue.includes(val)) {
+                          if (basOptions.includes(val)) {
+                            updatedBas = '';
+                          } else if (val === iasValue) {
+                            updatedIas = undefined;
+                          } else if (val === noValue) {
+                            updatedNo = undefined;
+                          }
+                        }
+                      });
+                    }
                     
                     const updatedValue = {
                       ...responses[question.id],
                       bas: updatedBas,
                       ias: updatedIas,
+                      no: updatedNo,
                     };
                     setResponses({ ...responses, [question.id]: updatedValue });
                   }}
@@ -2033,6 +2120,7 @@ export default function Questions() {
                         backgroundColor: '#f5f5f5',
                         color: '#ccc',
                         opacity: 0.6,
+                        border: '1px solid #d0d0d0',
                       },
                     },
                   }}
@@ -2056,7 +2144,7 @@ export default function Questions() {
                           fontSize: '0.9rem',
                         }}
                       >
-                        <Typography variant="body2" sx={{ fontWeight: 500 }}>{option.label}</Typography>
+                        <Typography variant="body2" sx={{ fontWeight: 700 }}>{option.label}</Typography>
                       </ToggleButton>
                     );
                   })}
@@ -2074,7 +2162,23 @@ export default function Questions() {
                       fontSize: '0.9rem',
                     }}
                   >
-                    <Typography variant="body2" sx={{ fontWeight: 500 }}>{question.iasOption.label}</Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 700 }}>{question.iasOption.label}</Typography>
+                  </ToggleButton>
+                  {/* No Option */}
+                  <ToggleButton 
+                    key={question.noOption.value} 
+                    value={question.noOption.value}
+                    sx={{
+                      minWidth: '160px',
+                      flex: '0 1 160px',
+                      whiteSpace: 'normal',
+                      wordBreak: 'break-word',
+                      py: 1.2,
+                      px: 1.5,
+                      fontSize: '0.9rem',
+                    }}
+                  >
+                    <Typography variant="body2" sx={{ fontWeight: 700 }}>{question.noOption.label}</Typography>
                   </ToggleButton>
                 </ToggleButtonGroup>
               </Stack>
@@ -2115,6 +2219,7 @@ export default function Questions() {
                       backgroundColor: '#f5f5f5',
                       color: '#ccc',
                       opacity: 0.6,
+                      border: '1px solid #d0d0d0',
                     },
                   },
                 }}
@@ -2142,152 +2247,11 @@ export default function Questions() {
                     disabled={question.id !== 'q2' && !responses.q2}
                     onClick={question.id !== 'q2' && !responses.q2 ? () => setRequireQ2Message(true) : undefined}
                   >
-                    <Typography variant="body2" sx={{ fontWeight: 500 }}>{option.label}</Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 700 }}>{option.label}</Typography>
                   </ToggleButton>
                 );
                 })}
               </ToggleButtonGroup>
-            )}
-            {question.id === 'q6' && selectedServices.smsf && (
-              <Typography variant="body2" color="text.secondary">
-                Selected service: {selectedServices.smsf.inclusion} (Code {selectedServices.smsf.code}) — Monthly{' '}
-                {formatCurrency(selectedServices.smsf.monthly)}, Yearly {formatCurrency(selectedServices.smsf.yearly)}
-              </Typography>
-            )}
-            {question.id === 'q6a' && selectedServices.fbt && (
-              <Typography variant="body2" color="text.secondary">
-                Selected service: {selectedServices.fbt.inclusion} (Code {selectedServices.fbt.code}) — Monthly{' '}
-                {formatCurrency(selectedServices.fbt.monthly)}, Yearly {formatCurrency(selectedServices.fbt.yearly)}
-              </Typography>
-            )}
-            {question.id === 'q7' && selectedServices.bas && (
-              <Typography variant="body2" color="text.secondary">
-                Selected service: {selectedServices.bas.inclusion} (Code {selectedServices.bas.code}) — Monthly{' '}
-                {formatCurrency(selectedServices.bas.monthly)}, Yearly {formatCurrency(selectedServices.bas.yearly)}
-              </Typography>
-            )}
-            {question.id === 'q7' && selectedServices.ias && (
-              <Typography variant="body2" color="text.secondary">
-                Selected service: {selectedServices.ias.inclusion} (Code {selectedServices.ias.code}) — Monthly{' '}
-                {formatCurrency(selectedServices.ias.monthly)}, Yearly {formatCurrency(selectedServices.ias.yearly)}
-              </Typography>
-            )}
-            {question.id === 'q12' && selectedServices.superPrep && (
-              <Typography variant="body2" color="text.secondary">
-                Selected service: {selectedServices.superPrep.inclusion} (Code {selectedServices.superPrep.code}) — Monthly{' '}
-                {formatCurrency(selectedServices.superPrep.monthly)}, Yearly{' '}
-                {formatCurrency(selectedServices.superPrep.yearly)}
-              </Typography>
-            )}
-            {question.id === 'q13' && selectedServices.payrollTax && (
-              <Typography variant="body2" color="text.secondary">
-                Selected service: {selectedServices.payrollTax.inclusion} (Code {selectedServices.payrollTax.code}) — Monthly{' '}
-                {formatCurrency(selectedServices.payrollTax.monthly)}, Yearly{' '}
-                {formatCurrency(selectedServices.payrollTax.yearly)}
-              </Typography>
-            )}
-            {question.id === 'q14' && selectedServices.workersComp && (
-              <Typography variant="body2" color="text.secondary">
-                Selected service: {selectedServices.workersComp.inclusion} (Code {selectedServices.workersComp.code}) — Monthly{' '}
-                {formatCurrency(selectedServices.workersComp.monthly)}, Yearly{' '}
-                {formatCurrency(selectedServices.workersComp.yearly)}
-              </Typography>
-            )}
-            {question.id === 'q16' && selectedServices.tpar && (
-              <Typography variant="body2" color="text.secondary">
-                Selected service: {selectedServices.tpar.inclusion} (Code {selectedServices.tpar.code}) — Monthly{' '}
-                {formatCurrency(selectedServices.tpar.monthly)}, Yearly {formatCurrency(selectedServices.tpar.yearly)}
-              </Typography>
-            )}
-            {question.id === 'q17' && selectedServices.fbtReturn && (
-              <Typography variant="body2" color="text.secondary">
-                Selected service: {selectedServices.fbtReturn.inclusion} (Code {selectedServices.fbtReturn.code}) — Monthly{' '}
-                {formatCurrency(selectedServices.fbtReturn.monthly)}, Yearly {formatCurrency(selectedServices.fbtReturn.yearly)}
-              </Typography>
-            )}
-            {question.id === 'q18' && selectedServices.taxPlanning && (
-              <Typography variant="body2" color="text.secondary">
-                Selected service: {selectedServices.taxPlanning.inclusion} (Code {selectedServices.taxPlanning.code}) — Monthly{' '}
-                {formatCurrency(selectedServices.taxPlanning.monthly)}, Yearly{' '}
-                {formatCurrency(selectedServices.taxPlanning.yearly)}
-              </Typography>
-            )}
-            {question.id === 'q19' && selectedServices.taxStructuring && (
-              <Typography variant="body2" color="text.secondary">
-                Selected service: {selectedServices.taxStructuring.inclusion} (Code {selectedServices.taxStructuring.code}) — Monthly{' '}
-                {formatCurrency(selectedServices.taxStructuring.monthly)}, Yearly{' '}
-                {formatCurrency(selectedServices.taxStructuring.yearly)}
-              </Typography>
-            )}
-            {question.id === 'q20' && selectedServices.financialStatementsTax && (
-              <Typography variant="body2" color="text.secondary">
-                Selected service: {selectedServices.financialStatementsTax.inclusion} (Code {selectedServices.financialStatementsTax.code}) — Monthly{' '}
-                {formatCurrency(selectedServices.financialStatementsTax.monthly)}, Yearly{' '}
-                {formatCurrency(selectedServices.financialStatementsTax.yearly)}
-              </Typography>
-            )}
-            {question.id === 'q21' && selectedServices.statutoryFinancialStatements && (
-              <Typography variant="body2" color="text.secondary">
-                Selected service: {selectedServices.statutoryFinancialStatements.inclusion} (Code {selectedServices.statutoryFinancialStatements.code}) — Monthly{' '}
-                {formatCurrency(selectedServices.statutoryFinancialStatements.monthly)}, Yearly{' '}
-                {formatCurrency(selectedServices.statutoryFinancialStatements.yearly)}
-              </Typography>
-            )}
-            {question.id === 'q22' && selectedServices.managementFinancialStatements && (
-              <Typography variant="body2" color="text.secondary">
-                Selected service: {selectedServices.managementFinancialStatements.inclusion} (Code {selectedServices.managementFinancialStatements.code}) — Monthly{' '}
-                {formatCurrency(selectedServices.managementFinancialStatements.monthly)}, Yearly{' '}
-                {formatCurrency(selectedServices.managementFinancialStatements.yearly)}
-              </Typography>
-            )}
-            {question.id === 'q23' && selectedServices.reviewNumbers && (
-              <Typography variant="body2" color="text.secondary">
-                Selected service: {selectedServices.reviewNumbers.inclusion} (Code {selectedServices.reviewNumbers.code}) — Monthly{' '}
-                {formatCurrency(selectedServices.reviewNumbers.monthly)}, Yearly{' '}
-                {formatCurrency(selectedServices.reviewNumbers.yearly)}
-              </Typography>
-            )}
-            {question.id === 'q25' && selectedServices.teamSupport && (
-              <Typography variant="body2" color="text.secondary">
-                Selected service: {selectedServices.teamSupport.inclusion} (Code {selectedServices.teamSupport.code}) — Monthly{' '}
-                {formatCurrency(selectedServices.teamSupport.monthly)}, Yearly{' '}
-                {formatCurrency(selectedServices.teamSupport.yearly)}
-              </Typography>
-            )}
-            {question.id === 'q25' && selectedServices.clientServiceManager && (
-              <Typography variant="body2" color="text.secondary">
-                Selected service: {selectedServices.clientServiceManager.inclusion} (Code {selectedServices.clientServiceManager.code}) — Monthly{' '}
-                {formatCurrency(selectedServices.clientServiceManager.monthly)}, Yearly{' '}
-                {formatCurrency(selectedServices.clientServiceManager.yearly)}
-              </Typography>
-            )}
-            {question.id === 'q25' && selectedServices.principalOwner && (
-              <Typography variant="body2" color="text.secondary">
-                Selected service: {selectedServices.principalOwner.inclusion} (Code {selectedServices.principalOwner.code}) — Monthly{' '}
-                {formatCurrency(selectedServices.principalOwner.monthly)}, Yearly{' '}
-                {formatCurrency(selectedServices.principalOwner.yearly)}
-              </Typography>
-            )}
-            {question.id === 'q26' && selectedServices.corporateSecretarial && (
-              <Typography variant="body2" color="text.secondary">
-                Selected service: {selectedServices.corporateSecretarial.inclusion} (Code {selectedServices.corporateSecretarial.code}) — Monthly{' '}
-                {formatCurrency(selectedServices.corporateSecretarial.monthly)}, Yearly{' '}
-                {formatCurrency(selectedServices.corporateSecretarial.yearly)}
-              </Typography>
-            )}
-            {question.id === 'q26b' && selectedServices.atoPaymentPlan && (
-              <Typography variant="body2" color="text.secondary">
-                Selected service: {selectedServices.atoPaymentPlan.inclusion} (Code {selectedServices.atoPaymentPlan.code}) — Monthly{' '}
-                {formatCurrency(selectedServices.atoPaymentPlan.monthly)}, Yearly{' '}
-                {formatCurrency(selectedServices.atoPaymentPlan.yearly)}
-              </Typography>
-            )}
-            {question.id === 'q24' && selectedServices.annualTaxMeetings && (
-              <Typography variant="body2" color="text.secondary">
-                Selected service: {selectedServices.annualTaxMeetings.inclusion} (Code {selectedServices.annualTaxMeetings.code}) — Monthly{' '}
-                {formatCurrency(selectedServices.annualTaxMeetings.monthly)}, Yearly{' '}
-                {formatCurrency(selectedServices.annualTaxMeetings.yearly)}
-              </Typography>
             )}
             {question.type === 'checkbox' && (
               <Stack spacing={1}>
@@ -2403,6 +2367,67 @@ export default function Questions() {
                         transition: 'all 0.2s ease-in-out',
                       }}
                     />
+                  ) : option.control === 'button' ? (
+                    <div 
+                      key={option.value}
+                      style={{ display: 'block', width: '100%', maxWidth: '400px' }}
+                    >
+                      <Button
+                        variant="outlined"
+                        fullWidth
+                        onClick={() => {
+                          setFocusedQuestion(question.id);
+                          const isSelectingNo = !responses[question.id][option.value];
+                          if (isSelectingNo) {
+                            // If selecting "No", clear all input fields
+                            const clearedInputs = {};
+                            question.options.forEach((opt) => {
+                              if (opt.control !== 'button' && opt.control !== 'checkbox') {
+                                clearedInputs[opt.value] = '';
+                              }
+                            });
+                            setResponses({
+                              ...responses,
+                              [question.id]: {
+                                ...responses[question.id],
+                                ...clearedInputs,
+                                [option.value]: true,
+                              },
+                            });
+                          } else {
+                            // If deselecting "No", just toggle it
+                            setResponses({
+                              ...responses,
+                              [question.id]: {
+                                ...responses[question.id],
+                                [option.value]: false,
+                              },
+                            });
+                          }
+                        }}
+                        disabled={question.id !== 'q2' && !responses.q2}
+                        sx={{
+                          transition: 'all 0.2s ease-in-out',
+                          border: '1px solid #d0d0d0',
+                          color: responses[question.id][option.value] ? '#fff' : '#666',
+                          backgroundColor: responses[question.id][option.value] ? '#002060' : 'transparent',
+                          '&:hover:not(.Mui-disabled)': {
+                            backgroundColor: responses[question.id][option.value] ? '#001a47' : '#f5f5f5',
+                            borderColor: '#002060',
+                          },
+                          '&.Mui-disabled': {
+                            backgroundColor: '#f5f5f5',
+                            color: '#ccc',
+                            opacity: 0.6,
+                            border: '1px solid #d0d0d0',
+                          },
+                          textTransform: 'none',
+                          fontWeight: 600,
+                        }}
+                      >
+                        {option.label}
+                      </Button>
+                    </div>
                   ) : (
                     <div 
                       key={option.value}
@@ -2473,20 +2498,16 @@ export default function Questions() {
   const combinedOnceOffTotal = totalOnceOffFee + serviceCatalogOnceOffFee;
 
   useEffect(() => {
+    console.log('DEBUG: Dispatching questionsPricing:', totalMonthlyPrice);
     if (typeof totalMonthlyPrice === 'number' && !isNaN(totalMonthlyPrice)) {
-      const action = setQuestionsPricing(totalMonthlyPrice);
-      if (action && action.type) {
-        dispatch(action);
-      }
+      dispatch(setQuestionsPricing(totalMonthlyPrice));
     }
   }, [totalMonthlyPrice, dispatch]);
 
   useEffect(() => {
+    console.log('DEBUG: Dispatching questionsOnceOffFee:', totalOnceOffFee);
     if (typeof totalOnceOffFee === 'number' && !isNaN(totalOnceOffFee)) {
-      const action = setQuestionsOnceOffFee(totalOnceOffFee);
-      if (action && action.type) {
-        dispatch(action);
-      }
+      dispatch(setQuestionsOnceOffFee(totalOnceOffFee));
     }
   }, [totalOnceOffFee, dispatch]);
 
@@ -2587,7 +2608,7 @@ export default function Questions() {
               <Button
                 variant="contained"
                 color="primary"
-                onClick={() => navigate('/services')}
+                onClick={() => navigate('/pricing-quote')}
                 sx={{
                   flex: { xs: 1, sm: 'initial' },
                   transition: 'all 0.2s ease-in-out',

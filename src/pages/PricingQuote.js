@@ -63,6 +63,11 @@ export default function PricingQuote() {
   const silverMonthly = questionsPricing + serviceCatalogPricing;
   const goldMonthly = calculateGoldMonthlyPricing();
 
+  // Debug logging
+  console.log('PricingQuote - questionsPricing:', questionsPricing, 'questionsOnceOffFee:', questionsOnceOffFee, 'bronzeMonthly:', bronzeMonthly);
+  console.log('PricingQuote - Full Redux state questionResponses:', questionResponses);
+  console.log('PricingQuote - q4 value:', questionResponses.q4, 'q7 value:', questionResponses.q7);
+
   // Check if tax services are included (based on q4, q5, q6, q16, q17)
   const hasTaxServices =
     (questionResponses.q4 && questionResponses.q4 !== 'no') ||
@@ -73,6 +78,78 @@ export default function PricingQuote() {
 
   // Check if corporate secretarial services are included (based on q26)
   const hasCorporateSecretarial = questionResponses.q26 && questionResponses.q26 !== 'no';
+
+  // Check if financial statement services are included (based on q20, q21, q22)
+  const hasFinancialReports =
+    (questionResponses.q20 && questionResponses.q20 !== 'no') ||
+    (questionResponses.q21 && questionResponses.q21 !== 'no') ||
+    (questionResponses.q22 && questionResponses.q22 !== 'no');
+
+  // Check if tax planning services are included (based on q18, q19)
+  const hasTaxPlanning =
+    (questionResponses.q18 && questionResponses.q18 !== 'no') ||
+    (questionResponses.q19 && questionResponses.q19 !== 'no');
+
+  // Check if reporting services are included (based on q20, q21, q22)
+  const hasReporting =
+    (questionResponses.q20 && questionResponses.q20 !== 'no') ||
+    (questionResponses.q21 && questionResponses.q21 !== 'no') ||
+    (questionResponses.q22 && questionResponses.q22 !== 'no');
+
+  // Determine reporting frequency (monthly takes precedence over quarterly)
+  const reportingFrequency =
+    questionResponses.q20 === 'monthly' || questionResponses.q21 === 'monthly' || questionResponses.q22 === 'monthly'
+      ? 'Monthly'
+      : questionResponses.q20 === 'quarterly' || questionResponses.q21 === 'quarterly' || questionResponses.q22 === 'quarterly'
+      ? 'Quarterly'
+      : null;
+
+  // Check if business meetings services are included (based on q23, q24)
+  const hasBusinessMeetings =
+    (questionResponses.q23 && questionResponses.q23 !== 'no') ||
+    (questionResponses.q24 && questionResponses.q24 !== 'no');
+
+  // Determine business meetings frequency (monthly takes precedence over quarterly)
+  const meetingsFrequency =
+    questionResponses.q23 === 'monthly' || questionResponses.q24 === 'monthly'
+      ? 'Monthly'
+      : questionResponses.q23 === 'quarterly' || questionResponses.q24 === 'quarterly'
+      ? 'Quarterly'
+      : null;
+
+  // Determine support level text based on q25 selection
+  const getSupportText = (selection) => {
+    switch (selection) {
+      case 'emailTeam':
+        return (
+          <Typography variant="body2">
+            Email the team
+            <br />
+            within 48 hr response
+          </Typography>
+        );
+      case 'emailPhoneTeamCsm':
+        return (
+          <Typography variant="body2">
+            Email and phone team
+            <br />
+            within 24 hr response
+          </Typography>
+        );
+      case 'emailPhoneCsmOwner':
+        return (
+          <Typography variant="body2">
+            Principal and team
+            <br />
+            same day
+          </Typography>
+        );
+      default:
+        return null;
+    }
+  };
+
+  const supportText = getSupportText(questionResponses.q25);
 
   // Compliance is ticked only if tax services values are actually used in pricing
   const complianceBronze = hasTaxServices && questionsPricing > 0 ? <CheckMark /> : <NotIncluded />;
@@ -154,51 +231,33 @@ export default function PricingQuote() {
     },
     {
       feature: 'Financial Reports\nAnnual financial statements for preparing tax returns and use with external parties like banks.',
-      bronze: <CheckMark />,
-      silver: <CheckMark />,
+      bronze: hasFinancialReports ? <CheckMark /> : <NotIncluded />,
+      silver: hasFinancialReports ? <CheckMark /> : <NotIncluded />,
       gold: <CheckMark />,
     },
     {
       feature: 'Tax Planning\nAnnual estimating and planning for tax minimisation',
-      bronze: <NotIncluded />,
+      bronze: hasTaxPlanning ? <CheckMark /> : <NotIncluded />,
       silver: <CheckMark />,
       gold: <CheckMark />,
     },
     {
       feature: 'Reporting\nWatch the numbers and know what\'s going on.',
-      bronze: <NotIncluded />,
-      silver: <Typography variant="body2">Quarterly</Typography>,
-      gold: <Typography variant="body2">Monthly</Typography>,
+      bronze: hasReporting ? <Typography variant="body2">{reportingFrequency}</Typography> : <NotIncluded />,
+      silver: hasReporting ? <Typography variant="body2">{reportingFrequency}</Typography> : <Typography variant="body2">Quarterly</Typography>,
+      gold: hasReporting ? <Typography variant="body2">{reportingFrequency}</Typography> : <Typography variant="body2">Monthly</Typography>,
     },
     {
       feature: 'Business Meetings\nTalk about the numbers, understand the numbers or make smart decisions',
-      bronze: <NotIncluded />,
-      silver: <Typography variant="body2">Quarterly</Typography>,
-      gold: <Typography variant="body2">Monthly</Typography>,
+      bronze: hasBusinessMeetings ? <Typography variant="body2">{meetingsFrequency}</Typography> : <NotIncluded />,
+      silver: hasBusinessMeetings ? <Typography variant="body2">{meetingsFrequency}</Typography> : <Typography variant="body2">Quarterly</Typography>,
+      gold: hasBusinessMeetings ? <Typography variant="body2">{meetingsFrequency}</Typography> : <Typography variant="body2">Monthly</Typography>,
     },
     {
       feature: 'Access and Support\nAsk us any time any questions we are here to partner with you',
-      bronze: (
-        <Typography variant="body2">
-          Email the team
-          <br />
-          within 48 hr response
-        </Typography>
-      ),
-      silver: (
-        <Typography variant="body2">
-          Email and phone team
-          <br />
-          within 24 hr response
-        </Typography>
-      ),
-      gold: (
-        <Typography variant="body2">
-          Principal and team
-          <br />
-          same day
-        </Typography>
-      ),
+      bronze: supportText || <NotIncluded />,
+      silver: supportText || <NotIncluded />,
+      gold: supportText || <NotIncluded />,
     },
   ];
 
@@ -212,7 +271,7 @@ export default function PricingQuote() {
       </Typography>
 
       <Box sx={{ position: 'relative', mb: 4 }}>
-        <TableContainer component={Paper}>
+        <TableContainer component={Paper} sx={{ userSelect: 'none' }}>
           <Table>
           <TableHead>
             <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
@@ -253,10 +312,10 @@ export default function PricingQuote() {
             <TableRow sx={{ backgroundColor: '#f5f5f5', fontWeight: 'bold' }}>
               <TableCell sx={{ fontWeight: 'bold', fontSize: '1.1rem' }}>Price</TableCell>
               <TableCell align="center" sx={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#CD7F32' }}>
-                {bronzeMonthly > 0 ? formatCurrency(bronzeMonthly) : '$197'}
+                {formatCurrency(bronzeMonthly)}
               </TableCell>
               <TableCell align="center" sx={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#C0C0C0', filter: 'blur(4px)' }}>
-                {silverMonthly > 0 ? formatCurrency(silverMonthly) : '$397'}
+                {formatCurrency(silverMonthly)}
               </TableCell>
               <TableCell align="center" sx={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#FFD700', filter: 'blur(4px)' }}>
                 {formatCurrency(goldMonthly)}

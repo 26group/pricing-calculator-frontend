@@ -73,6 +73,67 @@ export default function Pricing() {
   // Check if corporate secretarial services are included (based on q26)
   const hasCorporateSecretarial = questionResponses.q26 && questionResponses.q26 !== 'no';
 
+  // Check if reporting services are included (based on q20, q21, q22)
+  const hasReporting =
+    (questionResponses.q20 && questionResponses.q20 !== 'no') ||
+    (questionResponses.q21 && questionResponses.q21 !== 'no') ||
+    (questionResponses.q22 && questionResponses.q22 !== 'no');
+
+  // Determine reporting frequency (monthly takes precedence over quarterly)
+  const reportingFrequency =
+    questionResponses.q20 === 'monthly' || questionResponses.q21 === 'monthly' || questionResponses.q22 === 'monthly'
+      ? 'Monthly'
+      : questionResponses.q20 === 'quarterly' || questionResponses.q21 === 'quarterly' || questionResponses.q22 === 'quarterly'
+      ? 'Quarterly'
+      : null;
+
+  // Check if business meetings services are included (based on q23, q24)
+  const hasBusinessMeetings =
+    (questionResponses.q23 && questionResponses.q23 !== 'no') ||
+    (questionResponses.q24 && questionResponses.q24 !== 'no');
+
+  // Determine business meetings frequency (monthly takes precedence over quarterly)
+  const meetingsFrequency =
+    questionResponses.q23 === 'monthly' || questionResponses.q24 === 'monthly'
+      ? 'Monthly'
+      : questionResponses.q23 === 'quarterly' || questionResponses.q24 === 'quarterly'
+      ? 'Quarterly'
+      : null;
+
+  // Determine support level text based on q25 selection
+  const getSupportText = (selection) => {
+    switch (selection) {
+      case 'emailTeam':
+        return (
+          <Typography variant="body2">
+            Email the team
+            <br />
+            within 48 hr response
+          </Typography>
+        );
+      case 'emailPhoneTeamCsm':
+        return (
+          <Typography variant="body2">
+            Email and phone team
+            <br />
+            within 24 hr response
+          </Typography>
+        );
+      case 'emailPhoneCsmOwner':
+        return (
+          <Typography variant="body2">
+            Principal and team
+            <br />
+            same day
+          </Typography>
+        );
+      default:
+        return null;
+    }
+  };
+
+  const supportText = getSupportText(questionResponses.q25);
+
   // Compliance is ticked only if tax services values are actually used in pricing
   const complianceBronze = hasTaxServices && questionsPricing > 0 ? <CheckMark /> : <NotIncluded />;
   const complianceSilver = hasTaxServices && questionsPricing > 0 ? <CheckMark /> : <NotIncluded />;
@@ -165,39 +226,21 @@ export default function Pricing() {
     },
     {
       feature: 'Reporting\nWatch the numbers and know what\'s going on.',
-      bronze: <NotIncluded />,
-      silver: <Typography variant="body2">Quarterly</Typography>,
-      gold: <Typography variant="body2">Monthly</Typography>,
+      bronze: hasReporting ? <Typography variant="body2">{reportingFrequency}</Typography> : <NotIncluded />,
+      silver: hasReporting ? <Typography variant="body2">{reportingFrequency}</Typography> : <Typography variant="body2">Quarterly</Typography>,
+      gold: hasReporting ? <Typography variant="body2">{reportingFrequency}</Typography> : <Typography variant="body2">Monthly</Typography>,
     },
     {
       feature: 'Business Meetings\nTalk about the numbers, understand the numbers or make smart decisions',
-      bronze: <NotIncluded />,
-      silver: <Typography variant="body2">Quarterly</Typography>,
-      gold: <Typography variant="body2">Monthly</Typography>,
+      bronze: hasBusinessMeetings ? <Typography variant="body2">{meetingsFrequency}</Typography> : <NotIncluded />,
+      silver: hasBusinessMeetings ? <Typography variant="body2">{meetingsFrequency}</Typography> : <Typography variant="body2">Quarterly</Typography>,
+      gold: hasBusinessMeetings ? <Typography variant="body2">{meetingsFrequency}</Typography> : <Typography variant="body2">Monthly</Typography>,
     },
     {
       feature: 'Access and Support\nAsk us any time any questions we are here to partner with you',
-      bronze: (
-        <Typography variant="body2">
-          Email the team
-          <br />
-          within 48 hr response
-        </Typography>
-      ),
-      silver: (
-        <Typography variant="body2">
-          Email and phone team
-          <br />
-          within 24 hr response
-        </Typography>
-      ),
-      gold: (
-        <Typography variant="body2">
-          Principal and team
-          <br />
-          same day
-        </Typography>
-      ),
+      bronze: supportText || <NotIncluded />,
+      silver: supportText || <NotIncluded />,
+      gold: supportText || <NotIncluded />,
     },
   ];
 
@@ -251,10 +294,10 @@ export default function Pricing() {
             <TableRow sx={{ backgroundColor: '#f5f5f5', fontWeight: 'bold' }}>
               <TableCell sx={{ fontWeight: 'bold', fontSize: '1.1rem' }}>Price</TableCell>
               <TableCell align="center" sx={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#CD7F32' }}>
-                {bronzeMonthly > 0 ? formatCurrency(bronzeMonthly) : '$197'}
+                {formatCurrency(bronzeMonthly)}
               </TableCell>
               <TableCell align="center" sx={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#C0C0C0' }}>
-                {silverMonthly > 0 ? formatCurrency(silverMonthly) : '$397'}
+                {formatCurrency(silverMonthly)}
               </TableCell>
               <TableCell align="center" sx={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#FFD700' }}>
                 {formatCurrency(goldMonthly)}
