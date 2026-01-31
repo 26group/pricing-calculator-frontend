@@ -68,22 +68,32 @@ export const calculateTotalMonthlyPrice = (responses) => {
   }
 
   // q7: BAS/IAS
+  console.log('DEBUG q7:', responses.q7, 'segment:', segment);
   if (responses.q7 && segment) {
-    // Handle new object format { bas: 'basQuarterly'|'basMonthly', ias: 'iasMonthly'|undefined }
+    // Handle new object format { bas: 'basQuarterly'|'basMonthly', ias: 'iasMonthly'|undefined, no: 'no'|undefined }
     if (typeof responses.q7 === 'object' && responses.q7 !== null) {
-      if (responses.q7.bas === 'basQuarterly' || responses.q7.bas === 'basMonthly') {
-        const basService = serviceValuesAccounting.taxServices.bas[segment];
-        if (basService) {
-          total += basService.monthly;
+      console.log('DEBUG q7 is object, no:', responses.q7.no, 'bas:', responses.q7.bas, 'ias:', responses.q7.ias);
+      // Skip BAS/IAS pricing if "No" is selected
+      if (responses.q7.no === 'no') {
+        console.log('DEBUG q7 "No" is selected - skipping BAS/IAS pricing');
+      } else {
+        console.log('DEBUG q7.no is not set, checking bas/ias');
+        if (responses.q7.bas === 'basQuarterly' || responses.q7.bas === 'basMonthly') {
+          const basService = serviceValuesAccounting.taxServices.bas[segment];
+          console.log('DEBUG BAS service found:', basService);
+          if (basService) {
+            console.log('DEBUG Adding BAS monthly:', basService.monthly);
+            total += basService.monthly;
+          }
+        }
+        if (responses.q7.ias === 'iasMonthly') {
+          const iasService = serviceValuesAccounting.taxServices.ias[segment];
+          if (iasService) {
+            total += iasService.monthly;
+          }
         }
       }
-      if (responses.q7.ias === 'iasMonthly') {
-        const iasService = serviceValuesAccounting.taxServices.ias[segment];
-        if (iasService) {
-          total += iasService.monthly;
-        }
-      }
-    } else if (responses.q7 !== '') {
+    } else if (responses.q7 !== '' && responses.q7 !== 'no') {
       // Handle old string format for backward compatibility
       if (responses.q7 === 'basQuarterly' || responses.q7 === 'basMonthly') {
         const basService = serviceValuesAccounting.taxServices.bas[segment];

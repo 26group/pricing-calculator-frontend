@@ -20,13 +20,19 @@ const responsesSlice = createSlice({
   initialState,
   reducers: {
     setResponses: (state, action) => {
+      // Preserve pricing-related keys
+      const preservedKeys = ['questionsPricing', 'serviceCatalogPricing', 'serviceSelections', 'questionsOnceOffFee', 'serviceCatalogOnceOffFee', 'clientName'];
+      
       Object.keys(state).forEach((key) => { 
-        if (key !== 'questionsPricing' && key !== 'serviceCatalogPricing' && key !== 'serviceSelections' && key !== 'questionsOnceOffFee' && key !== 'serviceCatalogOnceOffFee') {
+        if (!preservedKeys.includes(key)) {
           delete state[key];
         }
       });
       Object.entries(action.payload).forEach(([key, value]) => {
-        state[key] = value;
+        // Don't overwrite preserved keys from payload (they might have stale values)
+        if (!preservedKeys.includes(key)) {
+          state[key] = value;
+        }
       });
     },
     updateResponse: (state, action) => {

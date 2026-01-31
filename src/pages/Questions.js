@@ -2050,29 +2050,41 @@ export default function Questions() {
                     let updatedIas = responses[question.id]?.ias;
                     let updatedNo = responses[question.id]?.no;
                     
-                    // Check what changed
-                    newValue.forEach((val) => {
-                      if (basOptions.includes(val)) {
-                        updatedBas = val;
-                      } else if (val === iasValue) {
-                        updatedIas = val;
-                      } else if (val === noValue) {
-                        updatedNo = val;
-                      }
-                    });
+                    // Check what was added (newly selected)
+                    const addedValues = newValue.filter(val => !currentSelections.includes(val));
                     
-                    // Check what was removed
-                    currentSelections.forEach((val) => {
-                      if (!newValue.includes(val)) {
+                    // If "No" was just selected, clear BAS and IAS
+                    if (addedValues.includes(noValue)) {
+                      updatedBas = '';
+                      updatedIas = undefined;
+                      updatedNo = noValue;
+                    } else {
+                      // Check what changed
+                      newValue.forEach((val) => {
                         if (basOptions.includes(val)) {
-                          updatedBas = '';
+                          updatedBas = val;
+                          updatedNo = undefined; // Clear "No" when BAS is selected
                         } else if (val === iasValue) {
-                          updatedIas = undefined;
+                          updatedIas = val;
+                          updatedNo = undefined; // Clear "No" when IAS is selected
                         } else if (val === noValue) {
-                          updatedNo = undefined;
+                          updatedNo = val;
                         }
-                      }
-                    });
+                      });
+                      
+                      // Check what was removed
+                      currentSelections.forEach((val) => {
+                        if (!newValue.includes(val)) {
+                          if (basOptions.includes(val)) {
+                            updatedBas = '';
+                          } else if (val === iasValue) {
+                            updatedIas = undefined;
+                          } else if (val === noValue) {
+                            updatedNo = undefined;
+                          }
+                        }
+                      });
+                    }
                     
                     const updatedValue = {
                       ...responses[question.id],
@@ -2486,20 +2498,16 @@ export default function Questions() {
   const combinedOnceOffTotal = totalOnceOffFee + serviceCatalogOnceOffFee;
 
   useEffect(() => {
+    console.log('DEBUG: Dispatching questionsPricing:', totalMonthlyPrice);
     if (typeof totalMonthlyPrice === 'number' && !isNaN(totalMonthlyPrice)) {
-      const action = setQuestionsPricing(totalMonthlyPrice);
-      if (action && action.type) {
-        dispatch(action);
-      }
+      dispatch(setQuestionsPricing(totalMonthlyPrice));
     }
   }, [totalMonthlyPrice, dispatch]);
 
   useEffect(() => {
+    console.log('DEBUG: Dispatching questionsOnceOffFee:', totalOnceOffFee);
     if (typeof totalOnceOffFee === 'number' && !isNaN(totalOnceOffFee)) {
-      const action = setQuestionsOnceOffFee(totalOnceOffFee);
-      if (action && action.type) {
-        dispatch(action);
-      }
+      dispatch(setQuestionsOnceOffFee(totalOnceOffFee));
     }
   }, [totalOnceOffFee, dispatch]);
 

@@ -63,6 +63,11 @@ export default function PricingQuote() {
   const silverMonthly = questionsPricing + serviceCatalogPricing;
   const goldMonthly = calculateGoldMonthlyPricing();
 
+  // Debug logging
+  console.log('PricingQuote - questionsPricing:', questionsPricing, 'questionsOnceOffFee:', questionsOnceOffFee, 'bronzeMonthly:', bronzeMonthly);
+  console.log('PricingQuote - Full Redux state questionResponses:', questionResponses);
+  console.log('PricingQuote - q4 value:', questionResponses.q4, 'q7 value:', questionResponses.q7);
+
   // Check if tax services are included (based on q4, q5, q6, q16, q17)
   const hasTaxServices =
     (questionResponses.q4 && questionResponses.q4 !== 'no') ||
