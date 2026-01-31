@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { ThemeProvider, CssBaseline, AppBar, Toolbar, Button, Typography, Dialog, DialogTitle, DialogContent, DialogActions, TextField } from '@mui/material';
-import { BrowserRouter, Routes, Route, Link, useNavigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { loginSuccess, logout } from './features/auth/authSlice';
 import { setClientName } from './features/questions/responsesSlice';
-import { useAuth } from '@workos-inc/authkit-react';
+import { useAuth0 } from '@auth0/auth0-react';
 import { createPrice } from './services/priceApi';
 import theme from './theme';
 import Home from './pages/Home';
@@ -13,6 +13,11 @@ import Questions from './pages/Questions';
 import ServiceCatalog from './pages/ServiceCatalog';
 import Pricing from './pages/Pricing';
 import PricingQuote from './pages/PricingQuote';
+<<<<<<< Updated upstream
+=======
+import ServiceValuesEditor from './pages/ServiceValuesEditor';
+import Onboarding from './pages/Onboarding';
+>>>>>>> Stashed changes
 import Login from './features/auth/Login';
 import ProtectedRoute from './features/auth/ProtectedRoute';
 
@@ -20,17 +25,23 @@ function AppContent() {
   const storedUser = useSelector((state) => state.auth.user);
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { user, isLoading, signOut } = useAuth();
+  const location = useLocation();
+  const { user, isLoading, logout: auth0Logout } = useAuth0();
   const [openModal, setOpenModal] = useState(false);
   const [clientNameInput, setClientNameInput] = useState('');
   const [isCreating, setIsCreating] = useState(false);
+  const [onboardingComplete, setOnboardingComplete] = useState(null);
 
   useEffect(() => {
     if (isLoading) return;
 
-    if (user && storedUser?.id !== user.id) {
-      dispatch(loginSuccess(user));
-      // Get JWT token from backend for this WorkOS user
+    if (user && storedUser?.id !== user.sub) {
+      dispatch(loginSuccess({
+        id: user.sub,
+        email: user.email,
+        name: user.name,
+      }));
+      // Get JWT token from backend for this Auth0 user
       getJWTToken(user);
     }
 
@@ -41,17 +52,52 @@ function AppContent() {
     }
   }, [dispatch, isLoading, storedUser, user]);
 
-  const getJWTToken = async (workosUser) => {
+  // Check onboarding status when user logs in
+  useEffect(() => {
+    const checkOnboardingStatus = async () => {
+      const token = localStorage.getItem('token');
+      if (!token || !user) {
+        setOnboardingComplete(null);
+        return;
+      }
+
+      try {
+        const response = await fetch('http://localhost:4000/v1/organisations/me', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (response.ok) {
+          setOnboardingComplete(true);
+        } else if (response.status === 404) {
+          setOnboardingComplete(false);
+          // Redirect to onboarding if not on login page
+          if (location.pathname !== '/onboarding' && location.pathname !== '/login') {
+            navigate('/onboarding');
+          }
+        }
+      } catch (error) {
+        console.error('Error checking onboarding status:', error);
+      }
+    };
+
+    if (user && localStorage.getItem('token')) {
+      checkOnboardingStatus();
+    }
+  }, [user, navigate, location.pathname]);
+
+  const getJWTToken = async (auth0User) => {
     try {
-      // Get the ID token from WorkOS
-      const response = await fetch('http://localhost:4000/v1/auth/workos-callback', {
+      // Get the ID token from Auth0
+      const response = await fetch('http://localhost:4000/v1/auth/auth0-callback', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          workosUserId: workosUser.id,
-          email: workosUser.email,
+          auth0UserId: auth0User.sub,
+          email: auth0User.email,
         }),
       });
 
@@ -66,7 +112,7 @@ function AppContent() {
     }
   };
 
-  const activeUser = user ?? storedUser;
+  const activeUser = user ? { id: user.sub, email: user.email, name: user.name } : storedUser;
 
   const handleNewPriceClick = () => {
     setOpenModal(true);
@@ -114,7 +160,7 @@ function AppContent() {
           {activeUser && (
             <>
               <Typography sx={{ flexGrow: 1, ml: 2 }}>{activeUser.email}</Typography>
-              <Button color="inherit" onClick={() => signOut({ returnTo: window.location.origin })}>
+              <Button color="inherit" onClick={() => auth0Logout({ logoutParams: { returnTo: window.location.origin } })}>
                 Logout
               </Button>
             </>
@@ -129,6 +175,11 @@ function AppContent() {
           <Route path="/services" element={<ServiceCatalog />} />
           <Route path="/pricing" element={<Pricing />} />
           <Route path="/pricing-quote" element={<PricingQuote />} />
+<<<<<<< Updated upstream
+=======
+          <Route path="/service-values-editor" element={<ProtectedRoute><ServiceValuesEditor /></ProtectedRoute>} />
+          <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
+>>>>>>> Stashed changes
           <Route path="/login" element={<Login />} />
         </Routes>
       </div>

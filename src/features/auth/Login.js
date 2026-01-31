@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { Button, Stack, Typography, Container, TextField, Alert, CircularProgress } from '@mui/material';
-import { useAuth } from '@workos-inc/authkit-react';
+import { useAuth0 } from '@auth0/auth0-react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { loginSuccess, setToken } from './authSlice';
 
 export default function Login() {
-  const { user, isLoading, signIn } = useAuth();
+  const { user, isLoading, loginWithRedirect } = useAuth0();
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const [testEmail, setTestEmail] = useState('');
@@ -14,7 +14,15 @@ export default function Login() {
   const [testError, setTestError] = useState('');
 
   const handleLogin = () => {
-    signIn();
+    loginWithRedirect();
+  };
+
+  const handleSignUp = () => {
+    loginWithRedirect({
+      authorizationParams: {
+        screen_hint: 'signup',
+      },
+    });
   };
 
   const handleTestLogin = async () => {
@@ -29,13 +37,13 @@ export default function Login() {
       
       console.log('🔐 Starting test login with email:', testEmail);
       
-      const response = await fetch('http://localhost:4000/v1/auth/workos-callback', {
+      const response = await fetch('http://localhost:4000/v1/auth/auth0-callback', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          workosUserId: 'test-' + Date.now(),
+          auth0UserId: 'test-' + Date.now(),
           email: testEmail,
         }),
       });
@@ -93,7 +101,17 @@ export default function Login() {
           disabled={isLoading}
           fullWidth
         >
-          Continue with WorkOS
+          Continue with Auth0
+        </Button>
+
+        <Button 
+          variant="outlined" 
+          size="large" 
+          onClick={handleSignUp} 
+          disabled={isLoading}
+          fullWidth
+        >
+          Sign Up
         </Button>
 
         <Typography variant="body2" color="textSecondary" sx={{ my: 2 }}>

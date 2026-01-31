@@ -1,5 +1,5 @@
 {
-  "name": "react-mui-redux-router-workos",
+  "name": "react-mui-redux-router-auth0",
   "version": "1.0.0",
   "private": true,
   "dependencies": {
@@ -8,7 +8,7 @@
     "@mui/icons-material": "^6.5.0",
     "@mui/material": "^6.0.0",
     "@reduxjs/toolkit": "^2.2.0",
-    "@workos-inc/authkit-react": "^0.13.0",
+    "@auth0/auth0-react": "^2.2.4",
     "axios": "^1.13.2",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
