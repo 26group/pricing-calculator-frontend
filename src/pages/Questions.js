@@ -115,6 +115,7 @@ const questionData = [
       { label: 'BAS Monthly', value: 'basMonthly' },
     ],
     iasOption: { label: 'IAS monthly reporting', value: 'iasMonthly' },
+    noOption: { label: 'No', value: 'no' },
   },
   {
     id: 'q8',
@@ -325,6 +326,7 @@ const questionData = [
     options: [
       { label: 'Annual returns', value: 'annualReturns' },
       { label: 'Detail changes', value: 'detailChanges' },
+      { label: 'No', value: 'no' },
     ],
   },
   {
@@ -334,6 +336,7 @@ const questionData = [
     options: [
       { label: 'Basic plans', value: 'basicPlans' },
       { label: 'Longer-term & hardship plans', value: 'hardshipPlans' },
+      { label: 'No', value: 'no' },
     ],
   },
   {
@@ -341,20 +344,20 @@ const questionData = [
     prompt: '28. Do they require prior year to be lodged?',
     type: 'inputGroup',
     options: [
-      { label: 'Yes - please provide # of Business returns', value: 'business', control: 'number' },
-      { label: 'Yes - please provide # of Individuals', value: 'individuals', control: 'number' },
-      { label: 'Yes - please provide # of BAS', value: 'bas', control: 'number' },
-      { label: 'Yes - please provide # of SMSF', value: 'smsf', control: 'number' },
-      { label: 'Yes - please provide # of IAS', value: 'ias', control: 'number' },
-      { label: 'Yes - please provide # of FBT', value: 'fbt', control: 'number' },
-      { label: 'Yes - please provide # of TPAR', value: 'tpar', control: 'number' },
-      { label: 'Yes - please provide # of Workers comp', value: 'workersComp', control: 'number' },
-      { label: 'Yes - please provide # of Super lodgment', value: 'super', control: 'number' },
-      { label: 'Yes - please provide # of STP EOY', value: 'stpEoy', control: 'number' },
-      { label: 'Yes - please provide # of LSL forms', value: 'lslForms', control: 'number' },
-      { label: 'Yes - please provide # of Payroll Tax', value: 'payrollTax', control: 'number' },
-      { label: 'Yes - please provide # of ASIC', value: 'asic', control: 'number' },
-      { label: 'No', value: 'none', control: 'checkbox' },
+      { label: 'Yes - provide # of Business returns', value: 'business', control: 'number' },
+      { label: 'Yes - provide # of Individuals', value: 'individuals', control: 'number' },
+      { label: 'Yes - provide # of BAS', value: 'bas', control: 'number' },
+      { label: 'Yes - provide # of SMSF', value: 'smsf', control: 'number' },
+      { label: 'Yes - provide # of IAS', value: 'ias', control: 'number' },
+      { label: 'Yes - provide # of FBT', value: 'fbt', control: 'number' },
+      { label: 'Yes - provide # of TPAR', value: 'tpar', control: 'number' },
+      { label: 'Yes - provide # of Workers comp', value: 'workersComp', control: 'number' },
+      { label: 'Yes - provide # of Super lodgment', value: 'super', control: 'number' },
+      { label: 'Yes - provide # of STP EOY', value: 'stpEoy', control: 'number' },
+      { label: 'Yes - provide # of LSL forms', value: 'lslForms', control: 'number' },
+      { label: 'Yes - provide # of Payroll Tax', value: 'payrollTax', control: 'number' },
+      { label: 'Yes - provide # of ASIC', value: 'asic', control: 'number' },
+      { label: 'No', value: 'none', control: 'button' },
     ],
   },
 ];
@@ -1176,7 +1179,7 @@ const buildInitialState = () => {
     }
 
     if (question.type === 'q7-custom') {
-      acc[question.id] = { bas: '', ias: undefined };
+      acc[question.id] = { bas: '', ias: undefined, no: undefined };
       return acc;
     }
 
@@ -1219,7 +1222,7 @@ export default function Questions() {
       const merged = { ...built, ...storeResponses };
       // Migrate q7 from old string format to new object format if needed
       if (typeof merged.q7 === 'string') {
-        merged.q7 = { bas: '', ias: undefined };
+        merged.q7 = { bas: '', ias: undefined, no: undefined };
       }
       return merged;
     }
@@ -1923,6 +1926,8 @@ export default function Questions() {
       [questionId]: {
         ...prev[questionId],
         [optionValue]: event.target.value,
+        // Deselect "No" option if a value is entered into any input field
+        ...(event.target.value && prev[questionId].none ? { none: false } : {}),
       },
     }));
   };
@@ -2023,6 +2028,7 @@ export default function Questions() {
                   value={[
                     ...(responses[question.id]?.bas ? [responses[question.id].bas] : []),
                     ...(responses[question.id]?.ias ? [responses[question.id].ias] : []),
+                    ...(responses[question.id]?.no ? [responses[question.id].no] : []),
                   ]}
                   onChange={(event, newValue) => {
                     setFocusedQuestion(question.id);
@@ -2031,15 +2037,18 @@ export default function Questions() {
                     const currentSelections = [
                       ...(responses[question.id]?.bas ? [responses[question.id].bas] : []),
                       ...(responses[question.id]?.ias ? [responses[question.id].ias] : []),
+                      ...(responses[question.id]?.no ? [responses[question.id].no] : []),
                     ];
                     
                     const basOptions = question.basOptions
                       .filter(opt => !opt.showWhen || opt.showWhen(responses))
                       .map(opt => opt.value);
                     const iasValue = question.iasOption.value;
+                    const noValue = question.noOption.value;
                     
                     let updatedBas = responses[question.id]?.bas || '';
                     let updatedIas = responses[question.id]?.ias;
+                    let updatedNo = responses[question.id]?.no;
                     
                     // Check what changed
                     newValue.forEach((val) => {
@@ -2047,6 +2056,8 @@ export default function Questions() {
                         updatedBas = val;
                       } else if (val === iasValue) {
                         updatedIas = val;
+                      } else if (val === noValue) {
+                        updatedNo = val;
                       }
                     });
                     
@@ -2057,6 +2068,8 @@ export default function Questions() {
                           updatedBas = '';
                         } else if (val === iasValue) {
                           updatedIas = undefined;
+                        } else if (val === noValue) {
+                          updatedNo = undefined;
                         }
                       }
                     });
@@ -2065,6 +2078,7 @@ export default function Questions() {
                       ...responses[question.id],
                       bas: updatedBas,
                       ias: updatedIas,
+                      no: updatedNo,
                     };
                     setResponses({ ...responses, [question.id]: updatedValue });
                   }}
@@ -2094,6 +2108,7 @@ export default function Questions() {
                         backgroundColor: '#f5f5f5',
                         color: '#ccc',
                         opacity: 0.6,
+                        border: '1px solid #d0d0d0',
                       },
                     },
                   }}
@@ -2137,6 +2152,22 @@ export default function Questions() {
                   >
                     <Typography variant="body2" sx={{ fontWeight: 700 }}>{question.iasOption.label}</Typography>
                   </ToggleButton>
+                  {/* No Option */}
+                  <ToggleButton 
+                    key={question.noOption.value} 
+                    value={question.noOption.value}
+                    sx={{
+                      minWidth: '160px',
+                      flex: '0 1 160px',
+                      whiteSpace: 'normal',
+                      wordBreak: 'break-word',
+                      py: 1.2,
+                      px: 1.5,
+                      fontSize: '0.9rem',
+                    }}
+                  >
+                    <Typography variant="body2" sx={{ fontWeight: 700 }}>{question.noOption.label}</Typography>
+                  </ToggleButton>
                 </ToggleButtonGroup>
               </Stack>
             )}
@@ -2176,6 +2207,7 @@ export default function Questions() {
                       backgroundColor: '#f5f5f5',
                       color: '#ccc',
                       opacity: 0.6,
+                      border: '1px solid #d0d0d0',
                     },
                   },
                 }}
@@ -2323,6 +2355,67 @@ export default function Questions() {
                         transition: 'all 0.2s ease-in-out',
                       }}
                     />
+                  ) : option.control === 'button' ? (
+                    <div 
+                      key={option.value}
+                      style={{ display: 'block', width: '100%', maxWidth: '400px' }}
+                    >
+                      <Button
+                        variant="outlined"
+                        fullWidth
+                        onClick={() => {
+                          setFocusedQuestion(question.id);
+                          const isSelectingNo = !responses[question.id][option.value];
+                          if (isSelectingNo) {
+                            // If selecting "No", clear all input fields
+                            const clearedInputs = {};
+                            question.options.forEach((opt) => {
+                              if (opt.control !== 'button' && opt.control !== 'checkbox') {
+                                clearedInputs[opt.value] = '';
+                              }
+                            });
+                            setResponses({
+                              ...responses,
+                              [question.id]: {
+                                ...responses[question.id],
+                                ...clearedInputs,
+                                [option.value]: true,
+                              },
+                            });
+                          } else {
+                            // If deselecting "No", just toggle it
+                            setResponses({
+                              ...responses,
+                              [question.id]: {
+                                ...responses[question.id],
+                                [option.value]: false,
+                              },
+                            });
+                          }
+                        }}
+                        disabled={question.id !== 'q2' && !responses.q2}
+                        sx={{
+                          transition: 'all 0.2s ease-in-out',
+                          border: '1px solid #d0d0d0',
+                          color: responses[question.id][option.value] ? '#fff' : '#666',
+                          backgroundColor: responses[question.id][option.value] ? '#002060' : 'transparent',
+                          '&:hover:not(.Mui-disabled)': {
+                            backgroundColor: responses[question.id][option.value] ? '#001a47' : '#f5f5f5',
+                            borderColor: '#002060',
+                          },
+                          '&.Mui-disabled': {
+                            backgroundColor: '#f5f5f5',
+                            color: '#ccc',
+                            opacity: 0.6,
+                            border: '1px solid #d0d0d0',
+                          },
+                          textTransform: 'none',
+                          fontWeight: 600,
+                        }}
+                      >
+                        {option.label}
+                      </Button>
+                    </div>
                   ) : (
                     <div 
                       key={option.value}
@@ -2507,7 +2600,7 @@ export default function Questions() {
               <Button
                 variant="contained"
                 color="primary"
-                onClick={() => navigate('/services')}
+                onClick={() => navigate('/pricing-quote')}
                 sx={{
                   flex: { xs: 1, sm: 'initial' },
                   transition: 'all 0.2s ease-in-out',

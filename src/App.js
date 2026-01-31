@@ -13,6 +13,7 @@ import Questions from './pages/Questions';
 import ServiceCatalog from './pages/ServiceCatalog';
 import Pricing from './pages/Pricing';
 import PricingQuote from './pages/PricingQuote';
+import ServiceValuesEditor from './pages/ServiceValuesEditor';
 import Login from './features/auth/Login';
 import ProtectedRoute from './features/auth/ProtectedRoute';
 
@@ -109,8 +110,8 @@ function AppContent() {
       <AppBar position="fixed" sx={{ boxShadow: 'none' }}>
         <Toolbar>
           <Button color="inherit" component={Link} to="/questions">Questions</Button>
-          <Button color="inherit" component={Link} to="/services">Services</Button>
           <Button color="inherit" component={Link} to="/pricing-quote">Pricing</Button>
+          <Button color="inherit" component={Link} to="/service-values-editor">Settings</Button>
           {activeUser && (
             <>
               <Typography sx={{ flexGrow: 1, ml: 2 }}>{activeUser.email}</Typography>
@@ -126,9 +127,8 @@ function AppContent() {
           <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
           <Route path="/about" element={<About />} />
           <Route path="/questions" element={<Questions />} />
-          <Route path="/services" element={<ServiceCatalog />} />
-          <Route path="/pricing" element={<Pricing />} />
           <Route path="/pricing-quote" element={<PricingQuote />} />
+          <Route path="/service-values-editor" element={<ProtectedRoute><ServiceValuesEditor /></ProtectedRoute>} />
           <Route path="/login" element={<Login />} />
         </Routes>
       </div>
