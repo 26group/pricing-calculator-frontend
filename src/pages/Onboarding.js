@@ -86,8 +86,8 @@ export default function Onboarding() {
         throw new Error(data.message || `Failed to create organisation (${response.status})`);
       }
 
-      // Successfully created - redirect to home
-      navigate('/');
+      // Successfully created - redirect to plan selection
+      navigate('/onboarding/select-plan');
     } catch (err) {
       setError(err.message);
     } finally {

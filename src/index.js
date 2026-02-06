@@ -20,7 +20,6 @@ function Root() {
 
   const authorizationParams = {
     redirect_uri: redirectUri,
-    prompt: 'login',  // Skip consent screen
   };
   
   // Only include audience if it's set and not a placeholder

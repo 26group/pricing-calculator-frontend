@@ -2095,37 +2095,37 @@ export default function Questions() {
                     setResponses({ ...responses, [question.id]: updatedValue });
                   }}
                   size="medium"
-                  sx={{
-                    flexWrap: 'wrap',
-                    gap: 1,
-                    display: 'flex',
-                    '& .MuiToggleButton-root': {
-                      transition: 'all 0.2s ease-in-out',
-                      border: '1px solid #d0d0d0',
-                      color: '#666',
-                      '&:hover:not(.Mui-disabled)': {
-                        backgroundColor: '#f5f5f5',
-                        borderColor: '#002060',
-                      },
-                      '&.Mui-selected': {
-                        backgroundColor: '#002060',
-                        color: '#fff',
-                        borderColor: '#002060',
-                        fontWeight: 600,
-                        '&:hover': {
-                          backgroundColor: '#001a47',
-                        },
-                      },
-                      '&.Mui-disabled': {
-                        backgroundColor: '#f5f5f5',
-                        color: '#ccc',
-                        opacity: 0.6,
-                        border: '1px solid #d0d0d0',
+                sx={{
+                  flexWrap: 'wrap',
+                  gap: 1,
+                  display: 'flex',
+                  '& .MuiToggleButton-root': {
+                    transition: 'all 0.2s ease-in-out',
+                    border: '1px solid #d0d0d0',
+                    color: '#666',
+                    '&:hover:not(.Mui-disabled)': {
+                      backgroundColor: '#f5f5f5',
+                      borderColor: '#002060',
+                    },
+                    '&.Mui-selected': {
+                      backgroundColor: '#002060',
+                      color: '#fff',
+                      borderColor: '#002060',
+                      fontWeight: 600,
+                      '&:hover': {
+                        backgroundColor: '#001a47',
                       },
                     },
-                  }}
-                >
-                  {/* BAS Options */}
+                    '&.Mui-disabled': {
+                      backgroundColor: '#f5f5f5',
+                      color: '#ccc',
+                      opacity: 0.6,
+                      border: '1px solid #d0d0d0',
+                    },
+                  },
+                }}
+              >
+                {/* BAS Options */}
                   {question.basOptions.map((option) => {
                     if (option.showWhen && !option.showWhen(responses)) {
                       return null;
@@ -2586,7 +2586,7 @@ export default function Questions() {
             spacing={2} 
             sx={{ alignItems: { xs: 'stretch', sm: 'center' }, justifyContent: 'space-between' }}
           >
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={3} sx={{ alignItems: { xs: 'flex-start', sm: 'center' } }}>
+            <Stack direction={{ xs: 'row', sm: 'row' }} spacing={3} sx={{ alignItems: { xs: 'center', sm: 'center' }, justifyContent: { xs: 'space-between', sm: 'flex-start' }, flex: { xs: 1, sm: 'initial' } }}>
               <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
                 <Typography variant="body2" sx={{ color: '#666', whiteSpace: 'nowrap', fontWeight: 600 }}>
                   Monthly:
