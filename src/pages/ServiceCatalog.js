@@ -32,7 +32,7 @@ const titleize = (value) =>
 const resolveServiceValue = (serviceEntry, revenueSelection) => {
   if (!serviceEntry) return undefined;
 
-  if (serviceEntry.code) {
+  if (serviceEntry.inclusion) {
     return serviceEntry;
   }
 
@@ -98,8 +98,8 @@ const shouldShowCategory = (categoryKey, responses) => {
 const hasSegmentPricing = (serviceEntry, revenueSelection) => {
   if (!serviceEntry) return true; // Show by default if no entry
   
-  // If service has a code at root level, it's not segment-based
-  if (serviceEntry.code) return true;
+  // If service has an inclusion at root level, it's not segment-based
+  if (serviceEntry.inclusion) return true;
   
   // Check if this is a segment-based service
   const potentialEntries = Object.entries(serviceEntry);
@@ -316,7 +316,7 @@ export default function ServiceCatalog() {
                       </ToggleButtonGroup>
                       {selection === 'yes' && resolvedService && (
                         <Typography variant="body2" color="text.secondary">
-                          Selected service: {resolvedService.inclusion} (Code {resolvedService.code}) — Monthly{' '}
+                          Selected service: {resolvedService.inclusion} — Monthly{' '}
                           {formatCurrency(resolvedService.monthly)}, Yearly {formatCurrency(resolvedService.yearly)}
                         </Typography>
                       )}

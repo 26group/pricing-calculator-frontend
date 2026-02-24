@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Container,
   Typography,
@@ -23,11 +23,14 @@ import {
   MenuItem,
   Alert,
   CircularProgress,
+  Chip,
 } from '@mui/material';
 import CheckIcon from '@mui/icons-material/Check';
+import CloudDoneIcon from '@mui/icons-material/CloudDone';
+import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import { useSelector } from 'react-redux';
 import { calculateGoldMonthlyPricing } from '../utils/calculateGoldPricing';
-import { createPrice } from '../services/priceApi';
+import { createPrice, updatePrice } from '../services/priceApi';
 
 const formatCurrency = (amount) =>
   amount == null
@@ -50,6 +53,7 @@ export default function PricingQuote() {
   const questionsOnceOffFee = useSelector((state) => state.responses?.questionsOnceOffFee || 0);
   const serviceCatalogOnceOffFee = useSelector((state) => state.responses?.serviceCatalogOnceOffFee || 0);
   const clientName = useSelector((state) => state.responses?.clientName || '');
+  const activePriceId = useSelector((state) => state.responses?.activePriceId);
 
   const [openSaveDialog, setOpenSaveDialog] = useState(false);
   const [clientNameInput, setClientNameInput] = useState(clientName);
@@ -58,10 +62,49 @@ export default function PricingQuote() {
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
   const [saveSuccess, setSaveSuccess] = useState('');
+  const [autoSaveStatus, setAutoSaveStatus] = useState('idle'); // 'idle' | 'saving' | 'saved' | 'error'
+  const autoSaveTimerRef = useRef(null);
 
   const bronzeMonthly = questionsPricing + serviceCatalogPricing;
   const silverMonthly = questionsPricing + serviceCatalogPricing;
   const goldMonthly = calculateGoldMonthlyPricing();
+
+  // Auto-save pricing values to existing price record
+  const autoSavePricing = useCallback(async () => {
+    if (!activePriceId) return;
+    try {
+      setAutoSaveStatus('saving');
+      // Extract revenue segment from Q2
+      const revenueSegmentValue = questionResponses?.q2 || undefined;
+      console.log('💾 Auto-saving pricing with Q2:', questionResponses?.q2, 'Revenue Segment:', revenueSegmentValue);
+      await updatePrice(activePriceId, {
+        questionsPricing,
+        questionsOnceOffFee,
+        serviceCatalogPricing,
+        serviceCatalogOnceOffFee,
+        serviceSelections,
+        bronzeMonthly: questionsPricing + serviceCatalogPricing,
+        silverMonthly: questionsPricing + serviceCatalogPricing,
+        goldMonthly: calculateGoldMonthlyPricing(),
+        totalMonthly: questionsPricing + serviceCatalogPricing,
+        totalOnceOff: questionsOnceOffFee + serviceCatalogOnceOffFee,
+        revenueSegment: revenueSegmentValue,
+      });
+      setAutoSaveStatus('saved');
+      setTimeout(() => setAutoSaveStatus('idle'), 2000);
+    } catch (error) {
+      console.error('Auto-save pricing failed:', error);
+      setAutoSaveStatus('error');
+      setTimeout(() => setAutoSaveStatus('idle'), 3000);
+    }
+  }, [activePriceId, questionsPricing, questionsOnceOffFee, serviceCatalogPricing, serviceCatalogOnceOffFee, serviceSelections, questionResponses]);
+
+  useEffect(() => {
+    if (!activePriceId) return;
+    if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
+    autoSaveTimerRef.current = setTimeout(() => autoSavePricing(), 1500);
+    return () => { if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current); };
+  }, [activePriceId, autoSavePricing]);
 
   // Debug logging
   console.log('PricingQuote - questionsPricing:', questionsPricing, 'questionsOnceOffFee:', questionsOnceOffFee, 'bronzeMonthly:', bronzeMonthly);
@@ -160,6 +203,15 @@ export default function PricingQuote() {
   const corporateSecretarialSilver = hasCorporateSecretarial ? <CheckMark /> : <NotIncluded />;
   const corporateSecretarialGold = <CheckMark />; // Gold always includes all services
 
+  // Set revenue segment from Q2 response
+  useEffect(() => {
+    console.log('🔄 useEffect checking Q2 - questionResponses.q2:', questionResponses?.q2);
+    if (questionResponses?.q2) {
+      console.log('✅ Setting revenueSegment to:', questionResponses.q2);
+      setRevenueSegment(questionResponses.q2);
+    }
+  }, [questionResponses?.q2]);
+
   const handleOpenSaveDialog = () => {
     setSaveError('');
     setSaveSuccess('');
@@ -185,6 +237,7 @@ export default function PricingQuote() {
     setSaveSuccess('');
 
     try {
+      console.log('💾 Manual save - revenueSegment state:', revenueSegment, 'Q2 from responses:', questionResponses?.q2);
       const priceData = {
         clientName: clientNameInput,
         revenueSegment,
@@ -202,7 +255,11 @@ export default function PricingQuote() {
         totalOnceOff: questionsOnceOffFee + serviceCatalogOnceOffFee,
       };
 
-      await createPrice(priceData);
+      if (activePriceId) {
+        await updatePrice(activePriceId, priceData);
+      } else {
+        await createPrice(priceData);
+      }
       setSaveSuccess('Price saved successfully!');
       setTimeout(() => {
         handleCloseSaveDialog();
@@ -266,6 +323,17 @@ export default function PricingQuote() {
       <Typography variant="h3" sx={{ mb: 2, textAlign: 'center', fontWeight: 'bold' }}>
         Pricing Quote for {clientName}
       </Typography>
+      <Stack direction="row" justifyContent="center" spacing={1} sx={{ mb: 1 }}>
+        {activePriceId && autoSaveStatus === 'saving' && (
+          <Chip icon={<CloudUploadIcon />} label="Saving..." size="small" color="info" variant="outlined" />
+        )}
+        {activePriceId && autoSaveStatus === 'saved' && (
+          <Chip icon={<CloudDoneIcon />} label="Saved" size="small" color="success" variant="outlined" />
+        )}
+        {activePriceId && autoSaveStatus === 'error' && (
+          <Chip label="Save failed" size="small" color="error" variant="outlined" />
+        )}
+      </Stack>
       <Typography variant="body1" sx={{ mb: 6, textAlign: 'center', color: 'text.secondary' }}>
         Recommended pricing plans based on your requirements
       </Typography>

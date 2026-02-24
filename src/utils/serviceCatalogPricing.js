@@ -9,7 +9,7 @@ import { segmentForServices } from '../pages/Questions';
 export const resolveServiceValue = (serviceEntry, revenueSelection) => {
   if (!serviceEntry) return undefined;
 
-  if (serviceEntry.code) {
+  if (serviceEntry.inclusion) {
     return serviceEntry;
   }
 
@@ -29,7 +29,7 @@ export const resolveServiceValue = (serviceEntry, revenueSelection) => {
     return undefined;
   }
 
-  const fallback = potentialEntries.find(([, value]) => value && typeof value === 'object' && value.code);
+  const fallback = potentialEntries.find(([, value]) => value && typeof value === 'object' && value.inclusion);
   return fallback ? fallback[1] : undefined;
 };
 

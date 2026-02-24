@@ -1,13 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { ThemeProvider, CssBaseline, AppBar, Toolbar, Button, Typography, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Menu, MenuItem } from '@mui/material';
+import { ThemeProvider, CssBaseline, AppBar, Toolbar, Button, Typography, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Menu, MenuItem, Box } from '@mui/material';
 import { BrowserRouter, Routes, Route, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
-import { loginSuccess, logout } from './features/auth/authSlice';
-import { setClientName } from './features/questions/responsesSlice';
+import { loginSuccess, logout, setOrganisation } from './features/auth/authSlice';
+import { setClientName, setActivePriceId, resetPriceState } from './features/questions/responsesSlice';
 import { useAuth0 } from '@auth0/auth0-react';
 import { createPrice } from './services/priceApi';
 import theme from './theme';
-import Home from './pages/Home';
 import About from './pages/About';
 import Questions from './pages/Questions';
 import ServiceCatalog from './pages/ServiceCatalog';
@@ -19,16 +18,19 @@ import SelectPlan from './pages/SelectPlan';
 import BillingSettings from './pages/BillingSettings';
 import UserManagement from './pages/UserManagement';
 import PaymentRequired from './pages/PaymentRequired';
+import InviteAccept from './pages/InviteAccept';
+import SavedPrices from './pages/SavedPrices';
 import Login from './features/auth/Login';
 import ProtectedRoute from './features/auth/ProtectedRoute';
 import SubscriptionGuard from './components/SubscriptionGuard';
 
 function AppContent() {
   const storedUser = useSelector((state) => state.auth.user);
+  const isOwner = useSelector((state) => state.auth.isOwner);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, isLoading, logout: auth0Logout } = useAuth0();
+  const { user, isLoading, isAuthenticated, logout: auth0Logout } = useAuth0();
   const [openModal, setOpenModal] = useState(false);
   const [clientNameInput, setClientNameInput] = useState('');
   const [isCreating, setIsCreating] = useState(false);
@@ -50,9 +52,26 @@ function AppContent() {
         },
       });
 
+      // Handle session expired
+      if (response.status === 401) {
+        localStorage.removeItem('token');
+        sessionStorage.setItem('sessionExpired', 'true');
+        sessionStorage.setItem('sessionExpiredMessage', 'Your session has expired. Please log in again.');
+        navigate('/login');
+        return;
+      }
+
       if (response.ok) {
         const data = await response.json();
+        console.log('📦 App.js org data:', { isOwner: data.isOwner, owner: data.owner, name: data.name });
         setOnboardingComplete(true);
+        
+        // Set organisation and owner status in Redux
+        dispatch(setOrganisation({
+          organisation: data,
+          isOwner: data.isOwner || false,
+        }));
+        
         // Check if subscription plan is selected
         if (!data.selectedPlanId) {
           // Organisation exists but no plan selected - redirect to plan selection
@@ -132,6 +151,21 @@ function AppContent() {
   };
 
   const activeUser = user ? { id: user.sub, email: user.email, name: user.name } : storedUser;
+  const isLoggedIn = isAuthenticated || !!storedUser || !!localStorage.getItem('token');
+
+  const handleLogout = () => {
+    // Clear local state
+    localStorage.removeItem('token');
+    dispatch(logout());
+    
+    if (isAuthenticated) {
+      // Auth0 logout
+      auth0Logout({ logoutParams: { returnTo: window.location.origin } });
+    } else {
+      // Non-Auth0 (test login) - just navigate to login
+      navigate('/login');
+    }
+  };
 
   const handleNewPriceClick = () => {
     setOpenModal(true);
@@ -146,11 +180,14 @@ function AppContent() {
     if (clientNameInput.trim()) {
       try {
         setIsCreating(true);
+        // Reset previous price state
+        dispatch(resetPriceState());
         const priceData = {
           clientName: clientNameInput,
         };
         const response = await createPrice(priceData);
         dispatch(setClientName(clientNameInput));
+        dispatch(setActivePriceId(response.id));
         setOpenModal(false);
         setClientNameInput('');
         setIsCreating(false);
@@ -182,18 +219,24 @@ function AppContent() {
 
   return (
     <>
-      <AppBar position="fixed" sx={{ boxShadow: 'none' }}>
+      {isLoggedIn && (
+      <AppBar position="fixed" sx={{ boxShadow: 'none', backdropFilter: 'blur(20px)', backgroundColor: 'rgba(255, 255, 255, 0.9)' }}>
         <Toolbar>
-          <Button color="inherit" component={Link} to="/questions">Questions</Button>
-          <Button color="inherit" component={Link} to="/pricing-quote">Pricing</Button>
+          <Button color="inherit" component={Link} to="/clients" sx={{ fontWeight: 600 }}>Client Quotes</Button>
+          <Box sx={{ flexGrow: 1 }} />
+          <Button variant="contained" size="small" onClick={handleNewPriceClick} sx={{ mr: 2 }}>Create Pricing</Button>
+          {activeUser?.email && (
+            <Typography sx={{ mr: 3, color: 'text.secondary', fontWeight: 500 }}>{activeUser.email}</Typography>
+          )}
           <Button 
             color="inherit" 
             onClick={handleSettingsClick}
             aria-controls={settingsMenuOpen ? 'settings-menu' : undefined}
             aria-haspopup="true"
             aria-expanded={settingsMenuOpen ? 'true' : undefined}
+            sx={{ fontWeight: 600 }}
           >
-            Settings
+            Menu
           </Button>
           <Menu
             id="settings-menu"
@@ -210,24 +253,21 @@ function AppContent() {
             <MenuItem onClick={() => { handleSettingsClose(); navigate('/settings/users'); }}>
               User Management
             </MenuItem>
+            <MenuItem onClick={() => { handleSettingsClose(); handleLogout(); }}>
+              Logout
+            </MenuItem>
           </Menu>
-          {activeUser && (
-            <>
-              <Typography sx={{ flexGrow: 1, ml: 2 }}>{activeUser.email}</Typography>
-              <Button color="inherit" onClick={() => auth0Logout({ logoutParams: { returnTo: window.location.origin } })}>
-                Logout
-              </Button>
-            </>
-          )}
         </Toolbar>
       </AppBar>
-      <div style={{ paddingTop: '64px' }}>
+      )}
+      <div style={{ paddingTop: isLoggedIn ? '64px' : '0px' }}>
         <SubscriptionGuard>
           <Routes>
-            <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
+            <Route path="/" element={<ProtectedRoute><SavedPrices /></ProtectedRoute>} />
             <Route path="/about" element={<About />} />
-            <Route path="/questions" element={<Questions />} />
-            <Route path="/pricing-quote" element={<PricingQuote />} />
+            <Route path="/clients" element={<ProtectedRoute><SavedPrices /></ProtectedRoute>} />
+            <Route path="/questions" element={<ProtectedRoute><Questions /></ProtectedRoute>} />
+            <Route path="/pricing-quote" element={<ProtectedRoute><PricingQuote /></ProtectedRoute>} />
             <Route path="/service-values-editor" element={<ProtectedRoute><ServiceValuesEditor /></ProtectedRoute>} />
             <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
             <Route path="/onboarding/select-plan" element={<ProtectedRoute><SelectPlan /></ProtectedRoute>} />
@@ -235,6 +275,7 @@ function AppContent() {
             <Route path="/settings/users" element={<ProtectedRoute><UserManagement /></ProtectedRoute>} />
             <Route path="/settings/select-plan" element={<ProtectedRoute><SelectPlan /></ProtectedRoute>} />
             <Route path="/payment-required" element={<ProtectedRoute><PaymentRequired /></ProtectedRoute>} />
+            <Route path="/invite/:token" element={<InviteAccept />} />
             <Route path="/login" element={<Login />} />
           </Routes>
         </SubscriptionGuard>

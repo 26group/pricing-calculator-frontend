@@ -16,7 +16,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { useAuth0 } from '@auth0/auth0-react';
 
-const steps = ['Create Organisation', 'Set Pricing Modifier'];
+const steps = ['Your Name', 'Create Organisation', 'Set Pricing Modifier'];
 
 const marks = [
   { value: -50, label: '-50%' },
@@ -34,13 +34,44 @@ export default function Onboarding() {
   const navigate = useNavigate();
   const { user } = useAuth0();
   const [activeStep, setActiveStep] = useState(0);
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [orgName, setOrgName] = useState('');
   const [pricingModifier, setPricingModifier] = useState(0);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [checkingName, setCheckingName] = useState(false);
 
-  const handleNext = () => {
+  const checkOrgNameAvailable = async (name) => {
+    const token = localStorage.getItem('token');
+    if (!token) return true; // Skip check if no token
+    
+    try {
+      const response = await fetch(`http://localhost:4000/v1/organisations/check-name?name=${encodeURIComponent(name)}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        return data.available;
+      }
+      return true; // Assume available if check fails
+    } catch (error) {
+      console.error('Error checking org name:', error);
+      return true; // Assume available if check fails
+    }
+  };
+
+  const handleNext = async () => {
     if (activeStep === 0) {
+      if (!firstName.trim() || !lastName.trim()) {
+        setError('Please enter both first and last name');
+        return;
+      }
+      setError('');
+    } else if (activeStep === 1) {
       if (!orgName.trim()) {
         setError('Please enter an organisation name');
         return;
@@ -49,6 +80,18 @@ export default function Onboarding() {
         setError('Organisation name must be at least 2 characters');
         return;
       }
+      
+      // Check if name is available
+      setCheckingName(true);
+      setError('');
+      const isAvailable = await checkOrgNameAvailable(orgName.trim());
+      setCheckingName(false);
+      
+      if (!isAvailable) {
+        setError('This organisation name is already taken. Please choose a different name.');
+        return;
+      }
+      
       setError('');
     }
     setActiveStep((prev) => prev + 1);
@@ -78,6 +121,8 @@ export default function Onboarding() {
         body: JSON.stringify({
           name: orgName.trim(),
           pricingModifier,
+          firstName: firstName.trim(),
+          lastName: lastName.trim(),
         }),
       });
 
@@ -101,8 +146,8 @@ export default function Onboarding() {
 
   return (
     <Container maxWidth="sm" sx={{ py: 8 }}>
-      <Paper elevation={3} sx={{ p: 4 }}>
-        <Typography variant="h4" component="h1" gutterBottom align="center">
+      <Paper elevation={0} sx={{ p: 5, borderRadius: '20px', boxShadow: '14px 17px 40px 4px rgba(112, 144, 176, 0.12)' }}>
+        <Typography variant="h4" component="h1" gutterBottom align="center" sx={{ fontWeight: 700 }}>
           Welcome{user?.name ? `, ${user.name}` : ''}!
         </Typography>
         <Typography variant="body1" color="text.secondary" align="center" sx={{ mb: 4 }}>
@@ -125,7 +170,31 @@ export default function Onboarding() {
 
         {activeStep === 0 && (
           <Box>
-            <Typography variant="h6" gutterBottom>
+            <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
+              What's your name?
+            </Typography>
+            <TextField
+              fullWidth
+              label="First Name"
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+              placeholder="John"
+              sx={{ mb: 2 }}
+              autoFocus
+            />
+            <TextField
+              fullWidth
+              label="Last Name"
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
+              placeholder="Doe"
+            />
+          </Box>
+        )}
+
+        {activeStep === 1 && (
+          <Box>
+            <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
               What's your organisation called?
             </Typography>
             <TextField
@@ -140,9 +209,9 @@ export default function Onboarding() {
           </Box>
         )}
 
-        {activeStep === 1 && (
+        {activeStep === 2 && (
           <Box>
-            <Typography variant="h6" gutterBottom>
+            <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
               Adjust your pricing modifier
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
@@ -165,13 +234,20 @@ export default function Onboarding() {
                 sx={{
                   '& .MuiSlider-valueLabel': {
                     backgroundColor: pricingModifier > 0 ? 'success.main' : pricingModifier < 0 ? 'error.main' : 'primary.main',
+                    borderRadius: '10px',
+                  },
+                  '& .MuiSlider-thumb': {
+                    backgroundColor: 'primary.main',
+                  },
+                  '& .MuiSlider-track': {
+                    background: 'linear-gradient(135deg, #868CFF 0%, #422AFB 100%)',
                   },
                 }}
               />
             </Box>
 
-            <Box sx={{ mt: 2, p: 2, bgcolor: 'grey.100', borderRadius: 1 }}>
-              <Typography variant="body2" align="center">
+            <Box sx={{ mt: 2, p: 2, bgcolor: 'background.default', borderRadius: '12px' }}>
+              <Typography variant="body2" align="center" sx={{ fontWeight: 500 }}>
                 {pricingModifier === 0 && 'Services will be priced at standard rates'}
                 {pricingModifier > 0 && `Services will be priced ${pricingModifier}% higher than standard`}
                 {pricingModifier < 0 && `Services will be priced ${Math.abs(pricingModifier)}% lower than standard`}
@@ -198,8 +274,13 @@ export default function Onboarding() {
               {loading ? 'Creating...' : 'Complete Setup'}
             </Button>
           ) : (
-            <Button variant="contained" onClick={handleNext}>
-              Next
+            <Button 
+              variant="contained" 
+              onClick={handleNext}
+              disabled={checkingName}
+              startIcon={checkingName ? <CircularProgress size={20} /> : null}
+            >
+              {checkingName ? 'Checking...' : 'Next'}
             </Button>
           )}
         </Box>

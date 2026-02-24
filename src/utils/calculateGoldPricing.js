@@ -19,10 +19,8 @@ export const calculateGoldMonthlyPricing = () => {
       // Handle nested segment values (micro, small, medium, large, etc.)
       Object.entries(serviceData).forEach(([segmentKey, segmentData]) => {
         if (
-          segmentKey !== 'code' &&
           segmentKey !== 'monthly' &&
           segmentKey !== 'yearly' &&
-          segmentKey !== 'quantity' &&
           segmentKey !== 'inclusion' &&
           segmentData &&
           typeof segmentData === 'object' &&

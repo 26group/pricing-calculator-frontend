@@ -1,19 +1,25 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Stack, Typography, Container, TextField, Alert, CircularProgress } from '@mui/material';
+import { Button, Stack, Typography, Container, Alert, CircularProgress } from '@mui/material';
 import { useAuth0 } from '@auth0/auth0-react';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
-import { loginSuccess, setToken } from './authSlice';
+import { loginSuccess, setToken, setOrganisation } from './authSlice';
+import { getSessionExpiredMessage } from '../../utils/sessionManager';
 
 export default function Login() {
   const { user, isLoading, loginWithRedirect } = useAuth0();
-  const navigate = useNavigate();
   const dispatch = useDispatch();
-  const [testEmail, setTestEmail] = useState('');
-  const [isTestLoading, setIsTestLoading] = useState(false);
-  const [testError, setTestError] = useState('');
   const [isCheckingOnboarding, setIsCheckingOnboarding] = useState(false);
   const [redirectPath, setRedirectPath] = useState(null);
+  const [sessionExpiredMessage, setSessionExpiredMessage] = useState(null);
+
+  // Check for session expired message on mount
+  useEffect(() => {
+    const expiredMessage = getSessionExpiredMessage();
+    if (expiredMessage) {
+      setSessionExpiredMessage(expiredMessage);
+    }
+  }, []);
 
   // When Auth0 user is present, get token and check onboarding
   useEffect(() => {
@@ -73,6 +79,13 @@ export default function Login() {
           } else if (orgResponse.ok) {
             const orgData = await orgResponse.json();
             console.log('🔄 Login: Org data:', orgData);
+            
+            // Set organisation and owner status in Redux
+            dispatch(setOrganisation({
+              organisation: orgData,
+              isOwner: orgData.isOwner || false,
+            }));
+            
             if (!orgData.selectedPlanId) {
               console.log('🔄 Login: No plan selected, redirecting to /onboarding/select-plan');
               setRedirectPath('/onboarding/select-plan');
@@ -110,85 +123,6 @@ export default function Login() {
     });
   };
 
-  const handleTestLogin = async () => {
-    if (!testEmail.trim()) {
-      setTestError('Please enter an email address');
-      return;
-    }
-
-    try {
-      setIsTestLoading(true);
-      setTestError('');
-      
-      console.log('🔐 Starting test login with email:', testEmail);
-      
-      const response = await fetch('http://localhost:4000/v1/auth/auth0-callback', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          auth0UserId: 'test-' + Date.now(),
-          email: testEmail,
-        }),
-      });
-
-      console.log('📡 Response status:', response.status);
-
-      if (response.ok) {
-        const data = await response.json();
-        console.log('✅ Test login successful');
-        console.log('✅ User data:', data.user);
-        console.log('✅ Token:', data.tokens.access.token.substring(0, 30) + '...');
-        
-        if (data.tokens && data.tokens.access) {
-          const token = data.tokens.access.token;
-          localStorage.setItem('token', token);
-          console.log('✅ Token saved to localStorage');
-          console.log('✅ Token from localStorage:', localStorage.getItem('token').substring(0, 30) + '...');
-          
-          dispatch(setToken(token));
-          console.log('✅ Token dispatched to Redux');
-          dispatch(loginSuccess(data.user));
-          console.log('✅ User dispatched to Redux');
-          
-          setIsTestLoading(false);
-          
-          // Check if user has an organisation - if not, redirect to onboarding
-          console.log('✅ Checking onboarding status...');
-          const orgResponse = await fetch('http://localhost:4000/v1/organisations/me', {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          
-          if (orgResponse.status === 404) {
-            console.log('✅ No organisation found, redirecting to onboarding');
-            navigate('/onboarding');
-          } else if (orgResponse.ok) {
-            const orgData = await orgResponse.json();
-            if (!orgData.selectedPlanId) {
-              console.log('✅ No plan selected, redirecting to plan selection');
-              navigate('/onboarding/select-plan');
-            } else {
-              console.log('✅ Onboarding complete, navigating to home page');
-              navigate('/');
-            }
-          } else {
-            navigate('/');
-          }
-        }
-      } else {
-        const error = await response.json();
-        console.error('❌ Test login failed:', error);
-        setTestError(error.message || 'Test login failed');
-        setIsTestLoading(false);
-      }
-    } catch (error) {
-      console.error('❌ Error during test login:', error);
-      setTestError('Error during test login: ' + error.message);
-      setIsTestLoading(false);
-    }
-  };
-
   // Don't auto-redirect here - let AppContent handle the redirect after checking onboarding
   // The onboarding check in App.js will redirect appropriately
   if (redirectPath) {
@@ -200,71 +134,67 @@ export default function Login() {
     return (
       <Container sx={{ mt: 8, textAlign: 'center' }}>
         <CircularProgress />
-        <Typography sx={{ mt: 2 }}>Setting up your account...</Typography>
+        <Typography sx={{ mt: 2, color: 'text.secondary' }}>Setting up your account...</Typography>
       </Container>
     );
   }
 
   return (
-    <Container sx={{ mt: 8, textAlign: 'center', maxWidth: 400 }}>
-      <Typography variant="h4" gutterBottom>
-        Sign in to Continue
-      </Typography>
-      <Stack direction="column" spacing={3} alignItems="center">
-        <Button 
-          variant="contained" 
-          size="large" 
-          onClick={handleLogin} 
-          disabled={isLoading}
-          fullWidth
-        >
-          Continue with Auth0
-        </Button>
+    <Container maxWidth="sm" sx={{ 
+      mt: 8, 
+      display: 'flex', 
+      flexDirection: 'column', 
+      alignItems: 'center',
+    }}>
+      <Stack 
+        spacing={4} 
+        sx={{ 
+          width: '100%', 
+          maxWidth: 400, 
+          backgroundColor: 'background.paper',
+          borderRadius: '20px',
+          p: 5,
+          boxShadow: '14px 17px 40px 4px rgba(112, 144, 176, 0.12)',
+        }}
+      >
+        <Stack spacing={1} alignItems="center">
+          <Typography variant="h4" sx={{ fontWeight: 700 }}>
+            Welcome Back
+          </Typography>
+          <Typography variant="body1" sx={{ color: 'text.secondary' }}>
+            Sign in to continue to Pricing Calculator
+          </Typography>
+        </Stack>
 
-        <Button 
-          variant="outlined" 
-          size="large" 
-          onClick={handleSignUp} 
-          disabled={isLoading}
-          fullWidth
-        >
-          Sign Up
-        </Button>
-
-        <Typography variant="body2" color="textSecondary" sx={{ my: 2 }}>
-          Or use test login for development
-        </Typography>
-
-        <TextField
-          label="Test Email"
-          type="email"
-          value={testEmail}
-          onChange={(e) => setTestEmail(e.target.value)}
-          placeholder="test@example.com"
-          fullWidth
-          disabled={isTestLoading}
-          onKeyPress={(e) => {
-            if (e.key === 'Enter') {
-              handleTestLogin();
-            }
-          }}
-        />
-
-        <Button 
-          variant="outlined" 
-          size="large" 
-          onClick={handleTestLogin}
-          disabled={isTestLoading || !testEmail.trim()}
-          fullWidth
-        >
-          {isTestLoading ? <CircularProgress size={24} /> : 'Test Login'}
-        </Button>
-
-        {testError && (
-          <Alert severity="error" fullWidth>
-            {testError}
+        {sessionExpiredMessage && (
+          <Alert severity="warning" onClose={() => setSessionExpiredMessage(null)}>
+            {sessionExpiredMessage}
           </Alert>
         )}
+        
+        <Stack direction="column" spacing={2}>
+          <Button 
+            variant="contained" 
+            size="large" 
+            onClick={handleLogin} 
+            disabled={isLoading}
+            fullWidth
+            sx={{ py: 1.5 }}
+          >
+            Sign In
+          </Button>
+
+          <Button 
+            variant="outlined" 
+            size="large" 
+            onClick={handleSignUp} 
+            disabled={isLoading}
+            fullWidth
+            sx={{ py: 1.5 }}
+          >
+            Create Account
+          </Button>
+        </Stack>
       </Stack>
     </Container>
   );

@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { handleSessionExpired } from '../utils/sessionManager';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:4000/v1';
 
@@ -22,6 +23,17 @@ api.interceptors.request.use((config) => {
   }
   return config;
 });
+
+// Handle 401 responses - session expired
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      handleSessionExpired();
+    }
+    return Promise.reject(error);
+  }
+);
 
 /**
  * Create a new price record

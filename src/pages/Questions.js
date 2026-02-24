@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useRef, useCallback } from 'react';
 import Alert from '@mui/material/Alert';
 import {
   Container,
@@ -12,12 +12,16 @@ import {
   Button,
   ToggleButton,
   ToggleButtonGroup,
+  Chip,
 } from '@mui/material';
+import CloudDoneIcon from '@mui/icons-material/CloudDone';
+import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import { useNavigate } from 'react-router-dom';
 
 import { useDispatch, useSelector } from 'react-redux';
 import { setResponses as setResponsesAction, setQuestionsPricing, setQuestionsOnceOffFee } from '../features/questions/responsesSlice';
 import { calculateTotalMonthlyPrice, calculateTotalOnceOffFee } from '../utils/pricingCalculator';
+import { updatePrice } from '../services/priceApi';
 const questionData = [
   {
     id: 'q1',
@@ -378,376 +382,278 @@ export const serviceValues = {
   taxServices: {
     individualReturns: {
       all: {
-        code: '416422',
         monthly: 20.83,
         yearly: 250,
-        quantity: null,
         inclusion: 'Individual Returns ALL',
       },
     },
     businessReturns: {
       micro: {
-        code: '416423',
         monthly: 62.5,
         yearly: 750,
-        quantity: 1,
         inclusion: 'Micro < $250K',
       },
       small: {
-        code: '416424',
         monthly: 125,
         yearly: 1500,
-        quantity: 1,
         inclusion: 'Small < $500K',
       },
       medium: {
-        code: '416425',
         monthly: 166.67,
         yearly: 2000,
-        quantity: 1,
         inclusion: 'Medium < $1M',
       },
       large: {
-        code: '416426',
         monthly: 250,
         yearly: 3000,
-        quantity: 1,
         inclusion: 'Large < $3M',
       },
     },
     smsf: {
       micro: {
-        code: '416416',
         monthly: 166.67,
         yearly: 2000,
-        quantity: null,
         inclusion: 'SMSF - Micro < $250K',
       },
       small: {
-        code: '416417',
         monthly: 166.67,
         yearly: 2000,
-        quantity: null,
         inclusion: 'SMSF - Small < $500K',
       },
       medium: {
-        code: '416418',
         monthly: 333.33,
         yearly: 4000,
-        quantity: null,
         inclusion: 'SMSF - Medium < $1M',
       },
       large: {
-        code: '416419',
         monthly: 500,
         yearly: 6000,
-        quantity: null,
         inclusion: 'SMSF - Large < $3M',
       },
     },
     fbtReturns: {
       micro: {
-        code: '416421',
         monthly: 41.67,
         yearly: 500,
-        quantity: null,
         inclusion: 'FBT - Micro < $250K',
       },
       small: {
-        code: '416422',
         monthly: 62.5,
         yearly: 750,
-        quantity: null,
         inclusion: 'FBT - Small < $500K',
       },
       medium: {
-        code: '416423',
         monthly: 83.33,
         yearly: 1000,
-        quantity: null,
         inclusion: 'FBT - Medium < $1M',
       },
       large: {
-        code: '416424',
         monthly: 125,
         yearly: 1500,
-        quantity: null,
         inclusion: 'FBT - Large < $3M',
       },
     },
     bas: {
       micro: {
-        code: '416426',
         monthly: 12.5,
         yearly: 150,
-        quantity: 4,
         inclusion: 'BAS - Micro < $250K (per return)',
       },
       small: {
-        code: '416427',
         monthly: 12.5,
         yearly: 150,
-        quantity: 4,
         inclusion: 'BAS - Small < $500K (per return)',
       },
       medium: {
-        code: '416428',
         monthly: 16.67,
         yearly: 200,
-        quantity: 4,
         inclusion: 'BAS - Medium < $1M (per return)',
       },
       large: {
-        code: '416429',
         monthly: 25,
         yearly: 300,
-        quantity: 4,
         inclusion: 'BAS - Large < $3M (per return)',
       },
     },
     ias: {
       micro: {
-        code: '416431',
         monthly: 8.33,
         yearly: 100,
-        quantity: null,
         inclusion: 'IAS - Micro < $250K (per return)',
       },
       small: {
-        code: '416432',
         monthly: 8.33,
         yearly: 100,
-        quantity: null,
         inclusion: 'IAS - Small < $500K (per return)',
       },
       medium: {
-        code: '416433',
         monthly: 10.42,
         yearly: 125,
-        quantity: null,
         inclusion: 'IAS - Medium < $1M (per return)',
       },
       large: {
-        code: '416434',
         monthly: 12.5,
         yearly: 150,
-        quantity: null,
         inclusion: 'IAS - Large < $3M (per return)',
       },
     },
     tpar: {
       micro: {
-        code: '416436',
         monthly: 18.33,
         yearly: 220,
-        quantity: null,
         inclusion: 'TPAR - Micro < $250K (per return)',
       },
       small: {
-        code: '416437',
         monthly: 18.33,
         yearly: 220,
-        quantity: null,
         inclusion: 'TPAR - Small < $500K (per return)',
       },
       medium: {
-        code: '416438',
         monthly: 18.33,
         yearly: 220,
-        quantity: null,
         inclusion: 'TPAR - Medium < $1M (per return)',
       },
       large: {
-        code: '416439',
         monthly: 20.83,
         yearly: 250,
-        quantity: null,
         inclusion: 'TPAR - Large < $3M (per return)',
       },
     },
   },
   corporateSecretarial: {
     asicAnnualReturn: {
-      code: '416590',
       monthly: 33.33,
       yearly: 400,
-      quantity: null,
       inclusion: 'ASIC Annual Return',
     },
     asicFormsLodgements: {
-      code: '416591',
       monthly: 12.5,
       yearly: 150,
-      quantity: null,
       inclusion: 'ASIC Forms Lodgements',
     },
   },
   atoPaymentPlans: {
     basicPlans: {
-      code: '416600',
       monthly: null,
       yearly: 500,
-      quantity: null,
       inclusion: 'Basic plans',
     },
     hardshipPlans: {
-      code: '416601',
       monthly: null,
       yearly: 1000,
-      quantity: null,
       inclusion: 'Longer term & hardship plans',
     },
   },
   payrollServices: {
     workersCompensation: {
       micro: {
-        code: '416441',
         monthly: 16.67,
         yearly: 200,
-        quantity: null,
         inclusion: 'Workers Comp - Micro < $250K',
       },
       small: {
-        code: '416442',
         monthly: 33.33,
         yearly: 400,
-        quantity: null,
         inclusion: 'Workers Comp - Small < $500K',
       },
       medium: {
-        code: '416443',
         monthly: 45.83,
         yearly: 550,
-        quantity: null,
         inclusion: 'Workers Comp - Medium < $1M',
       },
       large: {
-        code: '416444',
         monthly: 62.5,
         yearly: 750,
-        quantity: null,
         inclusion: 'Workers Comp - Large < $3M',
       },
     },
     payrollProcessing: {
       salary: {
-        code: null,
         monthly: 10,
         yearly: null,
-        quantity: null,
         inclusion: 'Payroll processing per salaried employee',
       },
       timesheets: {
-        code: null,
         monthly: 15,
         yearly: null,
-        quantity: null,
         inclusion: 'Payroll processing per timesheet employee',
       },
     },
     payrollTaxReturns: {
       medium: {
-        code: '416446',
         monthly: 16.67,
         yearly: 200,
-        quantity: null,
         inclusion: 'Payroll Tax - Medium < $1M',
       },
       large: {
-        code: '416447',
         monthly: 41.67,
         yearly: 500,
-        quantity: null,
         inclusion: 'Payroll Tax - Large < $3M',
       },
     },
     superPrepAndLodgement: {
       micro: {
-        code: '416449',
         monthly: 8.33,
         yearly: 100,
-        quantity: null,
         inclusion: 'Super Prep and Lodgement - Micro < $250K',
       },
       small: {
-        code: '416450',
         monthly: 12.5,
         yearly: 150,
-        quantity: null,
         inclusion: 'Super Prep and Lodgement - Small < $500K',
       },
       medium: {
-        code: '416451',
         monthly: 20.83,
         yearly: 250,
-        quantity: null,
         inclusion: 'Super Prep and Lodgement - Medium < $1M',
       },
       large: {
-        code: '416452',
         monthly: 41.67,
         yearly: 500,
-        quantity: null,
         inclusion: 'Super Prep and Lodgement - Large < $3M',
       },
     },
     stpReporting: {
       micro: {
-        code: '416454',
         monthly: 8.33,
         yearly: 100,
-        quantity: null,
         inclusion: 'STP Reporting - Micro < $250K',
       },
       small: {
-        code: '416455',
         monthly: 12.5,
         yearly: 150,
-        quantity: null,
         inclusion: 'STP Reporting - Small < $500K',
       },
       medium: {
-        code: '416456',
         monthly: 20.83,
         yearly: 250,
-        quantity: null,
         inclusion: 'STP Reporting - Medium < $1M',
       },
       large: {
-        code: '416457',
         monthly: 41.67,
         yearly: 500,
-        quantity: null,
         inclusion: 'STP Reporting - Large < $3M',
       },
     },
     lslReporting: {
       micro: {
-        code: '416459',
         monthly: 12.5,
         yearly: 150,
-        quantity: null,
         inclusion: 'LSL Construction Reporting - Micro < $250K',
       },
       small: {
-        code: '416460',
         monthly: 12.5,
         yearly: 150,
-        quantity: null,
         inclusion: 'LSL Construction Reporting - Small < $500K',
       },
       medium: {
-        code: '416461',
         monthly: 20.83,
         yearly: 250,
-        quantity: null,
         inclusion: 'LSL Construction Reporting - Medium < $1M',
       },
       large: {
-        code: '416462',
         monthly: 41.67,
         yearly: 500,
-        quantity: null,
         inclusion: 'LSL Construction Reporting - Large < $3M',
       },
     },
@@ -755,121 +661,89 @@ export const serviceValues = {
   advisoryServices: {
     taxPlanningReview: {
       micro: {
-        code: '416464',
         monthly: 33.33,
         yearly: 400,
-        quantity: null,
         inclusion: 'Tax Planning / Review - Micro < $250K',
       },
       small: {
-        code: '416465',
         monthly: 50,
         yearly: 600,
-        quantity: null,
         inclusion: 'Tax Planning / Review - Small < $500K',
       },
       medium: {
-        code: '416466',
         monthly: 83.33,
         yearly: 1000,
-        quantity: null,
         inclusion: 'Tax Planning / Review - Medium < $1M',
       },
       large: {
-        code: '416467',
         monthly: 166.67,
         yearly: 2000,
-        quantity: null,
         inclusion: 'Tax Planning / Review - Large < $3M',
       },
     },
     taxStructuringAdvice: {
       micro: {
-        code: '416469',
         monthly: 83.33,
         yearly: 1000,
-        quantity: null,
         inclusion: 'Tax Structuring Advice - Micro < $250K',
       },
       small: {
-        code: '416470',
         monthly: 83.33,
         yearly: 1000,
-        quantity: null,
         inclusion: 'Tax Structuring Advice - Small < $500K',
       },
       medium: {
-        code: '416471',
         monthly: 166.67,
         yearly: 2000,
-        quantity: null,
         inclusion: 'Tax Structuring Advice - Medium < $1M',
       },
       large: {
-        code: '416472',
         monthly: 416.67,
         yearly: 5000,
-        quantity: null,
         inclusion: 'Tax Structuring Advice - Large < $3M',
       },
     },
     xeroSetup: {
       micro: {
-        code: '416474',
         monthly: 62.5,
         yearly: 750,
-        quantity: null,
         inclusion: 'Xero Setup - Micro < $250K',
       },
       small: {
-        code: '416475',
         monthly: 83.33,
         yearly: 1000,
-        quantity: null,
         inclusion: 'Xero Setup - Small < $500K',
       },
       medium: {
-        code: '416476',
         monthly: 125,
         yearly: 1500,
-        quantity: null,
         inclusion: 'Xero Setup - Medium < $1M',
       },
       large: {
-        code: '416477',
         monthly: 125,
         yearly: 1500,
-        quantity: null,
         inclusion: 'Xero Setup - Large < $3M',
       },
     },
     xeroTraining: {
       micro: {
-        code: '416479',
         monthly: 41.67,
         yearly: 500,
-        quantity: null,
         inclusion: 'Xero Training - Micro < $250K',
       },
       small: {
-        code: '416480',
         monthly: 41.67,
         yearly: 500,
-        quantity: null,
         inclusion: 'Xero Training - Small < $500K',
       },
       medium: {
-        code: '416481',
         monthly: 66.67,
         yearly: 800,
-        quantity: null,
         inclusion: 'Xero Training - Medium < $1M',
       },
       large: {
-        code: '416482',
         monthly: 100,
         yearly: 1200,
-        quantity: null,
         inclusion: 'Xero Training - Large < $3M',
       },
     },
@@ -877,70 +751,52 @@ export const serviceValues = {
   reporting: {
     financialStatementsTax: {
       micro: {
-        code: '416484',
         monthly: 41.67,
         yearly: 500,
-        quantity: null,
         inclusion: 'Financial Statements - Micro < $250K',
       },
       small: {
-        code: '416485',
         monthly: 83.33,
         yearly: 1000,
-        quantity: null,
         inclusion: 'Financial Statements - Small < $500K',
       },
       medium: {
-        code: '416486',
         monthly: 125,
         yearly: 1500,
-        quantity: null,
         inclusion: 'Financial Statements - Medium < $1M',
       },
       large: {
-        code: '416487',
         monthly: 166.67,
         yearly: 2000,
-        quantity: null,
         inclusion: 'Financial Statements - Large < $3M',
       },
     },
     statutoryFinancialStatements: {
       large: {
-        code: '416489',
         monthly: 250,
         yearly: 3000,
-        quantity: null,
         inclusion: 'Statutory Financial Statements - Large < $3M',
       },
     },
     managementFinancialStatements: {
       micro: {
-        code: '416491',
         monthly: 41.67,
         yearly: 500,
-        quantity: null,
         inclusion: 'Management Financial Statements - Micro < $250K',
       },
       small: {
-        code: '416492',
         monthly: 83.33,
         yearly: 1000,
-        quantity: null,
         inclusion: 'Management Financial Statements - Small < $500K',
       },
       medium: {
-        code: '416493',
         monthly: 125,
         yearly: 1500,
-        quantity: null,
         inclusion: 'Management Financial Statements - Medium < $1M',
       },
       large: {
-        code: '416494',
         monthly: 166.67,
         yearly: 2000,
-        quantity: null,
         inclusion: 'Management Financial Statements - Large < $3M',
       },
     },
@@ -948,61 +804,45 @@ export const serviceValues = {
   meetings: {
     reviewNumbers: {
       micro: {
-        code: '416496',
         monthly: 16.67,
         yearly: 200,
-        quantity: null,
         inclusion: 'Review The Numbers Meetings - Micro < $250K',
       },
       small: {
-        code: '416497',
         monthly: 25,
         yearly: 300,
-        quantity: null,
         inclusion: 'Review The Numbers Meetings - Small < $500K',
       },
       medium: {
-        code: '416498',
         monthly: 41.67,
         yearly: 500,
-        quantity: null,
         inclusion: 'Review The Numbers Meetings - Medium < $1M',
       },
       large: {
-        code: '416499',
         monthly: 62.5,
         yearly: 750,
-        quantity: null,
         inclusion: 'Review The Numbers Meetings - Large < $3M',
       },
     },
     annualTaxMeetings: {
       micro: {
-        code: '416501',
         monthly: 16.67,
         yearly: 200,
-        quantity: null,
         inclusion: 'Annual Meetings - Micro < $250K',
       },
       small: {
-        code: '416502',
         monthly: 25,
         yearly: 300,
-        quantity: null,
         inclusion: 'Annual Meetings - Small < $500K',
       },
       medium: {
-        code: '416503',
         monthly: 41.67,
         yearly: 500,
-        quantity: null,
         inclusion: 'Annual Meetings - Medium < $1M',
       },
       large: {
-        code: '416504',
         monthly: 62.5,
         yearly: 750,
-        quantity: null,
         inclusion: 'Annual Meetings - Large < $3M',
       },
     },
@@ -1010,91 +850,67 @@ export const serviceValues = {
   supportServices: {
     teamOrEmail: {
       micro: {
-        code: '416506',
         monthly: 20.83,
         yearly: 250,
-        quantity: null,
         inclusion: 'Team or Email - Micro < $250K',
       },
       small: {
-        code: '416507',
         monthly: 20.83,
         yearly: 250,
-        quantity: null,
         inclusion: 'Team or Email - Small < $500K',
       },
       medium: {
-        code: '416508',
         monthly: 33.33,
         yearly: 400,
-        quantity: null,
         inclusion: 'Team or Email - Medium < $1M',
       },
       large: {
-        code: '416509',
         monthly: 50,
         yearly: 600,
-        quantity: null,
         inclusion: 'Team or Email - Large < $3M',
       },
     },
     clientServiceManager: {
       micro: {
-        code: '416511',
         monthly: 41.67,
         yearly: 500,
-        quantity: null,
         inclusion: 'Client Service Manager - Micro < $250K',
       },
       small: {
-        code: '416512',
         monthly: 41.67,
         yearly: 500,
-        quantity: null,
         inclusion: 'Client Service Manager - Small < $500K',
       },
       medium: {
-        code: '416513',
         monthly: 50,
         yearly: 600,
-        quantity: null,
         inclusion: 'Client Service Manager - Medium < $1M',
       },
       large: {
-        code: '416514',
         monthly: 100,
         yearly: 1200,
-        quantity: null,
         inclusion: 'Client Service Manager - Large < $3M',
       },
     },
     principalOwner: {
       micro: {
-        code: '416516',
         monthly: 83.33,
         yearly: 1000,
-        quantity: null,
         inclusion: 'Principal / Owner - Micro < $250K',
       },
       small: {
-        code: '416517',
         monthly: 83.33,
         yearly: 1000,
-        quantity: null,
         inclusion: 'Principal / Owner - Small < $500K',
       },
       medium: {
-        code: '416518',
         monthly: 125,
         yearly: 1500,
-        quantity: null,
         inclusion: 'Principal / Owner - Medium < $1M',
       },
       large: {
-        code: '416519',
         monthly: 208.33,
         yearly: 2500,
-        quantity: null,
         inclusion: 'Principal / Owner - Large < $3M',
       },
     },
@@ -1216,6 +1032,8 @@ const buildInitialState = () => {
 export default function Questions() {
   const navigate = useNavigate();
   const storeResponses = useSelector((state) => state.responses);
+  const activePriceId = useSelector((state) => state.responses?.activePriceId);
+  const clientName = useSelector((state) => state.responses?.clientName || '');
   const initialState = useMemo(() => {
     const built = buildInitialState();
     if (storeResponses && Object.keys(storeResponses).length) {
@@ -1232,6 +1050,56 @@ export default function Questions() {
   const [selectedServices, setSelectedServices] = useState({});
   const [requireQ2Message, setRequireQ2Message] = useState(false);
   const [focusedQuestion, setFocusedQuestion] = useState(null);
+  const [saveStatus, setSaveStatus] = useState('idle'); // 'idle' | 'saving' | 'saved' | 'error'
+  const saveTimerRef = useRef(null);
+  const lastSavedRef = useRef(null);
+
+  // Auto-save debounced function
+  const autoSave = useCallback(async (currentResponses) => {
+    if (!activePriceId) return;
+    
+    // Filter out non-question keys before saving
+    const nonQuestionKeys = ['questionsPricing', 'serviceCatalogPricing', 'serviceSelections', 'questionsOnceOffFee', 'serviceCatalogOnceOffFee', 'clientName', 'activePriceId'];
+    const questionResponses = {};
+    Object.entries(currentResponses).forEach(([key, value]) => {
+      if (!nonQuestionKeys.includes(key)) {
+        questionResponses[key] = value;
+      }
+    });
+
+    const dataStr = JSON.stringify(questionResponses);
+    if (dataStr === lastSavedRef.current) return; // No changes
+
+    try {
+      setSaveStatus('saving');
+      const totalMonthly = calculateTotalMonthlyPrice(currentResponses);
+      const totalOnceOff = calculateTotalOnceOffFee(currentResponses);
+      // Extract revenue segment from Q2
+      const revenueSegment = currentResponses?.q2 || undefined;
+      console.log('💾 Questions auto-save - Q2:', currentResponses?.q2, 'revenueSegment:', revenueSegment);
+      await updatePrice(activePriceId, {
+        questionResponses,
+        questionsPricing: totalMonthly,
+        questionsOnceOffFee: totalOnceOff,
+        revenueSegment,
+      });
+      lastSavedRef.current = dataStr;
+      setSaveStatus('saved');
+      setTimeout(() => setSaveStatus('idle'), 2000);
+    } catch (error) {
+      console.error('Auto-save failed:', error);
+      setSaveStatus('error');
+      setTimeout(() => setSaveStatus('idle'), 3000);
+    }
+  }, [activePriceId]);
+
+  // Debounced auto-save when responses change
+  useEffect(() => {
+    if (!activePriceId) return;
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = setTimeout(() => autoSave(responses), 1500);
+    return () => { if (saveTimerRef.current) clearTimeout(saveTimerRef.current); };
+  }, [responses, activePriceId, autoSave]);
 
   const dispatch = useDispatch();
   useEffect(() => {
@@ -1504,7 +1372,7 @@ export default function Questions() {
       let changed = false;
 
       if (smsfCandidate) {
-        if (!prev.smsf || prev.smsf.code !== smsfCandidate.code) {
+        if (!prev.smsf || prev.smsf.inclusion !== smsfCandidate.inclusion) {
           console.log('Selected SMSF service value', {
             revenueSelection: originalSegment,
             resolvedSegment: segment,
@@ -1520,7 +1388,7 @@ export default function Questions() {
       }
 
       if (fbtCandidate) {
-        if (!prev.fbt || prev.fbt.code !== fbtCandidate.code) {
+        if (!prev.fbt || prev.fbt.inclusion !== fbtCandidate.inclusion) {
           console.log('Selected FBT service value', {
             revenueSelection: originalSegment,
             resolvedSegment: segment,
@@ -1536,7 +1404,7 @@ export default function Questions() {
       }
 
       if (basCandidate) {
-        if (!prev.bas || prev.bas.code !== basCandidate.code) {
+        if (!prev.bas || prev.bas.inclusion !== basCandidate.inclusion) {
           console.log('Selected BAS service value', {
             revenueSelection: originalSegment,
             resolvedSegment: segment,
@@ -1552,7 +1420,7 @@ export default function Questions() {
       }
 
       if (iasCandidate) {
-        if (!prev.ias || prev.ias.code !== iasCandidate.code) {
+        if (!prev.ias || prev.ias.inclusion !== iasCandidate.inclusion) {
           console.log('Selected IAS service value', {
             revenueSelection: originalSegment,
             resolvedSegment: segment,
@@ -1568,7 +1436,7 @@ export default function Questions() {
       }
 
       if (payrollTaxCandidate) {
-        if (!prev.payrollTax || prev.payrollTax.code !== payrollTaxCandidate.code) {
+        if (!prev.payrollTax || prev.payrollTax.inclusion !== payrollTaxCandidate.inclusion) {
           console.log('Selected Payroll Tax service value', {
             revenueSelection: originalSegment,
             resolvedSegment: segment,
@@ -1584,7 +1452,7 @@ export default function Questions() {
       }
 
       if (workersCompCandidate) {
-        if (!prev.workersComp || prev.workersComp.code !== workersCompCandidate.code) {
+        if (!prev.workersComp || prev.workersComp.inclusion !== workersCompCandidate.inclusion) {
           console.log('Selected Workers Compensation service value', {
             revenueSelection: originalSegment,
             resolvedSegment: segment,
@@ -1600,7 +1468,7 @@ export default function Questions() {
       }
 
       if (superPrepCandidate) {
-        if (!prev.superPrep || prev.superPrep.code !== superPrepCandidate.code) {
+        if (!prev.superPrep || prev.superPrep.inclusion !== superPrepCandidate.inclusion) {
           console.log('Selected Superannuation Lodgement service value', {
             revenueSelection: originalSegment,
             resolvedSegment: segment,
@@ -1616,7 +1484,7 @@ export default function Questions() {
       }
 
       if (tparCandidate) {
-        if (!prev.tpar || prev.tpar.code !== tparCandidate.code) {
+        if (!prev.tpar || prev.tpar.inclusion !== tparCandidate.inclusion) {
           console.log('Selected TPAR service value', {
             revenueSelection: originalSegment,
             resolvedSegment: segment,
@@ -1632,7 +1500,7 @@ export default function Questions() {
       }
 
       if (fbtReturnCandidate) {
-        if (!prev.fbtReturn || prev.fbtReturn.code !== fbtReturnCandidate.code) {
+        if (!prev.fbtReturn || prev.fbtReturn.inclusion !== fbtReturnCandidate.inclusion) {
           console.log('Selected FBT return service value', {
             revenueSelection: originalSegment,
             resolvedSegment: segment,
@@ -1648,7 +1516,7 @@ export default function Questions() {
       }
 
       if (taxPlanningCandidate) {
-        if (!prev.taxPlanning || prev.taxPlanning.code !== taxPlanningCandidate.code) {
+        if (!prev.taxPlanning || prev.taxPlanning.inclusion !== taxPlanningCandidate.inclusion) {
           console.log('Selected Tax Planning service value', {
             revenueSelection: originalSegment,
             resolvedSegment: segment,
@@ -1664,7 +1532,7 @@ export default function Questions() {
       }
 
       if (taxStructuringCandidate) {
-        if (!prev.taxStructuring || prev.taxStructuring.code !== taxStructuringCandidate.code) {
+        if (!prev.taxStructuring || prev.taxStructuring.inclusion !== taxStructuringCandidate.inclusion) {
           console.log('Selected Tax Structuring service value', {
             revenueSelection: originalSegment,
             resolvedSegment: segment,
@@ -1680,7 +1548,7 @@ export default function Questions() {
       }
 
       if (financialStatementsCandidate) {
-        if (!prev.financialStatementsTax || prev.financialStatementsTax.code !== financialStatementsCandidate.code) {
+        if (!prev.financialStatementsTax || prev.financialStatementsTax.inclusion !== financialStatementsCandidate.inclusion) {
           console.log('Selected Financial Statements service value', {
             revenueSelection: originalSegment,
             resolvedSegment: segment,
@@ -1698,7 +1566,7 @@ export default function Questions() {
       if (statutoryStatementsCandidate) {
         if (
           !prev.statutoryFinancialStatements ||
-          prev.statutoryFinancialStatements.code !== statutoryStatementsCandidate.code
+          prev.statutoryFinancialStatements.inclusion !== statutoryStatementsCandidate.inclusion
         ) {
           console.log('Selected Statutory Financial Statements service value', {
             revenueSelection: originalSegment,
@@ -1717,7 +1585,7 @@ export default function Questions() {
       if (managementStatementsCandidate) {
         if (
           !prev.managementFinancialStatements ||
-          prev.managementFinancialStatements.code !== managementStatementsCandidate.code
+          prev.managementFinancialStatements.inclusion !== managementStatementsCandidate.inclusion
         ) {
           console.log('Selected Management Financial Statements service value', {
             revenueSelection: originalSegment,
@@ -1734,7 +1602,7 @@ export default function Questions() {
       }
 
       if (reviewNumbersCandidate) {
-        if (!prev.reviewNumbers || prev.reviewNumbers.code !== reviewNumbersCandidate.code) {
+        if (!prev.reviewNumbers || prev.reviewNumbers.inclusion !== reviewNumbersCandidate.inclusion) {
           console.log('Selected Review Numbers service value', {
             revenueSelection: originalSegment,
             resolvedSegment: segment,
@@ -1750,7 +1618,7 @@ export default function Questions() {
       }
 
       if (supportTeamCandidate) {
-        if (!prev.teamSupport || prev.teamSupport.code !== supportTeamCandidate.code) {
+        if (!prev.teamSupport || prev.teamSupport.inclusion !== supportTeamCandidate.inclusion) {
           console.log('Selected Team support service value', {
             revenueSelection: originalSegment,
             resolvedSegment: segment,
@@ -1766,7 +1634,7 @@ export default function Questions() {
       }
 
       if (supportCsmCandidate) {
-        if (!prev.clientServiceManager || prev.clientServiceManager.code !== supportCsmCandidate.code) {
+        if (!prev.clientServiceManager || prev.clientServiceManager.inclusion !== supportCsmCandidate.inclusion) {
           console.log('Selected Client Service Manager value', {
             revenueSelection: originalSegment,
             resolvedSegment: segment,
@@ -1782,7 +1650,7 @@ export default function Questions() {
       }
 
       if (supportOwnerCandidate) {
-        if (!prev.principalOwner || prev.principalOwner.code !== supportOwnerCandidate.code) {
+        if (!prev.principalOwner || prev.principalOwner.inclusion !== supportOwnerCandidate.inclusion) {
           console.log('Selected Principal/Owner support value', {
             revenueSelection: originalSegment,
             resolvedSegment: segment,
@@ -1800,7 +1668,7 @@ export default function Questions() {
       if (corporateSecretarialCandidate) {
         if (
           !prev.corporateSecretarial ||
-          prev.corporateSecretarial.code !== corporateSecretarialCandidate.code
+          prev.corporateSecretarial.inclusion !== corporateSecretarialCandidate.inclusion
         ) {
           console.log('Selected Corporate Secretarial service value', {
             questionSelection: responses.q26,
@@ -1816,7 +1684,7 @@ export default function Questions() {
       }
 
       if (atoPaymentPlanCandidate) {
-        if (!prev.atoPaymentPlan || prev.atoPaymentPlan.code !== atoPaymentPlanCandidate.code) {
+        if (!prev.atoPaymentPlan || prev.atoPaymentPlan.inclusion !== atoPaymentPlanCandidate.inclusion) {
           console.log('Selected ATO payment plan service value', {
             questionSelection: responses.q26b,
             service: atoPaymentPlanCandidate,
@@ -1848,7 +1716,7 @@ export default function Questions() {
       }
 
       if (annualTaxCandidate) {
-        if (!prev.annualTaxMeetings || prev.annualTaxMeetings.code !== annualTaxCandidate.code) {
+        if (!prev.annualTaxMeetings || prev.annualTaxMeetings.inclusion !== annualTaxCandidate.inclusion) {
           console.log('Selected Annual Tax Meetings service value', {
             revenueSelection: originalSegment,
             resolvedSegment: segment,
@@ -2007,20 +1875,20 @@ export default function Questions() {
           onBlur={() => setFocusedQuestion(null)}
           sx={{
             p: 2,
-            borderRadius: 1,
+            borderRadius: '12px',
             position: 'relative',
             zIndex: depth > 0 ? 1 : 0,
-            backgroundColor: focusedQuestion === question.id ? '#f5f5f5' : '#ffffff',
+            backgroundColor: focusedQuestion === question.id ? 'background.default' : 'background.paper',
             transition: 'all 0.2s ease-in-out',
-            boxShadow: focusedQuestion === question.id ? 'inset 0 0 0 2px #002060' : 'none',
+            boxShadow: focusedQuestion === question.id ? (theme) => `inset 0 0 0 2px ${theme.palette.primary.main}` : 'none',
             '&:hover': {
-              backgroundColor: focusedQuestion === question.id ? '#f5f5f5' : '#ffffff',
-              boxShadow: focusedQuestion === question.id ? 'inset 0 0 0 2px #002060' : '0 4px 16px rgba(0, 0, 0, 0.12)',
+              backgroundColor: focusedQuestion === question.id ? 'background.default' : 'background.paper',
+              boxShadow: focusedQuestion === question.id ? (theme) => `inset 0 0 0 2px ${theme.palette.primary.main}` : '14px 17px 40px 4px rgba(112, 144, 176, 0.12)',
             },
           }}
         >
           <Stack spacing={1.5}>
-            <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#1a1a1a', fontSize: '1rem' }}>{promptWithDynamicNumber}</Typography>
+            <Typography variant="subtitle1" sx={{ fontWeight: 700, color: 'text.primary', fontSize: '1rem' }}>{promptWithDynamicNumber}</Typography>
             {question.type === 'q7-custom' && (
               <Stack spacing={2}>
                 {/* Combined BAS and IAS Options in single button group */}
@@ -2099,30 +1967,6 @@ export default function Questions() {
                   flexWrap: 'wrap',
                   gap: 1,
                   display: 'flex',
-                  '& .MuiToggleButton-root': {
-                    transition: 'all 0.2s ease-in-out',
-                    border: '1px solid #d0d0d0',
-                    color: '#666',
-                    '&:hover:not(.Mui-disabled)': {
-                      backgroundColor: '#f5f5f5',
-                      borderColor: '#002060',
-                    },
-                    '&.Mui-selected': {
-                      backgroundColor: '#002060',
-                      color: '#fff',
-                      borderColor: '#002060',
-                      fontWeight: 600,
-                      '&:hover': {
-                        backgroundColor: '#001a47',
-                      },
-                    },
-                    '&.Mui-disabled': {
-                      backgroundColor: '#f5f5f5',
-                      color: '#ccc',
-                      opacity: 0.6,
-                      border: '1px solid #d0d0d0',
-                    },
-                  },
                 }}
               >
                 {/* BAS Options */}
@@ -2144,7 +1988,7 @@ export default function Questions() {
                           fontSize: '0.9rem',
                         }}
                       >
-                        <Typography variant="body2" sx={{ fontWeight: 700 }}>{option.label}</Typography>
+                        <Typography variant="body2" sx={{ fontWeight: 700, color: 'inherit' }}>{option.label}</Typography>
                       </ToggleButton>
                     );
                   })}
@@ -2162,7 +2006,7 @@ export default function Questions() {
                       fontSize: '0.9rem',
                     }}
                   >
-                    <Typography variant="body2" sx={{ fontWeight: 700 }}>{question.iasOption.label}</Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 700, color: 'inherit' }}>{question.iasOption.label}</Typography>
                   </ToggleButton>
                   {/* No Option */}
                   <ToggleButton 
@@ -2178,7 +2022,7 @@ export default function Questions() {
                       fontSize: '0.9rem',
                     }}
                   >
-                    <Typography variant="body2" sx={{ fontWeight: 700 }}>{question.noOption.label}</Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 700, color: 'inherit' }}>{question.noOption.label}</Typography>
                   </ToggleButton>
                 </ToggleButtonGroup>
               </Stack>
@@ -2198,30 +2042,6 @@ export default function Questions() {
                   flexWrap: 'wrap',
                   gap: 1,
                   display: 'flex',
-                  '& .MuiToggleButton-root': {
-                    transition: 'all 0.2s ease-in-out',
-                    border: '1px solid #d0d0d0',
-                    color: '#666',
-                    '&:hover:not(.Mui-disabled)': {
-                      backgroundColor: '#f5f5f5',
-                      borderColor: '#002060',
-                    },
-                    '&.Mui-selected': {
-                      backgroundColor: '#002060',
-                      color: '#fff',
-                      borderColor: '#002060',
-                      fontWeight: 600,
-                      '&:hover': {
-                        backgroundColor: '#001a47',
-                      },
-                    },
-                    '&.Mui-disabled': {
-                      backgroundColor: '#f5f5f5',
-                      color: '#ccc',
-                      opacity: 0.6,
-                      border: '1px solid #d0d0d0',
-                    },
-                  },
                 }}
                 disabled={question.id !== 'q2' && !responses.q2}
                 onClick={question.id !== 'q2' && !responses.q2 ? () => setRequireQ2Message(true) : undefined}
@@ -2247,7 +2067,7 @@ export default function Questions() {
                     disabled={question.id !== 'q2' && !responses.q2}
                     onClick={question.id !== 'q2' && !responses.q2 ? () => setRequireQ2Message(true) : undefined}
                   >
-                    <Typography variant="body2" sx={{ fontWeight: 700 }}>{option.label}</Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 700, color: 'inherit' }}>{option.label}</Typography>
                   </ToggleButton>
                 );
                 })}
@@ -2604,11 +2424,30 @@ export default function Questions() {
                 </Typography>
               </Stack>
             </Stack>
-            <Stack direction={{ xs: 'row', sm: 'row' }} spacing={1} sx={{ width: { xs: '100%', sm: 'auto' } }}>
+            <Stack direction={{ xs: 'row', sm: 'row' }} spacing={1} sx={{ width: { xs: '100%', sm: 'auto' }, alignItems: 'center' }}>
+              {activePriceId && saveStatus === 'saving' && (
+                <Chip icon={<CloudUploadIcon />} label="Saving..." size="small" color="info" variant="outlined" />
+              )}
+              {activePriceId && saveStatus === 'saved' && (
+                <Chip icon={<CloudDoneIcon />} label="Saved" size="small" color="success" variant="outlined" />
+              )}
+              {activePriceId && saveStatus === 'error' && (
+                <Chip label="Save failed" size="small" color="error" variant="outlined" />
+              )}
+              {clientName && (
+                <Chip label={clientName} size="small" variant="outlined" sx={{ maxWidth: 150 }} />
+              )}
               <Button
                 variant="contained"
                 color="primary"
-                onClick={() => navigate('/pricing-quote')}
+                onClick={async () => {
+                  // Final save before navigating
+                  if (activePriceId) {
+                    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+                    await autoSave(responses);
+                  }
+                  navigate('/pricing-quote');
+                }}
                 sx={{
                   flex: { xs: 1, sm: 'initial' },
                   transition: 'all 0.2s ease-in-out',
