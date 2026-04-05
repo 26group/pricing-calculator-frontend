@@ -16,7 +16,7 @@ import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { serviceValuesAccounting } from '../constants/accountingServicesValues';
 
-const API_URL = 'http://localhost:4000/v1';
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:4000/v1';
 
 // Helper to format camelCase to Title Case
 const formatLabel = (str) => {

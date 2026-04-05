@@ -33,10 +33,13 @@ import { getPrices, deletePrice, getPrice, createPrice } from '../services/price
 import { loadSavedPrice } from '../features/questions/responsesSlice';
 import { getRevenueSegmentLabel } from '../constants/revenueSegments';
 
-const getServiceTypeLabel = (questionResponses) => {
-  // Check for bookkeeping-specific questions to determine service type
-  // Bookkeeping questions are: q1-q15
-  // Accounting questions are: q1-q26
+const getServiceTypeLabel = (price) => {
+  // Use the dedicated serviceType field if available
+  if (price?.serviceType === 'bookkeeping') return 'Bookkeeping';
+  if (price?.serviceType === 'accounting') return 'Accounting';
+  
+  // Fallback: check questionResponses for old data
+  const questionResponses = price?.questionResponses || price;
   
   // If we have q2b (bookkeeping specific), it's bookkeeping
   if (questionResponses?.q2b) return 'Bookkeeping';
@@ -44,7 +47,7 @@ const getServiceTypeLabel = (questionResponses) => {
   // Check if they answered the first accounting-specific question (q4)
   if (questionResponses?.q4 !== undefined) return 'Accounting';
   
-  // Fallback: check the old serviceType field if it exists
+  // Fallback: check the old serviceType field in questionResponses if it exists
   const serviceType = questionResponses?.serviceType;
   if (serviceType === 'bookkeeping') return 'Bookkeeping';
   if (serviceType === 'accounting' || serviceType === 'taxAccounting') return 'Accounting';
@@ -54,9 +57,7 @@ const getServiceTypeLabel = (questionResponses) => {
   if (questionResponses?.q1 === 'accounting' || questionResponses?.q1 === 'taxAccounting') return 'Accounting';
   
   // Debug: log what we're getting to understand the data structure
-  if (!serviceType) {
-    console.warn('⚠️ No service type found. questionResponses:', questionResponses);
-  }
+  console.warn('⚠️ No service type found. price:', price);
   return 'Unknown';
 };
 
@@ -129,22 +130,23 @@ export default function SavedPrices() {
         serviceCatalogPricing: priceData.serviceCatalogPricing,
         serviceCatalogOnceOffFee: priceData.serviceCatalogOnceOffFee,
         serviceSelections: priceData.serviceSelections,
+        serviceType: priceData.serviceType,
       }));
       
-      // Determine service type to navigate to correct page
-      let isBookkeeping = false;
-      const qResp = priceData.questionResponses;
+      // Determine service type - use the serviceType field from database first
+      let isBookkeeping = priceData.serviceType === 'bookkeeping';
       
-      // Check for bookkeeping-specific questions
-      if (qResp?.q2b) {
-        isBookkeeping = true;
-      } else if (qResp?.q4 !== undefined) {
-        isBookkeeping = false;
-      } else if (qResp?.serviceType === 'bookkeeping') {
-        isBookkeeping = true;
-      } else if (qResp?.q1 === 'bookkeeping') {
-        // Old data: service type stored in q1
-        isBookkeeping = true;
+      // Fallback for old data that doesn't have serviceType field
+      if (!priceData.serviceType) {
+        const qResp = priceData.questionResponses;
+        // Check for bookkeeping-specific questions
+        if (qResp?.q2b) {
+          isBookkeeping = true;
+        } else if (qResp?.q4 !== undefined) {
+          isBookkeeping = false;
+        } else if (qResp?.serviceType === 'bookkeeping') {
+          isBookkeeping = true;
+        }
       }
       
       if (isBookkeeping) {
@@ -284,7 +286,7 @@ export default function SavedPrices() {
   const filteredPrices = prices.filter((price) => {
     const query = searchQuery.toLowerCase();
     const clientName = (price.clientName || '').toLowerCase();
-    const serviceType = getServiceTypeLabel(price.questionResponses).toLowerCase();
+    const serviceType = getServiceTypeLabel(price).toLowerCase();
     
     // Determine actual revenue segment from question responses
     // q1 is the revenue segment for accounting/bookkeeping
@@ -383,7 +385,7 @@ export default function SavedPrices() {
               </TableRow>
             </TableHead>
             <TableBody>
-              {filteredPrices.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).filter(price => getServiceTypeLabel(price.questionResponses) !== 'Unknown').map((price) => (
+              {filteredPrices.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).filter(price => getServiceTypeLabel(price) !== 'Unknown').map((price) => (
                 <TableRow
                   key={price.id}
                   hover
@@ -404,9 +406,9 @@ export default function SavedPrices() {
                   </TableCell>
                   <TableCell sx={{ py: 0.5, fontSize: '0.875rem' }}>
                     <Chip
-                      label={getServiceTypeLabel(price.questionResponses)}
+                      label={getServiceTypeLabel(price)}
                       size="small"
-                      color={price.questionResponses?.q1 === 'bookkeeping' ? 'secondary' : 'primary'}
+                      color={price.serviceType === 'bookkeeping' ? 'secondary' : 'primary'}
                       sx={{ fontWeight: 600, height: 24 }}
                     />
                   </TableCell>

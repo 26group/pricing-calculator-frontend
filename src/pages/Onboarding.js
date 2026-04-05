@@ -74,7 +74,7 @@ export default function Onboarding() {
     if (!token) return true; // Skip check if no token
     
     try {
-      const response = await fetch(`http://localhost:4000/v1/organisations/check-name?name=${encodeURIComponent(name)}`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:4000/v1'}/organisations/check-name?name=${encodeURIComponent(name)}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -139,7 +139,7 @@ export default function Onboarding() {
         throw new Error('Not authenticated. Please log in again.');
       }
       
-      const response = await fetch('http://localhost:4000/v1/organisations', {
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:4000/v1'}/organisations`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

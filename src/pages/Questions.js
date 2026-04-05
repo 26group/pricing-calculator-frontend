@@ -793,7 +793,7 @@ export default function Questions() {
       if (!token) return;
       
       try {
-        const response = await fetch('http://localhost:4000/v1/organisations/me', {
+        const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:4000/v1'}/organisations/me`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },

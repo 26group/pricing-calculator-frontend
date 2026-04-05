@@ -14,7 +14,6 @@ export const bookkeepingQuestionData = [
       { label: '$500K - $1M', value: 'medium' },
       { label: '$1M - $3M', value: 'large' },
       { label: '$3M+', value: 'enterprise' },
-      { label: "I don't know", value: 'micro' }, // Default to Micro band
     ],
   },
   // Q3 in CSV -> q2 in code: Accounting System
@@ -92,7 +91,7 @@ export const bookkeepingQuestionData = [
     children: [
       {
         id: 'q6a',
-        prompt: '6.a Please enter number of transactions',
+        prompt: '6.a How many transactions above 400?',
         type: 'number',
         showWhen: (responses) => responses.q6 === 'over400',
       },
@@ -104,16 +103,18 @@ export const bookkeepingQuestionData = [
     prompt: '7. Does the client require Accounts Payable (Payables) management?',
     type: 'radio',
     options: [
-      { label: 'No', value: 'no' },
       { label: '< 20 single-line supplier invoices/month', value: 'under20' },
       { label: '20-50 single-line supplier invoices/month', value: '20to50' },
+      { label: '50+ single-line supplier invoices/month', value: 'over50' },
+      { label: 'No', value: 'no' },
     ],
     children: [
       {
         id: 'q7a',
-        prompt: '7.a Extra transactions above flat-fee threshold (enter #)',
+        prompt: '7.a How many invoices above 50?',
         type: 'number',
-        showWhen: (responses) => responses.q7 === '20to50',
+        placeholder: 'Enter extra invoices',
+        showWhen: (responses) => responses.q7 === 'over50',
       },
       {
         id: 'q7b',
@@ -129,8 +130,8 @@ export const bookkeepingQuestionData = [
     prompt: '8. Does the client require TPAR (Taxable Payments Annual Report)?',
     type: 'radio',
     options: [
-      { label: 'No', value: 'no' },
       { label: 'Yes', value: 'yes' },
+      { label: 'No', value: 'no' },
     ],
     children: [
       {
@@ -147,16 +148,18 @@ export const bookkeepingQuestionData = [
     prompt: '9. Does the client require Accounts Receivable (Receivables) management?',
     type: 'radio',
     options: [
-      { label: 'No', value: 'no' },
       { label: '< 20 single-line sales invoices/month', value: 'under20' },
       { label: '20-50 single-line sales invoices/month', value: '20to50' },
+      { label: '50+ single-line sales invoices/month', value: 'over50' },
+      { label: 'No', value: 'no' },
     ],
     children: [
       {
         id: 'q9a',
-        prompt: '9.a Extra transactions above flat-fee threshold (enter #)',
+        prompt: '9.a How many invoices above 50?',
         type: 'number',
-        showWhen: (responses) => responses.q9 === '20to50',
+        placeholder: 'Enter extra invoices',
+        showWhen: (responses) => responses.q9 === 'over50',
       },
       {
         id: 'q9b',
@@ -178,9 +181,9 @@ export const bookkeepingQuestionData = [
     prompt: '10. Does the client require Financial Reporting (Management Reports)?',
     type: 'radio',
     options: [
-      { label: 'No', value: 'no' },
       { label: 'Monthly Management Reports', value: 'monthly' },
       { label: 'Quarterly Management Reports', value: 'quarterly' },
+      { label: 'No', value: 'no' },
     ],
   },
   // Q12 in CSV -> q11 in code: Management Meetings
@@ -189,19 +192,21 @@ export const bookkeepingQuestionData = [
     prompt: '11. Does the client require Management Meetings?',
     type: 'radio',
     options: [
-      { label: 'No', value: 'no' },
       { label: 'Monthly Meetings (12 per year)', value: 'monthly' },
       { label: 'Quarterly Meetings (4 per year)', value: 'quarterly' },
+      { label: 'No', value: 'no' },
     ],
   },
   // Q13 in CSV -> q12 in code: Compliance Lodgement Services
   {
     id: 'q12',
     prompt: '12. Which compliance lodgement services does the client require?',
-    type: 'checkbox',
-    options: [
+    type: 'mixed',
+    basOptions: [
       { label: 'BAS Quarterly Lodgement', value: 'basQuarterly' },
       { label: 'BAS Monthly Lodgement', value: 'basMonthly' },
+    ],
+    independentOptions: [
       { label: 'IAS Monthly Lodgement', value: 'iasMonthly' },
     ],
   },
@@ -222,9 +227,9 @@ export const bookkeepingQuestionData = [
     prompt: '14. Does the client require an EOFY process & workpapers? (Bookkeeping only clients)',
     type: 'radio',
     options: [
-      { label: 'No', value: 'no' },
       { label: 'Yes - Micro & Small', value: 'microSmall' },
       { label: 'Yes - Medium & Large', value: 'mediumLarge' },
+      { label: 'No', value: 'no' },
     ],
   },
   // Q16 in CSV -> q15 in code: Cleanup/Rescue Work
@@ -233,8 +238,8 @@ export const bookkeepingQuestionData = [
     prompt: '15. Does the client require rescue / cleanup work?',
     type: 'radio',
     options: [
-      { label: 'No', value: 'no' },
       { label: 'Yes', value: 'yes' },
+      { label: 'No', value: 'no' },
     ],
     children: [
       {
@@ -242,6 +247,42 @@ export const bookkeepingQuestionData = [
         prompt: '15.a Enter number of months of cleanup required',
         type: 'number',
         showWhen: (responses) => responses.q15 === 'yes',
+      },
+    ],
+  },
+  // Q17: Additional Once-Off Services
+  {
+    id: 'q17',
+    prompt: '16. Select any additional once-off services required',
+    type: 'checkbox',
+    options: [
+      { label: 'Accounting Software Setup', value: 'accountingSoftwareSetup' },
+      { label: 'Payables & Receivables Setup', value: 'payablesReceivablesSetup' },
+      { label: 'Payroll Setup - per new employee', value: 'payrollSetup' },
+      { label: 'Online Training - 1 Session (30 min)', value: 'training1Session' },
+      { label: 'Online Training - 3 Sessions (30 min each)', value: 'training3Sessions' },
+    ],
+    children: [
+      {
+        id: 'q17a',
+        prompt: '16.a How many 50-item batches for Payables & Receivables Setup?',
+        type: 'number',
+        placeholder: 'Enter number of batches',
+        showWhen: (responses) => responses.q17?.payablesReceivablesSetup,
+      },
+      {
+        id: 'q17b',
+        prompt: '16.b Extra Payables & Receivables items above 50-batch threshold?',
+        type: 'number',
+        placeholder: 'Enter number of extra items',
+        showWhen: (responses) => responses.q17?.payablesReceivablesSetup,
+      },
+      {
+        id: 'q17c',
+        prompt: '16.c How many new employees for Payroll Setup?',
+        type: 'number',
+        placeholder: 'Enter number of employees',
+        showWhen: (responses) => responses.q17?.payrollSetup,
       },
     ],
   },

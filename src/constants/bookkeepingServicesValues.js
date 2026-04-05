@@ -81,6 +81,11 @@ export const serviceValuesBookkeeping = {
       monthly: 75.00,
       inclusion: 'Accounts Payable - 20-50 single-line supplier invoices/month',
     },
+    over50SingleLine: {
+      monthly: 75.00,
+      perInvoice: 1.00,
+      inclusion: 'Accounts Payable - 50+ single-line supplier invoices/month (base + per extra)',
+    },
     extraTransaction: {
       each: 1.00,
       inclusion: 'Accounts Payable - Extra transaction above threshold',
@@ -108,6 +113,11 @@ export const serviceValuesBookkeeping = {
     under50SingleLine: {
       monthly: 75.00,
       inclusion: 'Accounts Receivable - 20-50 single-line sales invoices/month',
+    },
+    over50SingleLine: {
+      monthly: 75.00,
+      perInvoice: 1.00,
+      inclusion: 'Accounts Receivable - 50+ single-line sales invoices/month (base + per extra)',
     },
     extraTransaction: {
       each: 1.00,
@@ -217,7 +227,7 @@ export const serviceValuesBookkeeping = {
       inclusion: 'Accounting Software Setup - includes bank accounts, 1 credit card, conversion balances, payables/receivables, directors payroll',
     },
     payablesReceivablesSetup: {
-      onceOff: 50.00,
+      perBatch: 50.00,
       inclusion: 'Payables & Receivables Setup - per 50 items',
     },
     extraPayablesReceivablesItem: {
@@ -228,11 +238,11 @@ export const serviceValuesBookkeeping = {
       onceOff: 50.00,
       inclusion: 'Payroll Setup - per new employee',
     },
-    singleTrainingSession: {
-      onceOff: 99.00,
+    training1Session: {
+      onceOff: 120.00,
       inclusion: '1 × Online Training Session (30 min) - Recorded Zoom session',
     },
-    threeTrainingSessions: {
+    training3Sessions: {
       onceOff: 250.00,
       inclusion: '3 × Online Training Sessions (30 min each) - Recorded Zoom sessions',
     },

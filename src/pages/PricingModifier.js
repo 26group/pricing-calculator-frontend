@@ -54,7 +54,7 @@ export default function PricingModifier() {
       }
 
       try {
-        const response = await fetch('http://localhost:4000/v1/organisations/me', {
+        const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:4000/v1'}/organisations/me`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -100,7 +100,7 @@ export default function PricingModifier() {
     }
 
     try {
-      const response = await fetch('http://localhost:4000/v1/organisations/me', {
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:4000/v1'}/organisations/me`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',

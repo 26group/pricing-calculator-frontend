@@ -49,7 +49,7 @@ function AppContent() {
     }
 
     try {
-      const response = await fetch('http://localhost:4000/v1/organisations/me', {
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:4000/v1'}/organisations/me`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -130,7 +130,7 @@ function AppContent() {
   const getJWTToken = async (auth0User) => {
     try {
       // Get the ID token from Auth0
-      const response = await fetch('http://localhost:4000/v1/auth/auth0-callback', {
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:4000/v1'}/auth/auth0-callback`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -188,6 +188,7 @@ function AppContent() {
         dispatch(resetPriceState());
         const priceData = {
           clientName: clientNameInput,
+          serviceType: serviceType,
           questionResponses: {},
         };
         const response = await createPrice(priceData);

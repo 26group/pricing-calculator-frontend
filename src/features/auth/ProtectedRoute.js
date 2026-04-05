@@ -25,7 +25,7 @@ export default function ProtectedRoute({ children }) {
     // If we have a token, validate it
     if (token) {
       setIsValidatingToken(true);
-      fetch('http://localhost:4000/v1/organisations/me', {
+      fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:4000/v1'}/organisations/me`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

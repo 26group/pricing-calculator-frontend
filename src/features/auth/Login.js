@@ -6,6 +6,8 @@ import { useDispatch } from 'react-redux';
 import { loginSuccess, setToken, setOrganisation } from './authSlice';
 import { getSessionExpiredMessage } from '../../utils/sessionManager';
 
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:4000/v1';
+
 export default function Login() {
   const { user, isLoading, loginWithRedirect } = useAuth0();
   const dispatch = useDispatch();
@@ -34,7 +36,7 @@ export default function Login() {
       let token = null;
       console.log('🔄 Login: Fetching fresh token from backend...');
       try {
-        const response = await fetch('http://localhost:4000/v1/auth/auth0-callback', {
+        const response = await fetch(`${API_URL}/auth/auth0-callback`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -67,7 +69,7 @@ export default function Login() {
         // Check onboarding status
         console.log('🔄 Login: Checking organisation status...');
         try {
-          const orgResponse = await fetch('http://localhost:4000/v1/organisations/me', {
+          const orgResponse = await fetch(`${API_URL}/organisations/me`, {
             headers: { Authorization: `Bearer ${token}` },
           });
           

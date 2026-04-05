@@ -1,5 +1,30 @@
 import { createSlice } from '@reduxjs/toolkit';
 
+// Helper functions for localStorage persistence
+const STORAGE_KEY = 'bookkeeping_responses';
+
+const loadFromStorage = () => {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    return stored ? JSON.parse(stored) : {};
+  } catch (error) {
+    console.error('Error loading from storage:', error);
+    return {};
+  }
+};
+
+const saveToStorage = (state) => {
+  try {
+    // Only save question responses, not pricing data
+    const toSave = { ...state };
+    const excludeKeys = ['questionsPricing', 'serviceCatalogPricing', 'serviceSelections', 'questionsOnceOffFee', 'serviceCatalogOnceOffFee', 'activePriceId'];
+    excludeKeys.forEach(key => delete toSave[key]);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
+  } catch (error) {
+    console.error('Error saving to storage:', error);
+  }
+};
+
 const initialState = {
   q1: '',
   q2: '',
@@ -35,10 +60,12 @@ const responsesSlice = createSlice({
           state[key] = value;
         }
       });
+      saveToStorage(state);
     },
     updateResponse: (state, action) => {
       const { questionId, value } = action.payload;
       state[questionId] = value;
+      saveToStorage(state);
     },
     setQuestionsPricing: (state, action) => {
       state.questionsPricing = action.payload;
@@ -62,10 +89,10 @@ const responsesSlice = createSlice({
       state.activePriceId = action.payload;
     },
     loadSavedPrice: (state, action) => {
-      const { priceId, clientName, questionResponses, questionsPricing, questionsOnceOffFee, serviceCatalogPricing, serviceCatalogOnceOffFee, serviceSelections } = action.payload;
+      const { priceId, clientName, questionResponses, questionsPricing, questionsOnceOffFee, serviceCatalogPricing, serviceCatalogOnceOffFee, serviceSelections, serviceType } = action.payload;
       // Reset all question keys
       Object.keys(state).forEach((key) => {
-        if (!['questionsPricing', 'serviceCatalogPricing', 'serviceSelections', 'questionsOnceOffFee', 'serviceCatalogOnceOffFee', 'clientName', 'activePriceId'].includes(key)) {
+        if (!['questionsPricing', 'serviceCatalogPricing', 'serviceSelections', 'questionsOnceOffFee', 'serviceCatalogOnceOffFee', 'clientName', 'activePriceId', 'serviceType'].includes(key)) {
           delete state[key];
         }
       });
@@ -82,8 +109,12 @@ const responsesSlice = createSlice({
       state.serviceCatalogPricing = serviceCatalogPricing || 0;
       state.serviceCatalogOnceOffFee = serviceCatalogOnceOffFee || 0;
       state.serviceSelections = serviceSelections || {};
+      state.serviceType = serviceType || 'accounting';
     },
-    resetPriceState: () => initialState,
+    resetPriceState: () => {
+      localStorage.removeItem(STORAGE_KEY);
+      return initialState;
+    },
   }
 });
 

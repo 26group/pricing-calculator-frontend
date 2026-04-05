@@ -80,6 +80,16 @@ const buildInitialState = () => {
   }, {});
 };
 
+const loadResponsesFromStorage = () => {
+  try {
+    const stored = localStorage.getItem('bookkeeping_responses');
+    return stored ? JSON.parse(stored) : {};
+  } catch (error) {
+    console.error('Error loading from storage:', error);
+    return {};
+  }
+};
+
 export default function BookkeepingQuestions() {
   const navigate = useNavigate();
   const storeResponses = useSelector((state) => state.responses);
@@ -87,6 +97,12 @@ export default function BookkeepingQuestions() {
   const clientName = useSelector((state) => state.responses?.clientName || '');
   const initialState = useMemo(() => {
     const built = buildInitialState();
+    // First try to load from localStorage
+    const storedResponses = loadResponsesFromStorage();
+    if (Object.keys(storedResponses).length) {
+      return { ...built, ...storedResponses };
+    }
+    // Then try to load from Redux
     if (storeResponses && Object.keys(storeResponses).length) {
       const merged = { ...built, ...storeResponses };
       return merged;
@@ -176,7 +192,7 @@ export default function BookkeepingQuestions() {
       if (!token) return;
       
       try {
-        const response = await fetch('http://localhost:4000/v1/organisations/me', {
+        const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:4000/v1'}/organisations/me`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -356,6 +372,120 @@ export default function BookkeepingQuestions() {
                   />
                 ))}
               </Stack>
+            )}
+
+            {question.type === 'mixed' && (
+              <ToggleButtonGroup
+                value={responses[question.id]?.basOption || ''}
+                exclusive
+                size="medium"
+                sx={{
+                  flexWrap: 'wrap',
+                  gap: 1,
+                  display: 'flex',
+                }}
+                disabled={question.id !== 'q1' && !responses.q1}
+                onClick={question.id !== 'q1' && !responses.q1 ? () => setRequireQ1Message(true) : undefined}
+              >
+                {/* BAS Options - mutually exclusive */}
+                {question.basOptions.map((option) => (
+                  <ToggleButton
+                    key={option.value}
+                    value={option.value}
+                    onChange={() => {
+                      setFocusedQuestion(question.id);
+                      setResponses((prev) => ({
+                        ...prev,
+                        [question.id]: {
+                          ...prev[question.id],
+                          basOption: option.value,
+                          basQuarterly: option.value === 'basQuarterly',
+                          basMonthly: option.value === 'basMonthly',
+                        },
+                      }));
+                    }}
+                    sx={{
+                      minWidth: '120px',
+                      flex: '0 1 120px',
+                      whiteSpace: 'normal',
+                      wordBreak: 'break-word',
+                      py: 1.2,
+                      px: 1.5,
+                      fontSize: '0.85rem',
+                      fontWeight: 600,
+                      textTransform: 'none',
+                      borderRadius: '8px',
+                      border: '2px solid #ddd',
+                      color: '#555',
+                      '&.Mui-selected': {
+                        backgroundColor: (theme) => theme.palette.primary.main,
+                        color: '#fff',
+                        borderColor: (theme) => theme.palette.primary.main,
+                        '&:hover': {
+                          backgroundColor: (theme) => theme.palette.primary.dark,
+                        },
+                      },
+                      '&:hover': {
+                        borderColor: '#999',
+                      },
+                      '&.Mui-disabled': {
+                        opacity: 0.6,
+                      },
+                    }}
+                  >
+                    <Typography variant="body2" sx={{ fontWeight: 700, color: 'inherit' }}>{option.label}</Typography>
+                  </ToggleButton>
+                ))}
+
+                {/* IAS Option - independent toggle */}
+                {question.independentOptions.map((option) => (
+                  <ToggleButton
+                    key={option.value}
+                    value={option.value}
+                    selected={responses[question.id]?.iasMonthly || false}
+                    onChange={() => {
+                      setFocusedQuestion(question.id);
+                      setResponses((prev) => ({
+                        ...prev,
+                        [question.id]: {
+                          ...prev[question.id],
+                          iasMonthly: !prev[question.id]?.iasMonthly,
+                        },
+                      }));
+                    }}
+                    sx={{
+                      minWidth: '120px',
+                      flex: '0 1 120px',
+                      whiteSpace: 'normal',
+                      wordBreak: 'break-word',
+                      py: 1.2,
+                      px: 1.5,
+                      fontSize: '0.85rem',
+                      fontWeight: 600,
+                      textTransform: 'none',
+                      borderRadius: '8px',
+                      border: '2px solid #ddd',
+                      color: '#555',
+                      '&.Mui-selected': {
+                        backgroundColor: (theme) => theme.palette.primary.main,
+                        color: '#fff',
+                        borderColor: (theme) => theme.palette.primary.main,
+                        '&:hover': {
+                          backgroundColor: (theme) => theme.palette.primary.dark,
+                        },
+                      },
+                      '&:hover': {
+                        borderColor: '#999',
+                      },
+                      '&.Mui-disabled': {
+                        opacity: 0.6,
+                      },
+                    }}
+                  >
+                    <Typography variant="body2" sx={{ fontWeight: 700, color: 'inherit' }}>{option.label}</Typography>
+                  </ToggleButton>
+                ))}
+              </ToggleButtonGroup>
             )}
 
             {question.type === 'number' && (

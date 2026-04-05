@@ -26,8 +26,6 @@ export const calculateBookkeepingMonthlyPrice = (responses, pricingModifier = 10
   let total = 0;
   const multiplier = getPricingMultiplier(pricingModifier);
 
-  console.log('calculateBookkeepingMonthlyPrice called with responses:', responses, 'pricingModifier:', pricingModifier, 'multiplier:', multiplier);
-
   // Helper function to get segment for service lookup
   const getSegment = (originalSegment) => {
     if (['micro', 'small', 'medium', 'large'].includes(originalSegment)) {
@@ -119,13 +117,15 @@ export const calculateBookkeepingMonthlyPrice = (responses, pricingModifier = 10
         }
         break;
       case 'over400':
-        // For 400+ transactions, calculate per-transaction rate × volume ÷ 12
+        // For 400+ transactions: include base 201-400 price + per-transaction rate for transactions over 400
+        if (bookkeeping.transactions201to400) {
+          total += bookkeeping.transactions201to400.monthly;
+        }
         if (responses.q6a && bookkeeping.transactionsOver400) {
-          const transactionCount = parseInt(responses.q6a, 10) || 400;
-          total += (bookkeeping.transactionsOver400.perTransaction * transactionCount) / 12;
-        } else if (bookkeeping.transactionsOver400) {
-          // Default to 400 transactions if no count specified
-          total += (bookkeeping.transactionsOver400.perTransaction * 400) / 12;
+          // q6a is the number of EXTRA transactions above 400 (not total)
+          const extraTransactions = Math.max(0, parseInt(responses.q6a, 10) || 0);
+          const extraCost = bookkeeping.transactionsOver400.perTransaction * extraTransactions;
+          total += extraCost;
         }
         break;
       default:
@@ -140,10 +140,13 @@ export const calculateBookkeepingMonthlyPrice = (responses, pricingModifier = 10
       total += payables.under20SingleLine.monthly;
     } else if (responses.q7 === '20to50' && payables.under50SingleLine) {
       total += payables.under50SingleLine.monthly;
-      // Add extra transactions if specified
-      if (responses.q7a && payables.extraTransaction) {
-        const extraCount = parseInt(responses.q7a, 10) || 0;
-        total += payables.extraTransaction.each * extraCount;
+    } else if (responses.q7 === 'over50' && payables.over50SingleLine) {
+      // Base price for 20-50 tier
+      total += payables.over50SingleLine.monthly;
+      // Add per-invoice cost for extra invoices above 50
+      if (responses.q7a) {
+        const extraInvoices = Math.max(0, parseInt(responses.q7a, 10) || 0);
+        total += payables.over50SingleLine.perInvoice * extraInvoices;
       }
     }
     // Add multi-line invoice extra lines
@@ -163,10 +166,13 @@ export const calculateBookkeepingMonthlyPrice = (responses, pricingModifier = 10
       total += receivables.under20SingleLine.monthly;
     } else if (responses.q9 === '20to50' && receivables.under50SingleLine) {
       total += receivables.under50SingleLine.monthly;
-      // Add extra transactions if specified
-      if (responses.q9a && receivables.extraTransaction) {
-        const extraCount = parseInt(responses.q9a, 10) || 0;
-        total += receivables.extraTransaction.each * extraCount;
+    } else if (responses.q9 === 'over50' && receivables.over50SingleLine) {
+      // Base price for 20-50 tier
+      total += receivables.over50SingleLine.monthly;
+      // Add per-invoice cost for extra invoices above 50
+      if (responses.q9a) {
+        const extraInvoices = Math.max(0, parseInt(responses.q9a, 10) || 0);
+        total += receivables.over50SingleLine.perInvoice * extraInvoices;
       }
     }
     // Add multi-line invoice extra lines
@@ -257,9 +263,7 @@ export const calculateBookkeepingMonthlyPrice = (responses, pricingModifier = 10
 
   // Q15: Cleanup work - once-off, handled in once-off calculation
 
-  console.log('calculateBookkeepingMonthlyPrice total (before multiplier):', total, 'multiplier:', multiplier);
   const adjustedTotal = Math.round(total * multiplier * 100) / 100;
-  console.log('calculateBookkeepingMonthlyPrice returning:', adjustedTotal);
   return adjustedTotal;
 };
 
@@ -272,8 +276,6 @@ export const calculateBookkeepingMonthlyPrice = (responses, pricingModifier = 10
 export const calculateBookkeepingOnceOffFee = (responses, pricingModifier = 100) => {
   let total = 0;
   const multiplier = getPricingMultiplier(pricingModifier);
-
-  console.log('calculateBookkeepingOnceOffFee called with responses:', responses);
 
   const setup = serviceValuesBookkeeping.setupServices;
   const additional = serviceValuesBookkeeping.additionalServices;
@@ -306,8 +308,41 @@ export const calculateBookkeepingOnceOffFee = (responses, pricingModifier = 100)
     }
   }
 
-  console.log('calculateBookkeepingOnceOffFee total (before multiplier):', total, 'multiplier:', multiplier);
+  // Q17: Additional Once-Off Services
+  if (responses.q17 && typeof responses.q17 === 'object') {
+    // Accounting Software Setup
+    if (responses.q17.accountingSoftwareSetup && additional.accountingSoftwareSetup) {
+      total += additional.accountingSoftwareSetup.onceOff;
+    }
+
+    // Payables & Receivables Setup
+    if (responses.q17.payablesReceivablesSetup && additional.payablesReceivablesSetup) {
+      // Add per-batch cost
+      const batchCount = parseInt(responses.q17a, 10) || 0;
+      total += additional.payablesReceivablesSetup.perBatch * batchCount;
+      
+      // Add extra items cost
+      const extraItems = parseInt(responses.q17b, 10) || 0;
+      if (extraItems > 0 && additional.extraPayablesReceivablesItem) {
+        total += additional.extraPayablesReceivablesItem.each * extraItems;
+      }
+    }
+
+    // Payroll Setup - per new employee
+    if (responses.q17.payrollSetup && responses.q17c && additional.payrollSetupPerEmployee) {
+      const employeeCount = parseInt(responses.q17c, 10) || 0;
+      total += additional.payrollSetupPerEmployee.onceOff * employeeCount;
+    }
+
+    // Training Sessions
+    if (responses.q17.training1Session && additional.training1Session) {
+      total += additional.training1Session.onceOff;
+    }
+    if (responses.q17.training3Sessions && additional.training3Sessions) {
+      total += additional.training3Sessions.onceOff;
+    }
+  }
+
   const adjustedTotal = Math.round(total * multiplier * 100) / 100;
-  console.log('calculateBookkeepingOnceOffFee returning:', adjustedTotal);
   return adjustedTotal;
 };
