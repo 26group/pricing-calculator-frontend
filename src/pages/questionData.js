@@ -5,7 +5,7 @@ const questionData = [
     prompt: '1. What services do you provide? Please select one or more from below.',
     type: 'checkbox',
     options: [
-      { label: 'Tax Accounting', value: 'taxAccounting' },
+      { label: 'Accounting', value: 'accounting' },
       { label: 'Bookkeeping', value: 'bookkeeping' },
     ],
   },
@@ -19,7 +19,7 @@ const questionData = [
         { label: '$500K - $1M', value: 'medium' },
         { label: '$1M - $3M', value: 'large' },
         { label: '$3M plus', value: 'enterprise' },
-        { label: 'I don’t know the annual revenue', value: 'unknown' },
+
     ],
   },
   {
@@ -113,7 +113,7 @@ const questionData = [
         options: [
           { label: 'Yes - they want you to process the payroll electronically', value: 'processElectronic' },
           { label: 'Yes - they require a system setup (how many employees?)', value: 'systemSetup' },
-          { label: 'No - they do not require payroll services', value: 'noServices' },
+          { label: 'No', value: 'noServices' },
         ],
         showWhen: (responses) => responses.q8 === true,
         children: [
@@ -155,7 +155,7 @@ const questionData = [
       { label: 'Weekly', value: 'weekly' },
       { label: 'Fortnightly', value: 'fortnightly' },
       { label: 'Monthly', value: 'monthly' },
-      { label: 'No - they do not require', value: false },
+      { label: 'No', value: false },
     ],
   },
   {
@@ -165,7 +165,7 @@ const questionData = [
     options: [
       { label: 'Quarterly', value: 'quarterly' },
       { label: 'Monthly', value: 'monthly' },
-      { label: 'They do not require', value: false },
+      { label: 'No', value: false },
     ],
   },
   {
@@ -174,7 +174,7 @@ const questionData = [
     type: 'radio',
     options: [
       { label: 'Yes', value: true },
-      { label: 'No - they do not require', value: false },
+      { label: 'No', value: false },
     ],
   },
   {
@@ -183,7 +183,7 @@ const questionData = [
     type: 'radio',
     options: [
       { label: 'Yes', value: true },
-      { label: 'No - they do not require', value: false },
+      { label: 'No', value: false },
     ],
   },
   {
@@ -192,7 +192,7 @@ const questionData = [
     type: 'radio',
     options: [
       { label: 'Yes', value: true },
-      { label: 'No - they do not require', value: false },
+      { label: 'No', value: false },
     ],
   },
   {
@@ -201,7 +201,7 @@ const questionData = [
     type: 'radio',
     options: [
       { label: 'Yes', value: true },
-      { label: 'No - they do not require', value: false },
+      { label: 'No', value: false },
     ],
     children: [
       {
@@ -218,7 +218,7 @@ const questionData = [
     type: 'radio',
     options: [
       { label: 'Yes', value: true },
-      { label: 'No - they do not require', value: false },
+      { label: 'No', value: false },
     ],
   },
   {
@@ -227,7 +227,7 @@ const questionData = [
     type: 'radio',
     options: [
       { label: 'Yes', value: true },
-      { label: 'No - they do not require', value: false },
+      { label: 'No', value: false },
     ],
   },
   {
@@ -236,7 +236,7 @@ const questionData = [
     type: 'radio',
     options: [
       { label: 'Yes', value: true },
-      { label: 'No - they do not require', value: false },
+      { label: 'No', value: false },
     ],
   },
   {
@@ -245,7 +245,7 @@ const questionData = [
     type: 'radio',
     options: [
       { label: 'Yes', value: true },
-      { label: 'No - they do not require', value: false },
+      { label: 'No', value: false },
     ],
   },
   {
@@ -254,7 +254,7 @@ const questionData = [
     type: 'radio',
     options: [
       { label: 'Yes', value: true },
-      { label: 'No - they do not require', value: false },
+      { label: 'No', value: false },
     ],
   },
   {
@@ -264,7 +264,7 @@ const questionData = [
     options: [
       { label: 'Monthly reports', value: 'monthly' },
       { label: 'Quarterly reports', value: 'quarterly' },
-      { label: 'No - they do not require', value: false },
+      { label: 'No', value: false },
     ],
   },
   {
@@ -274,7 +274,7 @@ const questionData = [
     options: [
       { label: 'Monthly meetings', value: 'monthly' },
       { label: 'Quarterly meetings', value: 'quarterly' },
-      { label: 'No - they do not require', value: false },
+      { label: 'No', value: false },
     ],
   },
   {
@@ -283,7 +283,7 @@ const questionData = [
     type: 'radio',
     options: [
       { label: 'Yes', value: true },
-      { label: 'No - they do not require', value: false },
+      { label: 'No', value: false },
     ],
   },
   {
@@ -327,12 +327,12 @@ const questionData = [
       { label: 'Yes - please provide # of FBT', value: 'fbt', control: 'number' },
       { label: 'Yes - please provide # of TPAR', value: 'tpar', control: 'number' },
       { label: 'Yes - please provide # of Workers comp', value: 'workersComp', control: 'number' },
-      { label: 'Yes - please provide # of Super lodgment', value: 'super', control: 'number' },
+      { label: 'Yes - please provide # of SGC lodgment', value: 'super', control: 'number' },
       { label: 'Yes - please provide # of STP EOY', value: 'stpEoy', control: 'number' },
       { label: 'Yes - please provide # of LSL forms', value: 'lslForms', control: 'number' },
       { label: 'Yes - please provide # of Payroll Tax', value: 'payrollTax', control: 'number' },
       { label: 'Yes - please provide # of ASIC', value: 'asic', control: 'number' },
-      { label: 'No - they do not require', value: 'none', control: 'checkbox' },
+      { label: 'No', value: 'none', control: 'checkbox' },
     ],
   },
 ];

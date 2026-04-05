@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Container,
   Typography,
@@ -46,6 +47,7 @@ const NotIncluded = () => (
 );
 
 export default function PricingQuote() {
+  const navigate = useNavigate();
   const questionsPricing = useSelector((state) => state.responses?.questionsPricing || 0);
   const serviceCatalogPricing = useSelector((state) => state.responses?.serviceCatalogPricing || 0);
   const questionResponses = useSelector((state) => state.responses || {});
@@ -74,9 +76,9 @@ export default function PricingQuote() {
     if (!activePriceId) return;
     try {
       setAutoSaveStatus('saving');
-      // Extract revenue segment from Q2
-      const revenueSegmentValue = questionResponses?.q2 || undefined;
-      console.log('💾 Auto-saving pricing with Q2:', questionResponses?.q2, 'Revenue Segment:', revenueSegmentValue);
+      // Extract revenue segment from Q1
+      const revenueSegmentValue = questionResponses?.q1 || undefined;
+      console.log('💾 Auto-saving pricing with Q1:', questionResponses?.q1, 'Revenue Segment:', revenueSegmentValue);
       await updatePrice(activePriceId, {
         questionsPricing,
         questionsOnceOffFee,
@@ -203,14 +205,14 @@ export default function PricingQuote() {
   const corporateSecretarialSilver = hasCorporateSecretarial ? <CheckMark /> : <NotIncluded />;
   const corporateSecretarialGold = <CheckMark />; // Gold always includes all services
 
-  // Set revenue segment from Q2 response
+  // Set revenue segment from Q1 response
   useEffect(() => {
-    console.log('🔄 useEffect checking Q2 - questionResponses.q2:', questionResponses?.q2);
-    if (questionResponses?.q2) {
-      console.log('✅ Setting revenueSegment to:', questionResponses.q2);
-      setRevenueSegment(questionResponses.q2);
+    console.log('🔄 useEffect checking Q1 - questionResponses.q1:', questionResponses?.q1);
+    if (questionResponses?.q1) {
+      console.log('✅ Setting revenueSegment to:', questionResponses.q1);
+      setRevenueSegment(questionResponses.q1);
     }
-  }, [questionResponses?.q2]);
+  }, [questionResponses?.q1]);
 
   const handleOpenSaveDialog = () => {
     setSaveError('');
@@ -237,10 +239,12 @@ export default function PricingQuote() {
     setSaveSuccess('');
 
     try {
-      console.log('💾 Manual save - revenueSegment state:', revenueSegment, 'Q2 from responses:', questionResponses?.q2);
+      // Always use q1 from questionResponses as the revenue segment
+      const revenueSegmentValue = questionResponses?.q1 || '';
+      console.log('💾 Manual save - using Q1 as revenueSegment:', revenueSegmentValue);
       const priceData = {
         clientName: clientNameInput,
-        revenueSegment,
+        revenueSegment: revenueSegmentValue,
         notes,
         questionResponses,
         serviceSelections,
@@ -257,13 +261,19 @@ export default function PricingQuote() {
 
       if (activePriceId) {
         await updatePrice(activePriceId, priceData);
+        setSaveSuccess('Price saved successfully!');
+        setTimeout(() => {
+          handleCloseSaveDialog();
+        }, 2000);
       } else {
         await createPrice(priceData);
+        setSaveSuccess('Price saved successfully!');
+        setTimeout(() => {
+          handleCloseSaveDialog();
+          // Navigate to SavedPrices after successful creation
+          navigate('/saved-prices');
+        }, 1500);
       }
-      setSaveSuccess('Price saved successfully!');
-      setTimeout(() => {
-        handleCloseSaveDialog();
-      }, 2000);
     } catch (error) {
       setSaveError(
         error?.message || 'Failed to save price. Please check your connection and try again.'

@@ -20,351 +20,14 @@ import { useNavigate } from 'react-router-dom';
 
 import { useDispatch, useSelector } from 'react-redux';
 import { setResponses as setResponsesAction, setQuestionsPricing, setQuestionsOnceOffFee } from '../features/questions/responsesSlice';
+import { setOrganisation } from '../features/auth/authSlice';
 import { calculateTotalMonthlyPrice, calculateTotalOnceOffFee } from '../utils/pricingCalculator';
+
+// Default pricing modifier (base hourly rate)
+const DEFAULT_PRICING_MODIFIER = 200;
 import { updatePrice } from '../services/priceApi';
-const questionData = [
-  {
-    id: 'q1',
-    prompt: '1. What services do you provide? Please select one or more from below.',
-    type: 'checkbox',
-    options: [
-      { label: 'Tax Accounting', value: 'taxAccounting' },
-      { label: 'Bookkeeping', value: 'bookkeeping' },
-    ],
-  },
-  {
-    id: 'q2',
-    prompt: "2. What is your potential client's current annual revenue?",
-    type: 'radio',
-    options: [
-      { label: '< $250K', value: 'micro' },
-      { label: '$250K - $500K', value: 'small' },
-      { label: '$500K - $1M', value: 'medium' },
-      { label: '$1M - $3M', value: 'large' },
-      { label: '$3M plus', value: 'enterprise' },
-      { label: "I don't know", value: 'unknown' },
-    ],
-  },
-  {
-    id: 'q3',
-    prompt: '3. Do they have an accounting system in place?',
-    type: 'radio',
-    options: [
-      { label: 'Yes', value: 'yes' },
-      { label: 'No', value: 'no' },
-    ],
-    children: [
-      {
-        id: 'q3a',
-        prompt: '3.a Would they like you to set up a system for them?',
-        type: 'radio',
-        options: [
-          { label: 'Yes', value: 'yes' },
-          { label: 'No', value: 'no' },
-        ],
-        showWhen: (responses) => responses.q3 === 'no',
-        children: [
-          {
-            id: 'q3b',
-            prompt: '3.b How will they provide the information to complete the return?',
-            type: 'radio',
-            options: [
-              { label: 'Shoe box', value: 'shoeBox' },
-              { label: 'Spreadsheet - reconciled cashbook', value: 'spreadsheet' },
-              { label: 'Other', value: 'other' },
-            ],
-            showWhen: (responses) => responses.q3a === 'no',
-          },
-        ],
-      },
-    ],
-  },
-  {
-    id: 'q4',
-    prompt: '4. How many business entities do they want tax returns lodged for?',
-    type: 'number',
-  },
-  {
-    id: 'q5',
-    prompt: '5. How many individuals do they want tax returns lodged for?',
-    type: 'number',
-  },
-  {
-    id: 'q6',
-    prompt: '6. Do they have a Self Managed Superannuation Fund (SMSF)?',
-    type: 'radio',
-    options: [
-      { label: 'Yes', value: 'yes' },
-      { label: 'No', value: 'no' },
-    ],
-    children: [
-      {
-        id: 'q6a',
-        prompt: '6.a Do they want you to complete the audit and tax return?',
-        type: 'radio',
-        options: [
-          { label: 'Yes', value: 'yes' },
-          { label: 'No', value: 'no' },
-        ],
-        showWhen: (responses) => responses.q6 === 'yes',
-      },
-    ],
-  },
-  {
-    id: 'q7',
-    prompt: '7. Do they want you to lodge their BAS and/or IAS?',
-    type: 'q7-custom',
-    basOptions: [
-      { label: 'BAS Quarterly', value: 'basQuarterly', showWhen: (responses) => responses.q2 === 'micro' },
-      { label: 'BAS Monthly', value: 'basMonthly' },
-    ],
-    iasOption: { label: 'IAS monthly reporting', value: 'iasMonthly' },
-    noOption: { label: 'No', value: 'no' },
-  },
-  {
-    id: 'q8',
-    prompt: '8. Do they run payroll?',
-    type: 'radio',
-    options: [
-      { label: 'Yes', value: 'yes' },
-      { label: 'No', value: 'no' },
-    ],
-    children: [
-      {
-        id: 'q8a',
-        prompt: '8.a Do they want you to run payroll for them?',
-        type: 'radio',
-        options: [
-          { label: 'Yes - they want you to process the payroll electronically', value: 'processElectronic' },
-          { label: 'Yes - they require a system setup (how many employees?)', value: 'systemSetup' },
-          { label: 'No', value: 'noServices' },
-        ],
-        showWhen: (responses) => responses.q8 === 'yes',
-        children: [
-          {
-            id: 'q8aEmployees',
-            prompt: 'How many employees require the system setup?',
-            type: 'number',
-            showWhen: (responses) => responses.q8a === 'systemSetup',
-          },
-        ],
-      },
-    ],
-  },
-  {
-    id: 'q9',
-    prompt: '9. How many salaried employees do they have?',
-    type: 'inputGroup',
-    showWhen: (responses) => responses.q8 === 'yes',
-    options: [
-      { label: 'Weekly salary', value: 'weekly', control: 'number' },
-      { label: 'Fortnightly salary', value: 'fortnightly', control: 'number' },
-      { label: 'Monthly salary', value: 'monthly', control: 'number' },
-    ],
-  },
-  {
-    id: 'q10',
-    prompt: '10. How many timesheet employees do they have?',
-    type: 'inputGroup',
-    showWhen: (responses) => responses.q8 === 'yes',
-    options: [
-      { label: 'Weekly timesheet', value: 'weekly', control: 'number' },
-      { label: 'Fortnightly timesheet', value: 'fortnightly', control: 'number' },
-      { label: 'Monthly timesheet', value: 'monthly', control: 'number' },
-    ],
-  },
-  {
-    id: 'q11',
-    prompt: '11. Do they want you to lodge Single Touch Payroll for them?',
-    type: 'radio',
-    showWhen: (responses) => responses.q8 === 'yes',
-    options: [
-      { label: 'Weekly', value: 'weekly' },
-      { label: 'Fortnightly', value: 'fortnightly' },
-      { label: 'Monthly', value: 'monthly' },
-      { label: 'No', value: 'no' },
-    ],
-  },
-  {
-    id: 'q12',
-    prompt: '12. Do they want you to lodge superannuation payments for them?',
-    type: 'radio',
-    options: [
-      { label: 'Quarterly', value: 'quarterly' },
-      { label: 'Monthly', value: 'monthly' },
-      { label: 'No', value: 'no' },
-    ],
-  },
-  {
-    id: 'q13',
-    prompt: '13. Do they want you to lodge payroll tax returns for them?',
-    type: 'radio',
-    options: [
-      { label: 'Yes', value: 'yes' },
-      { label: 'No', value: 'no' },
-    ],
-  },
-  {
-    id: 'q14',
-    prompt: '14. Do they want you to lodge workers compensation forms for them?',
-    type: 'radio',
-    options: [
-      { label: 'Yes', value: 'yes' },
-      { label: 'No', value: 'no' },
-    ],
-  },
-  {
-    id: 'q15',
-    prompt: '15. Do they want you to lodge long service leave forms for them?',
-    type: 'radio',
-    options: [
-      { label: 'Yes', value: 'yes' },
-      { label: 'No', value: 'no' },
-    ],
-  },
-  {
-    id: 'q16',
-    prompt: '16. Does your potential client require TPAR?',
-    type: 'radio',
-    options: [
-      { label: 'Yes', value: 'yes' },
-      { label: 'No', value: 'no' },
-    ],
-    children: [
-      {
-        id: 'q16a',
-        prompt: '16.a Please provide number of suppliers.',
-        type: 'number',
-        showWhen: (responses) => responses.q16 === 'yes',
-      },
-    ],
-  },
-  {
-    id: 'q17',
-    prompt: '17. Do they require FBT return to be lodged?',
-    type: 'radio',
-    options: [
-      { label: 'Yes', value: 'yes' },
-      { label: 'No', value: 'no' },
-    ],
-  },
-  {
-    id: 'q18',
-    prompt: '18. Do they require tax planning?',
-    type: 'radio',
-    options: [
-      { label: 'Yes', value: 'yes' },
-      { label: 'No', value: 'no' },
-    ],
-  },
-  {
-    id: 'q19',
-    prompt: '19. Do they require tax restructuring review?',
-    type: 'radio',
-    options: [
-      { label: 'Yes', value: 'yes' },
-      { label: 'No', value: 'no' },
-    ],
-  },
-  {
-    id: 'q20',
-    prompt: '20. Do they require financial statements for tax returns preparation?',
-    type: 'radio',
-    options: [
-      { label: 'Yes', value: 'yes' },
-      { label: 'No', value: 'no' },
-    ],
-  },
-  {
-    id: 'q21',
-    prompt: '21. Do they require statutory financial statements?',
-    type: 'radio',
-    options: [
-      { label: 'Yes', value: 'yes' },
-      { label: 'No', value: 'no' },
-    ],
-  },
-  {
-    id: 'q22',
-    prompt: '22. Do they require management financial statements?',
-    type: 'radio',
-    options: [
-      { label: 'Monthly reports', value: 'monthly' },
-      { label: 'Quarterly reports', value: 'quarterly' },
-      { label: 'No', value: 'no' },
-    ],
-  },
-  {
-    id: 'q23',
-    prompt: '23. Do they require “Review the Numbers” meetings?',
-    type: 'radio',
-    options: [
-      { label: 'Monthly meetings', value: 'monthly' },
-      { label: 'Quarterly meetings', value: 'quarterly' },
-      { label: 'No', value: 'no' },
-    ],
-  },
-  {
-    id: 'q24',
-    prompt: '24. Do they require annual tax meetings?',
-    type: 'radio',
-    options: [
-      { label: 'Yes', value: 'yes' },
-      { label: 'No', value: 'no' },
-    ],
-  },
-  {
-    id: 'q25',
-    prompt: '25. Do you offer them support?',
-    type: 'radio',
-    options: [
-      { label: 'Email only - Team', value: 'emailTeam' },
-      { label: 'Email and phone - Team & CSM', value: 'emailPhoneTeamCsm' },
-      { label: 'Email and phone - CSM & Owner', value: 'emailPhoneCsmOwner' },
-    ],
-  },
-  {
-    id: 'q26',
-    prompt: '26. Do they need ASIC company secretarial work?',
-    type: 'radio',
-    options: [
-      { label: 'Annual returns', value: 'annualReturns' },
-      { label: 'Detail changes', value: 'detailChanges' },
-      { label: 'No', value: 'no' },
-    ],
-  },
-  {
-    id: 'q26b',
-    prompt: '27. Do they need ATO payment plans set up?',
-    type: 'radio',
-    options: [
-      { label: 'Basic plans', value: 'basicPlans' },
-      { label: 'Longer-term & hardship plans', value: 'hardshipPlans' },
-      { label: 'No', value: 'no' },
-    ],
-  },
-  {
-    id: 'q27',
-    prompt: '28. Do they require prior year to be lodged?',
-    type: 'inputGroup',
-    options: [
-      { label: 'Yes - provide # of Business returns', value: 'business', control: 'number' },
-      { label: 'Yes - provide # of Individuals', value: 'individuals', control: 'number' },
-      { label: 'Yes - provide # of BAS', value: 'bas', control: 'number' },
-      { label: 'Yes - provide # of SMSF', value: 'smsf', control: 'number' },
-      { label: 'Yes - provide # of IAS', value: 'ias', control: 'number' },
-      { label: 'Yes - provide # of FBT', value: 'fbt', control: 'number' },
-      { label: 'Yes - provide # of TPAR', value: 'tpar', control: 'number' },
-      { label: 'Yes - provide # of Workers comp', value: 'workersComp', control: 'number' },
-      { label: 'Yes - provide # of Super lodgment', value: 'super', control: 'number' },
-      { label: 'Yes - provide # of STP EOY', value: 'stpEoy', control: 'number' },
-      { label: 'Yes - provide # of LSL forms', value: 'lslForms', control: 'number' },
-      { label: 'Yes - provide # of Payroll Tax', value: 'payrollTax', control: 'number' },
-      { label: 'Yes - provide # of ASIC', value: 'asic', control: 'number' },
-      { label: 'No', value: 'none', control: 'button' },
-    ],
-  },
-];
+import { accountingQuestionData } from '../constants/accountingQuestions';
+const questionData = accountingQuestionData;
 
 const formatCurrency = (amount) =>
   amount == null
@@ -1048,11 +711,31 @@ export default function Questions() {
   }, [storeResponses]);
   const [responses, setResponses] = useState(initialState);
   const [selectedServices, setSelectedServices] = useState({});
-  const [requireQ2Message, setRequireQ2Message] = useState(false);
+  const [requireQ1Message, setRequireQ1Message] = useState(false);
+  
+  // Get pricing modifier from organisation
+  const organisation = useSelector((state) => state.auth.organisation);
+  const pricingModifier = organisation?.pricingModifier ?? DEFAULT_PRICING_MODIFIER;
+  
+  // Debug: Log when pricingModifier changes
+  useEffect(() => {
+    console.log('🔍 Questions.js - pricingModifier changed:', pricingModifier, 'organisation:', organisation);
+  }, [pricingModifier, organisation]);
+  
   const [focusedQuestion, setFocusedQuestion] = useState(null);
   const [saveStatus, setSaveStatus] = useState('idle'); // 'idle' | 'saving' | 'saved' | 'error'
   const saveTimerRef = useRef(null);
   const lastSavedRef = useRef(null);
+
+  // Sync local state when a new price is created or loaded (activePriceId changes)
+  const prevActivePriceIdRef = useRef(activePriceId);
+  useEffect(() => {
+    if (prevActivePriceIdRef.current !== activePriceId) {
+      setResponses(initialState);
+      lastSavedRef.current = null; // Reset saved ref to allow fresh saves
+      prevActivePriceIdRef.current = activePriceId;
+    }
+  }, [activePriceId, initialState]);
 
   // Auto-save debounced function
   const autoSave = useCallback(async (currentResponses) => {
@@ -1072,11 +755,11 @@ export default function Questions() {
 
     try {
       setSaveStatus('saving');
-      const totalMonthly = calculateTotalMonthlyPrice(currentResponses);
-      const totalOnceOff = calculateTotalOnceOffFee(currentResponses);
-      // Extract revenue segment from Q2
-      const revenueSegment = currentResponses?.q2 || undefined;
-      console.log('💾 Questions auto-save - Q2:', currentResponses?.q2, 'revenueSegment:', revenueSegment);
+      const totalMonthly = calculateTotalMonthlyPrice(currentResponses, pricingModifier);
+      const totalOnceOff = calculateTotalOnceOffFee(currentResponses, pricingModifier);
+      // Extract revenue segment from Q1
+      const revenueSegment = currentResponses?.q1 || undefined;
+      console.log('💾 Questions auto-save - Q1:', currentResponses?.q1, 'revenueSegment:', revenueSegment);
       await updatePrice(activePriceId, {
         questionResponses,
         questionsPricing: totalMonthly,
@@ -1091,7 +774,7 @@ export default function Questions() {
       setSaveStatus('error');
       setTimeout(() => setSaveStatus('idle'), 3000);
     }
-  }, [activePriceId]);
+  }, [activePriceId, pricingModifier]);
 
   // Debounced auto-save when responses change
   useEffect(() => {
@@ -1102,36 +785,66 @@ export default function Questions() {
   }, [responses, activePriceId, autoSave]);
 
   const dispatch = useDispatch();
+  
+  // Fetch organisation data to ensure pricingModifier is available
+  useEffect(() => {
+    const fetchOrganisation = async () => {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+      
+      try {
+        const response = await fetch('http://localhost:4000/v1/organisations/me', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          console.log('📊 Questions.js - Fetched organisation:', { pricingModifier: data.pricingModifier });
+          dispatch(setOrganisation({
+            organisation: data,
+            isOwner: data.isOwner || false,
+          }));
+        }
+      } catch (error) {
+        console.error('Error fetching organisation:', error);
+      }
+    };
+    
+    fetchOrganisation();
+  }, [dispatch]);
+  
   useEffect(() => {
     dispatch(setResponsesAction(responses));
-    if (responses.q2 && requireQ2Message) {
-      setRequireQ2Message(false);
+    if (responses.q1 && requireQ1Message) {
+      setRequireQ1Message(false);
     }
-  }, [responses, dispatch, requireQ2Message]);
+  }, [responses, dispatch, requireQ1Message]);
 
   useEffect(() => {
-    if (responses.q2) {
-      localStorage.setItem('selectedRevenueSegment', responses.q2);
+    if (responses.q1) {
+      localStorage.setItem('selectedRevenueSegment', responses.q1);
     }
-  }, [responses.q2]);
+  }, [responses.q1]);
 
   useEffect(() => {
-    // Focus question 2 on page load
-    const q2Button = document.querySelector('[value="micro"]');
-    if (q2Button) {
-      q2Button.focus();
+    // Focus question 1 on page load
+    const q1Button = document.querySelector('[value="micro"]');
+    if (q1Button) {
+      q1Button.focus();
     }
   }, []);
 
   const q7StringKey = useMemo(() => JSON.stringify(responses.q7), [responses.q7]);
 
   useEffect(() => {
-    console.log('Pricing calculation effect triggered', { q7: responses.q7, q2: responses.q2 });
+    console.log('Pricing calculation effect triggered', { q7: responses.q7, q1: responses.q1 });
     setSelectedServices((prev) => {
-      const originalSegment = responses.q2;
+      const originalSegment = responses.q1;
       const segment = segmentForServices(originalSegment);
       if (originalSegment && !segment) {
-        console.log('No service mapping for revenue segment', { question2Value: originalSegment });
+        console.log('No service mapping for revenue segment', { question1Value: originalSegment });
       }
       const smsfCandidate =
         responses.q6 === 'yes' && segment ? serviceValues.taxServices.smsf[segment] : undefined;
@@ -1734,7 +1447,7 @@ export default function Questions() {
       return changed ? next : prev;
     });
   }, [
-    responses.q2,
+    responses.q1,
     responses.q6,
     responses.q6a,
     responses.q7,
@@ -1821,17 +1534,24 @@ export default function Questions() {
     const parentMap = {}; // Track parent-child relationships
     let counter = 1;
     
+    // Recursive function to track all children
+    const trackChildren = (children, parentId) => {
+      if (!children) return;
+      children.forEach((child) => {
+        parentMap[child.id] = parentId;
+        if (child.children) {
+          trackChildren(child.children, child.id);
+        }
+      });
+    };
+    
     // First pass: Only count top-level questions and track parent-child relationships
     questionData.forEach((question) => {
       if (!question.showWhen || question.showWhen(responses)) {
         mapping[question.id] = counter++;
       }
-      // Track all children with their parent's ID
-      if (question.children) {
-        question.children.forEach((child) => {
-          parentMap[child.id] = question.id;
-        });
-      }
+      // Track all children recursively
+      trackChildren(question.children, question.id);
     });
     
     return { mapping, parentMap };
@@ -1840,6 +1560,16 @@ export default function Questions() {
   const { mapping: questionNumberMapping, parentMap } = useMemo(() => getQuestionNumberMapping(), [responses]);
 
   const renderQuestion = (question, depth = 0) => {
+    // Debug: log showWhen evaluation for q4's children
+    if (question.id === 'q4a' || question.id === 'q4b') {
+      console.log(`DEBUG renderQuestion ${question.id}:`, {
+        hasShowWhen: !!question.showWhen,
+        responsesQ4: responses.q4,
+        responsesQ4Type: typeof responses.q4,
+        showWhenResult: question.showWhen ? question.showWhen(responses) : 'no showWhen',
+      });
+    }
+    
     if (question.showWhen && !question.showWhen(responses)) {
       return null;
     }
@@ -1875,7 +1605,7 @@ export default function Questions() {
           onBlur={() => setFocusedQuestion(null)}
           sx={{
             p: 2,
-            borderRadius: '12px',
+            borderRadius: '4px',
             position: 'relative',
             zIndex: depth > 0 ? 1 : 0,
             backgroundColor: focusedQuestion === question.id ? 'background.default' : 'background.paper',
@@ -1963,6 +1693,8 @@ export default function Questions() {
                     setResponses({ ...responses, [question.id]: updatedValue });
                   }}
                   size="medium"
+                  disabled={question.id !== 'q1' && !responses.q1}
+                  onClick={question.id !== 'q1' && !responses.q1 ? () => setRequireQ1Message(true) : undefined}
                 sx={{
                   flexWrap: 'wrap',
                   gap: 1,
@@ -1978,6 +1710,8 @@ export default function Questions() {
                       <ToggleButton 
                         key={option.value} 
                         value={option.value}
+                        disabled={question.id !== 'q1' && !responses.q1}
+                        onClick={question.id !== 'q1' && !responses.q1 ? () => setRequireQ1Message(true) : undefined}
                         sx={{
                           minWidth: '160px',
                           flex: '0 1 160px',
@@ -1996,6 +1730,8 @@ export default function Questions() {
                   <ToggleButton 
                     key={question.iasOption.value} 
                     value={question.iasOption.value}
+                    disabled={question.id !== 'q1' && !responses.q1}
+                    onClick={question.id !== 'q1' && !responses.q1 ? () => setRequireQ1Message(true) : undefined}
                     sx={{
                       minWidth: '160px',
                       flex: '0 1 160px',
@@ -2012,6 +1748,8 @@ export default function Questions() {
                   <ToggleButton 
                     key={question.noOption.value} 
                     value={question.noOption.value}
+                    disabled={question.id !== 'q1' && !responses.q1}
+                    onClick={question.id !== 'q1' && !responses.q1 ? () => setRequireQ1Message(true) : undefined}
                     sx={{
                       minWidth: '160px',
                       flex: '0 1 160px',
@@ -2043,8 +1781,8 @@ export default function Questions() {
                   gap: 1,
                   display: 'flex',
                 }}
-                disabled={question.id !== 'q2' && !responses.q2}
-                onClick={question.id !== 'q2' && !responses.q2 ? () => setRequireQ2Message(true) : undefined}
+                disabled={question.id !== 'q1' && !responses.q1}
+                onClick={question.id !== 'q1' && !responses.q1 ? () => setRequireQ1Message(true) : undefined}
               >
                 {question.options.map((option) => {
                   // Check if option should be shown
@@ -2064,8 +1802,8 @@ export default function Questions() {
                       px: 1.5,
                       fontSize: '0.9rem',
                     }}
-                    disabled={question.id !== 'q2' && !responses.q2}
-                    onClick={question.id !== 'q2' && !responses.q2 ? () => setRequireQ2Message(true) : undefined}
+                    disabled={question.id !== 'q1' && !responses.q1}
+                    onClick={question.id !== 'q1' && !responses.q1 ? () => setRequireQ1Message(true) : undefined}
                   >
                     <Typography variant="body2" sx={{ fontWeight: 700, color: 'inherit' }}>{option.label}</Typography>
                   </ToggleButton>
@@ -2086,8 +1824,8 @@ export default function Questions() {
                           handleCheckboxChange(question.id, option.value)(e);
                         }}
                         size="small"
-                        disabled={question.id !== 'q2' && !responses.q2}
-                        onClick={question.id !== 'q2' && !responses.q2 ? () => setRequireQ2Message(true) : undefined}
+                        disabled={question.id !== 'q1' && !responses.q1}
+                        onClick={question.id !== 'q1' && !responses.q1 ? () => setRequireQ1Message(true) : undefined}
                         sx={{
                           '&.Mui-disabled': {
                             opacity: 0.6,
@@ -2095,9 +1833,9 @@ export default function Questions() {
                         }}
                       />
                     }
-                    label={<Typography variant="body2" sx={{ color: question.id !== 'q2' && !responses.q2 ? '#ccc' : '#666', fontWeight: 500 }}>{option.label}</Typography>}
-                    disabled={question.id !== 'q2' && !responses.q2}
-                    onClick={question.id !== 'q2' && !responses.q2 ? () => setRequireQ2Message(true) : undefined}
+                    label={<Typography variant="body2" sx={{ color: question.id !== 'q1' && !responses.q1 ? '#ccc' : '#666', fontWeight: 500 }}>{option.label}</Typography>}
+                    disabled={question.id !== 'q1' && !responses.q1}
+                    onClick={question.id !== 'q1' && !responses.q1 ? () => setRequireQ1Message(true) : undefined}
                     sx={{
                       m: 0,
                       transition: 'all 0.2s ease-in-out',
@@ -2108,7 +1846,7 @@ export default function Questions() {
             )}
             {question.type === 'number' && (
               <div 
-                onClick={question.id !== 'q2' && !responses.q2 ? () => setRequireQ2Message(true) : undefined}
+                onClick={question.id !== 'q1' && !responses.q1 ? () => setRequireQ1Message(true) : undefined}
                 style={{ display: 'inline-block' }}
               >
                 <TextField
@@ -2122,11 +1860,11 @@ export default function Questions() {
                   onFocus={() => setFocusedQuestion(question.id)}
                   label="Enter number"
                   size="small"
-                  disabled={question.id !== 'q2' && !responses.q2}
+                  disabled={question.id !== 'q1' && !responses.q1}
                   variant="outlined"
                   sx={{
                     maxWidth: '150px',
-                    pointerEvents: question.id !== 'q2' && !responses.q2 ? 'none' : 'auto',
+                    pointerEvents: question.id !== 'q1' && !responses.q1 ? 'none' : 'auto',
                     '& .MuiOutlinedInput-root': {
                       backgroundColor: '#ffffff',
                       transition: 'all 0.2s ease-in-out',
@@ -2170,8 +1908,8 @@ export default function Questions() {
                             handleInputGroupCheckboxChange(question.id, option.value)(e);
                           }}
                           size="small"
-                          disabled={question.id !== 'q2' && !responses.q2}
-                          onClick={question.id !== 'q2' && !responses.q2 ? () => setRequireQ2Message(true) : undefined}
+                          disabled={question.id !== 'q1' && !responses.q1}
+                          onClick={question.id !== 'q1' && !responses.q1 ? () => setRequireQ1Message(true) : undefined}
                           sx={{
                             '&.Mui-disabled': {
                               opacity: 0.6,
@@ -2179,9 +1917,9 @@ export default function Questions() {
                           }}
                         />
                       }
-                      label={<Typography variant="body2" sx={{ color: question.id !== 'q2' && !responses.q2 ? '#ccc' : '#666', fontWeight: 500 }}>{option.label}</Typography>}
-                      disabled={question.id !== 'q2' && !responses.q2}
-                      onClick={question.id !== 'q2' && !responses.q2 ? () => setRequireQ2Message(true) : undefined}
+                      label={<Typography variant="body2" sx={{ color: question.id !== 'q1' && !responses.q1 ? '#ccc' : '#666', fontWeight: 500 }}>{option.label}</Typography>}
+                      disabled={question.id !== 'q1' && !responses.q1}
+                      onClick={question.id !== 'q1' && !responses.q1 ? () => setRequireQ1Message(true) : undefined}
                       sx={{
                         m: 0,
                         transition: 'all 0.2s ease-in-out',
@@ -2225,7 +1963,7 @@ export default function Questions() {
                             });
                           }
                         }}
-                        disabled={question.id !== 'q2' && !responses.q2}
+                        disabled={question.id !== 'q1' && !responses.q1}
                         sx={{
                           transition: 'all 0.2s ease-in-out',
                           border: '1px solid #d0d0d0',
@@ -2251,7 +1989,7 @@ export default function Questions() {
                   ) : (
                     <div 
                       key={option.value}
-                      onClick={question.id !== 'q2' && !responses.q2 ? () => setRequireQ2Message(true) : undefined}
+                      onClick={question.id !== 'q1' && !responses.q1 ? () => setRequireQ1Message(true) : undefined}
                       style={{ display: 'block', width: '100%', maxWidth: '400px' }}
                     >
                       <TextField
@@ -2265,11 +2003,11 @@ export default function Questions() {
                         }}
                         onFocus={() => setFocusedQuestion(question.id)}
                         size="small"
-                        disabled={question.id !== 'q2' && !responses.q2}
+                        disabled={question.id !== 'q1' && !responses.q1}
                         variant="outlined"
                         sx={{
                           width: '100%',
-                          pointerEvents: question.id !== 'q2' && !responses.q2 ? 'none' : 'auto',
+                          pointerEvents: question.id !== 'q1' && !responses.q1 ? 'none' : 'auto',
                           '& .MuiOutlinedInput-root': {
                             backgroundColor: '#ffffff',
                             transition: 'all 0.2s ease-in-out',
@@ -2304,16 +2042,23 @@ export default function Questions() {
             )}
           </Stack>
         </Paper>
-        {question.children && question.children.map((child) => renderQuestion(child, depth + 1))}
+        {question.children && (() => {
+          console.log(`DEBUG: Rendering children for ${question.id}:`, question.children.map(c => c.id));
+          return question.children.map((child) => renderQuestion(child, depth + 1));
+        })()}
       </div>
     );
   };
 
-  const totalMonthlyPrice = useMemo(() => calculateTotalMonthlyPrice(responses), [responses]);
+  const totalMonthlyPrice = useMemo(() => {
+    const price = calculateTotalMonthlyPrice(responses, pricingModifier);
+    console.log('📊 totalMonthlyPrice calculated:', price, 'with pricingModifier:', pricingModifier, 'responses.q1:', responses.q1);
+    return price;
+  }, [responses, pricingModifier]);
   const serviceCatalogPricing = useSelector((state) => state.responses?.serviceCatalogPricing || 0);
   const combinedTotal = totalMonthlyPrice + serviceCatalogPricing;
 
-  const totalOnceOffFee = useMemo(() => calculateTotalOnceOffFee(responses), [responses]);
+  const totalOnceOffFee = useMemo(() => calculateTotalOnceOffFee(responses, pricingModifier), [responses, pricingModifier]);
   const serviceCatalogOnceOffFee = useSelector((state) => state.responses?.serviceCatalogOnceOffFee || 0);
   const combinedOnceOffTotal = totalOnceOffFee + serviceCatalogOnceOffFee;
 
@@ -2323,6 +2068,16 @@ export default function Questions() {
       dispatch(setQuestionsPricing(totalMonthlyPrice));
     }
   }, [totalMonthlyPrice, dispatch]);
+  
+  // Re-dispatch pricing when pricingModifier changes
+  useEffect(() => {
+    console.log('💰 Pricing modifier changed, recalculating prices with modifier:', pricingModifier);
+    const recalculatedMonthly = calculateTotalMonthlyPrice(responses, pricingModifier);
+    const recalculatedOnceOff = calculateTotalOnceOffFee(responses, pricingModifier);
+    console.log('💰 Recalculated prices:', { monthly: recalculatedMonthly, onceOff: recalculatedOnceOff, modifier: pricingModifier });
+    dispatch(setQuestionsPricing(recalculatedMonthly));
+    dispatch(setQuestionsOnceOffFee(recalculatedOnceOff));
+  }, [pricingModifier, responses, dispatch]);
 
   useEffect(() => {
     console.log('DEBUG: Dispatching questionsOnceOffFee:', totalOnceOffFee);
@@ -2336,13 +2091,13 @@ export default function Questions() {
       <Container sx={{ py: 3, pb: 14 }}>
         <Stack spacing={1} sx={{ mb: 3 }}>
           <Typography variant="h4" sx={{ fontWeight: 700, color: '#1a1a1a' }}>
-            Service Calculator
+            Accounting Pricing Calculator
           </Typography>
           <Typography variant="body2" sx={{ color: '#666' }}>
-            Answer a few quick questions to calculate pricing for your potential client
+            Answer a few quick questions to calculate accounting pricing for your potential client
           </Typography>
         </Stack>
-        {requireQ2Message && (
+        {requireQ1Message && (
           <div style={{
             position: 'fixed',
             top: 24,
@@ -2369,7 +2124,7 @@ export default function Questions() {
             <div style={{ pointerEvents: 'auto', minWidth: 320, maxWidth: 500 }}>
               <Alert 
                 severity="warning" 
-                onClose={() => setRequireQ2Message(false)}
+                onClose={() => setRequireQ1Message(false)}
                 sx={{
                   backgroundColor: '#fff3cd',
                   borderRadius: 1,
@@ -2377,13 +2132,13 @@ export default function Questions() {
                 }}
               >
                 <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                  Please select an answer for question 2 before proceeding.
+                  Please select an answer for question 1 before proceeding.
                 </Typography>
               </Alert>
             </div>
           </div>
         )}
-        <Stack spacing={2}>{questionData.filter((question) => question.id !== 'q1').map((question) => renderQuestion(question))}</Stack>
+        <Stack spacing={2}>{questionData.map((question) => renderQuestion(question))}</Stack>
       </Container>
       
       {/* Sticky Footer Bar with Pricing */}
@@ -2402,42 +2157,22 @@ export default function Questions() {
       >
         <Container sx={{ py: 2 }}>
           <Stack 
-            direction={{ xs: 'column', sm: 'row' }} 
-            spacing={2} 
-            sx={{ alignItems: { xs: 'stretch', sm: 'center' }, justifyContent: 'space-between' }}
+            direction="row" 
+            spacing={3}
+            sx={{ alignItems: 'center', justifyContent: 'space-between' }}
           >
-            <Stack direction={{ xs: 'row', sm: 'row' }} spacing={3} sx={{ alignItems: { xs: 'center', sm: 'center' }, justifyContent: { xs: 'space-between', sm: 'flex-start' }, flex: { xs: 1, sm: 'initial' } }}>
-              <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
-                <Typography variant="body2" sx={{ color: '#666', whiteSpace: 'nowrap', fontWeight: 600 }}>
-                  Monthly:
-                </Typography>
-                <Typography variant="h6" sx={{ color: '#002060', fontWeight: 700, minWidth: '110px' }}>
-                  ${combinedTotal.toFixed(2)}
-                </Typography>
-              </Stack>
-              <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
-                <Typography variant="body2" sx={{ color: '#666', whiteSpace: 'nowrap', fontWeight: 600 }}>
-                  Once Off:
-                </Typography>
-                <Typography variant="h6" sx={{ color: '#002060', fontWeight: 700, minWidth: '110px' }}>
-                  ${combinedOnceOffTotal.toFixed(2)}
-                </Typography>
-              </Stack>
+            <Stack direction="row" spacing={2} sx={{ alignItems: 'center' }}>
+              <Typography variant="body1" sx={{ color: '#666', fontSize: '1.1rem' }}>
+                Monthly: <span style={{ fontWeight: 700, color: '#002060' }}>${combinedTotal.toFixed(2)}</span>
+              </Typography>
+              <Typography variant="body1" sx={{ color: '#666', fontSize: '1.1rem' }}>
+                Once Off: <span style={{ fontWeight: 700, color: '#002060' }}>${combinedOnceOffTotal.toFixed(2)}</span>
+              </Typography>
             </Stack>
-            <Stack direction={{ xs: 'row', sm: 'row' }} spacing={1} sx={{ width: { xs: '100%', sm: 'auto' }, alignItems: 'center' }}>
-              {activePriceId && saveStatus === 'saving' && (
-                <Chip icon={<CloudUploadIcon />} label="Saving..." size="small" color="info" variant="outlined" />
-              )}
-              {activePriceId && saveStatus === 'saved' && (
-                <Chip icon={<CloudDoneIcon />} label="Saved" size="small" color="success" variant="outlined" />
-              )}
-              {activePriceId && saveStatus === 'error' && (
-                <Chip label="Save failed" size="small" color="error" variant="outlined" />
-              )}
-              {clientName && (
-                <Chip label={clientName} size="small" variant="outlined" sx={{ maxWidth: 150 }} />
-              )}
-              <Button
+            <Typography variant="body1" sx={{ color: '#666', fontWeight: 500, minWidth: 120, textAlign: 'center', fontSize: '1.1rem' }}>
+              {clientName || 'New Quote'}
+            </Typography>
+            <Button
                 variant="contained"
                 color="primary"
                 onClick={async () => {
@@ -2456,10 +2191,9 @@ export default function Questions() {
                   },
                 }}
               >
-                Next
+                Generate Quote
               </Button>
             </Stack>
-          </Stack>
         </Container>
       </Paper>
     </>

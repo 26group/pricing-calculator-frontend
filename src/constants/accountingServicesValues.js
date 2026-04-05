@@ -14,6 +14,160 @@ export const serviceValuesAccounting = {
         inclusion: 'Individual Returns ALL',
       },
     },
+    individualReturnExtras: {
+      rentalProperty: {
+        providedByClient: {
+          monthly: 12.5,
+          yearly: 150,
+          inclusion: 'Rental Property - Summary provided by client',
+        },
+        preparedByFirm: {
+          monthly: 25,
+          yearly: 300,
+          inclusion: 'Rental Property - Summary prepared by the firm',
+        },
+      },
+      managedFunds: {
+        providedByClient: {
+          monthly: 4.17,
+          yearly: 50,
+          inclusion: 'Managed Funds - Summary provided by client',
+        },
+        preparedByFirm: {
+          monthly: 8.33,
+          yearly: 100,
+          inclusion: 'Managed Funds - Summary prepared by the firm',
+        },
+      },
+      dividendsNotReportedToATO: {
+        providedByClient: {
+          monthly: 4.17,
+          yearly: 50,
+          inclusion: 'Dividends not reported to ATO - Summary provided by client',
+        },
+        preparedByFirm: {
+          monthly: 8.33,
+          yearly: 100,
+          inclusion: 'Dividends not reported to ATO - Summary prepared by the firm',
+        },
+      },
+      interestNotReportedToATO: {
+        providedByClient: {
+          monthly: 4.17,
+          yearly: 50,
+          inclusion: 'Interest not reported to ATO - Summary provided by client',
+        },
+        preparedByFirm: {
+          monthly: 8.33,
+          yearly: 100,
+          inclusion: 'Interest not reported to ATO - Summary prepared by the firm',
+        },
+      },
+      cgtSharesAndEquities: {
+        providedByClient: {
+          monthly: 12.5,
+          yearly: 150,
+          inclusion: 'CGT - shares and equities etc - Summary provided by client',
+        },
+        preparedByFirm: {
+          monthly: 25,
+          yearly: 300,
+          inclusion: 'CGT - shares and equities etc - Summary prepared by the firm',
+        },
+      },
+      cgtPropertySales: {
+        providedByClient: {
+          monthly: 45.83,
+          yearly: 550,
+          inclusion: 'CGT - Property sales - Summary provided by client',
+        },
+        preparedByFirm: {
+          monthly: 91.67,
+          yearly: 1100,
+          inclusion: 'CGT - Property sales - Summary prepared by the firm',
+        },
+      },
+      balancingAdjustmentCalculation: {
+        providedByClient: {
+          monthly: 4.17,
+          yearly: 50,
+          inclusion: 'Balancing adjustment calculation (sale of business asset) - Summary provided by client',
+        },
+        preparedByFirm: {
+          monthly: 8.33,
+          yearly: 100,
+          inclusion: 'Balancing adjustment calculation (sale of business asset) - Summary prepared by the firm',
+        },
+      },
+      deductionsMoreThan3Standard: {
+        providedByClient: {
+          monthly: 4.17,
+          yearly: 50,
+          inclusion: 'Deductions - more than 3 standard expenses - Summary provided by client',
+        },
+        preparedByFirm: {
+          monthly: 8.33,
+          yearly: 100,
+          inclusion: 'Deductions - more than 3 standard expenses - Summary prepared by the firm',
+        },
+      },
+      motorVehicleLogBook: {
+        providedByClient: {
+          monthly: 4.17,
+          yearly: 50,
+          inclusion: 'Motor Vehicle Schedule - log book method - Summary provided by client',
+        },
+        preparedByFirm: {
+          monthly: 8.33,
+          yearly: 100,
+          inclusion: 'Motor Vehicle Schedule - log book method - Summary prepared by the firm',
+        },
+      },
+      motorVehicleStatutoryRate: {
+        providedByClient: {
+          monthly: 4.17,
+          yearly: 50,
+          inclusion: 'Motor Vehicle claim statutory rate - Summary provided by client',
+        },
+        preparedByFirm: {
+          monthly: 8.33,
+          yearly: 100,
+          inclusion: 'Motor Vehicle claim statutory rate - Summary prepared by the firm',
+        },
+      },
+      amendmentOriginalPreparedByFirm: {
+        providedByClient: {
+          monthly: 8.33,
+          yearly: 100,
+          inclusion: 'Amendment to lodge returns - Original prepared by firm - Summary provided by client',
+        },
+        preparedByFirm: {
+          monthly: 16.67,
+          yearly: 200,
+          inclusion: 'Amendment to lodge returns - Original prepared by firm - Summary prepared by the firm',
+        },
+      },
+      amendmentOriginalNotPreparedByFirm: {
+        providedByClient: {
+          monthly: 20.83,
+          yearly: 250,
+          inclusion: 'Amendment to lodge returns - Original not prepared by firm - Summary provided by client',
+        },
+        preparedByFirm: {
+          monthly: 33.33,
+          yearly: 400,
+          inclusion: 'Amendment to lodge returns - Original not prepared by firm - Summary prepared by the firm',
+        },
+      },
+      returnNotNecessary: {
+        providedByClient: {
+          monthly: 4.17,
+          yearly: 50,
+          inclusion: 'Return not necessary',
+        },
+        preparedByFirm: null,
+      },
+    },
     businessReturns: {
       micro: {
         monthly: 62.5,
@@ -34,6 +188,11 @@ export const serviceValuesAccounting = {
         monthly: 250,
         yearly: 3000,
         inclusion: 'Large < $3M',
+      },
+      enterprise: {
+        monthly: 375,
+        yearly: 4500,
+        inclusion: 'Enterprise $3M plus',
       },
     },
     smsf: {
@@ -57,6 +216,11 @@ export const serviceValuesAccounting = {
         yearly: 6000,
         inclusion: 'SMSF - Large < $3M',
       },
+      enterprise: {
+        monthly: 750,
+        yearly: 9000,
+        inclusion: 'SMSF - Enterprise $3M plus',
+      },
     },
     fbtReturns: {
       micro: {
@@ -78,6 +242,11 @@ export const serviceValuesAccounting = {
         monthly: 125,
         yearly: 1500,
         inclusion: 'FBT - Large < $3M',
+      },
+      enterprise: {
+        monthly: 187.5,
+        yearly: 2250,
+        inclusion: 'FBT - Enterprise $3M plus',
       },
     },
     bas: {
@@ -101,6 +270,11 @@ export const serviceValuesAccounting = {
         yearly: 300,
         inclusion: 'BAS - Large < $3M (per return)',
       },
+      enterprise: {
+        monthly: 37.5,
+        yearly: 450,
+        inclusion: 'BAS - Enterprise $3M plus (per return)',
+      },
     },
     ias: {
       micro: {
@@ -123,6 +297,11 @@ export const serviceValuesAccounting = {
         yearly: 150,
         inclusion: 'IAS - Large < $3M (per return)',
       },
+      enterprise: {
+        monthly: 18.75,
+        yearly: 225,
+        inclusion: 'IAS - Enterprise $3M plus (per return)',
+      },
     },
     tpar: {
       micro: {
@@ -144,6 +323,11 @@ export const serviceValuesAccounting = {
         monthly: 20.83,
         yearly: 250,
         inclusion: 'TPAR - Large < $3M (per return)',
+      },
+      enterprise: {
+        monthly: 31.25,
+        yearly: 375,
+        inclusion: 'TPAR - Enterprise $3M plus (per return)',
       },
     },
   },
@@ -193,6 +377,11 @@ export const serviceValuesAccounting = {
         yearly: 750,
         inclusion: 'Workers Comp - Large < $3M',
       },
+      enterprise: {
+        monthly: 93.75,
+        yearly: 1125,
+        inclusion: 'Workers Comp - Enterprise $3M plus',
+      },
     },
     payrollProcessing: {
       salary: {
@@ -217,6 +406,11 @@ export const serviceValuesAccounting = {
         yearly: 500,
         inclusion: 'Payroll Tax - Large < $3M',
       },
+      enterprise: {
+        monthly: 62.5,
+        yearly: 750,
+        inclusion: 'Payroll Tax - Enterprise $3M plus',
+      },
     },
     superPrepAndLodgement: {
       micro: {
@@ -238,6 +432,11 @@ export const serviceValuesAccounting = {
         monthly: 41.67,
         yearly: 500,
         inclusion: 'Super Prep and Lodgement - Large < $3M',
+      },
+      enterprise: {
+        monthly: 62.5,
+        yearly: 750,
+        inclusion: 'Super Prep and Lodgement - Enterprise $3M plus',
       },
     },
     stpReporting: {
@@ -261,6 +460,11 @@ export const serviceValuesAccounting = {
         yearly: 500,
         inclusion: 'STP Reporting - Large < $3M',
       },
+      enterprise: {
+        monthly: 62.5,
+        yearly: 750,
+        inclusion: 'STP Reporting - Enterprise $3M plus',
+      },
     },
     lslReporting: {
       micro: {
@@ -282,6 +486,11 @@ export const serviceValuesAccounting = {
         monthly: 41.67,
         yearly: 500,
         inclusion: 'LSL Construction Reporting - Large < $3M',
+      },
+      enterprise: {
+        monthly: 62.5,
+        yearly: 750,
+        inclusion: 'LSL Construction Reporting - Enterprise $3M plus',
       },
     },
   },
@@ -307,6 +516,11 @@ export const serviceValuesAccounting = {
         yearly: 2000,
         inclusion: 'Tax Planning / Review - Large < $3M',
       },
+      enterprise: {
+        monthly: 250,
+        yearly: 3000,
+        inclusion: 'Tax Planning / Review - Enterprise $3M plus',
+      },
     },
     taxStructuringAdvice: {
       micro: {
@@ -328,6 +542,11 @@ export const serviceValuesAccounting = {
         monthly: 416.67,
         yearly: 5000,
         inclusion: 'Tax Structuring Advice - Large < $3M',
+      },
+      enterprise: {
+        monthly: 625,
+        yearly: 7500,
+        inclusion: 'Tax Structuring Advice - Enterprise $3M plus',
       },
     },
     xeroSetup: {
@@ -351,6 +570,11 @@ export const serviceValuesAccounting = {
         yearly: 1500,
         inclusion: 'Xero Setup - Large < $3M',
       },
+      enterprise: {
+        monthly: 187.5,
+        yearly: 2250,
+        inclusion: 'Xero Setup - Enterprise $3M plus',
+      },
     },
     xeroTraining: {
       micro: {
@@ -372,6 +596,11 @@ export const serviceValuesAccounting = {
         monthly: 100,
         yearly: 1200,
         inclusion: 'Xero Training - Large < $3M',
+      },
+      enterprise: {
+        monthly: 150,
+        yearly: 1800,
+        inclusion: 'Xero Training - Enterprise $3M plus',
       },
     },
   },
@@ -397,12 +626,22 @@ export const serviceValuesAccounting = {
         yearly: 2000,
         inclusion: 'Financial Statements - Large < $3M',
       },
+      enterprise: {
+        monthly: 250,
+        yearly: 3000,
+        inclusion: 'Financial Statements - Enterprise $3M plus',
+      },
     },
     statutoryFinancialStatements: {
       large: {
         monthly: 250,
         yearly: 3000,
         inclusion: 'Statutory Financial Statements - Large < $3M',
+      },
+      enterprise: {
+        monthly: 375,
+        yearly: 4500,
+        inclusion: 'Statutory Financial Statements - Enterprise $3M plus',
       },
     },
     managementFinancialStatements: {
@@ -425,6 +664,11 @@ export const serviceValuesAccounting = {
         monthly: 166.67,
         yearly: 2000,
         inclusion: 'Management Financial Statements - Large < $3M',
+      },
+      enterprise: {
+        monthly: 250,
+        yearly: 3000,
+        inclusion: 'Management Financial Statements - Enterprise $3M plus',
       },
     },
   },
@@ -450,6 +694,11 @@ export const serviceValuesAccounting = {
         yearly: 750,
         inclusion: 'Review The Numbers Meetings - Large < $3M',
       },
+      enterprise: {
+        monthly: 93.75,
+        yearly: 1125,
+        inclusion: 'Review The Numbers Meetings - Enterprise $3M plus',
+      },
     },
     annualTaxMeetings: {
       micro: {
@@ -471,6 +720,11 @@ export const serviceValuesAccounting = {
         monthly: 62.5,
         yearly: 750,
         inclusion: 'Annual Meetings - Large < $3M',
+      },
+      enterprise: {
+        monthly: 93.75,
+        yearly: 1125,
+        inclusion: 'Annual Meetings - Enterprise $3M plus',
       },
     },
   },
@@ -496,6 +750,11 @@ export const serviceValuesAccounting = {
         yearly: 600,
         inclusion: 'Team or Email - Large < $3M',
       },
+      enterprise: {
+        monthly: 75,
+        yearly: 900,
+        inclusion: 'Team or Email - Enterprise $3M plus',
+      },
     },
     clientServiceManager: {
       micro: {
@@ -518,6 +777,11 @@ export const serviceValuesAccounting = {
         yearly: 1200,
         inclusion: 'Client Service Manager - Large < $3M',
       },
+      enterprise: {
+        monthly: 150,
+        yearly: 1800,
+        inclusion: 'Client Service Manager - Enterprise $3M plus',
+      },
     },
     principalOwner: {
       micro: {
@@ -539,6 +803,11 @@ export const serviceValuesAccounting = {
         monthly: 208.33,
         yearly: 2500,
         inclusion: 'Principal / Owner - Large < $3M',
+      },
+      enterprise: {
+        monthly: 312.5,
+        yearly: 3750,
+        inclusion: 'Principal / Owner - Enterprise $3M plus',
       },
     },
   },

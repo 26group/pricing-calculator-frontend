@@ -1,14 +1,31 @@
 import { serviceValuesAccounting } from '../constants/accountingServicesValues';
 
+// Base pricing modifier value (center of slider)
+const BASE_PRICING_MODIFIER = 200;
+
+/**
+ * Calculates the pricing multiplier based on the pricing modifier
+ * @param {number} pricingModifier - The pricing modifier value (default 200)
+ * @returns {number} The multiplier to apply to prices
+ */
+const getPricingMultiplier = (pricingModifier) => {
+  if (pricingModifier === undefined || pricingModifier === null) {
+    return 1; // No adjustment
+  }
+  return pricingModifier / BASE_PRICING_MODIFIER;
+};
+
 /**
  * Calculates total monthly pricing based on question responses
  * @param {Object} responses - Question responses from Questions.js
+ * @param {number} pricingModifier - Optional pricing modifier from organisation (default 200)
  * @returns {number} Total monthly cost
  */
-export const calculateTotalMonthlyPrice = (responses) => {
+export const calculateTotalMonthlyPrice = (responses, pricingModifier = 200) => {
   let total = 0;
+  const multiplier = getPricingMultiplier(pricingModifier);
 
-  console.log('calculateTotalMonthlyPrice called with responses:', responses);
+  console.log('calculateTotalMonthlyPrice called with responses:', responses, 'pricingModifier:', pricingModifier, 'multiplier:', multiplier);
 
   // Helper function to get segment for service lookup
   const getSegment = (originalSegment) => {
@@ -21,16 +38,15 @@ export const calculateTotalMonthlyPrice = (responses) => {
     return null;
   };
 
-  const segment = getSegment(responses.q2);
+  const segment = getSegment(responses.q1);
 
-  // q1: Services provided (checkbox) - not directly a service cost
-  // q2: Revenue segment - used for lookups
-  // q3: Accounting system - not directly a service cost
-  // q3a: Set up system - not directly a service cost
-  // q3b: Information method - not directly a service cost
-  // q4: Number of business entities
-  if (responses.q4 && responses.q4 !== '' && segment) {
-    const businessCount = parseInt(responses.q4, 10);
+  // q1: Revenue segment - used for lookups
+  // q2: Accounting system - not directly a service cost
+  // q2a: Set up system - not directly a service cost
+  // q2b: Information method - not directly a service cost
+  // q3: Number of business entities
+  if (responses.q3 && responses.q3 !== '' && segment) {
+    const businessCount = parseInt(responses.q3, 10);
     if (!isNaN(businessCount) && businessCount > 0) {
       // Business returns pricing per entity
       const businessReturn = serviceValuesAccounting.taxServices.businessReturns[segment];
@@ -40,9 +56,9 @@ export const calculateTotalMonthlyPrice = (responses) => {
     }
   }
 
-  // q5: Number of individual returns
-  if (responses.q5 && responses.q5 !== '') {
-    const individualCount = parseInt(responses.q5, 10);
+  // q4: Number of individual returns
+  if (responses.q4 && responses.q4 !== '') {
+    const individualCount = parseInt(responses.q4, 10);
     if (!isNaN(individualCount) && individualCount > 0) {
       const individualReturn = serviceValuesAccounting.taxServices.individualReturns.all;
       if (individualReturn) {
@@ -51,34 +67,59 @@ export const calculateTotalMonthlyPrice = (responses) => {
     }
   }
 
-  // q6: SMSF
-  if (responses.q6 === 'yes' && segment) {
+  // q4a/q4b: Individual return extras (based on q4a selection)
+  if (responses.q4a && responses.q4b && typeof responses.q4b === 'object') {
+    const summaryType = responses.q4a; // 'providedByClient' or 'preparedByFirm'
+    const extras = serviceValuesAccounting.taxServices.individualReturnExtras;
+    
+    Object.entries(responses.q4b).forEach(([extraKey, value]) => {
+      // Skip 'none' button and empty values
+      if (extraKey === 'none' || !value) return;
+      
+      const extraPricing = extras[extraKey];
+      if (extraPricing && extraPricing[summaryType]) {
+        // For checkbox (deductionsMoreThan3Standard), value is true/false
+        if (typeof value === 'boolean' && value === true) {
+          total += extraPricing[summaryType].monthly;
+        } else {
+          // For number inputs, multiply by quantity
+          const quantity = parseInt(value, 10);
+          if (!isNaN(quantity) && quantity > 0) {
+            total += extraPricing[summaryType].monthly * quantity;
+          }
+        }
+      }
+    });
+  }
+
+  // q5: SMSF
+  if (responses.q5 === 'yes' && segment) {
     const smsfService = serviceValuesAccounting.taxServices.smsf[segment];
     if (smsfService) {
       total += smsfService.monthly;
     }
   }
 
-  // q6a: SMSF audit and tax return
-  if (responses.q6a === 'yes' && segment) {
+  // q5a: SMSF audit and tax return
+  if (responses.q5a === 'yes' && segment) {
     const smsfService = serviceValuesAccounting.taxServices.smsf[segment];
     if (smsfService) {
       total += smsfService.monthly;
     }
   }
 
-  // q7: BAS/IAS
-  console.log('DEBUG q7:', responses.q7, 'segment:', segment);
-  if (responses.q7 && segment) {
+  // q6: BAS/IAS
+  console.log('DEBUG q6:', responses.q6, 'segment:', segment);
+  if (responses.q6 && segment) {
     // Handle new object format { bas: 'basQuarterly'|'basMonthly', ias: 'iasMonthly'|undefined, no: 'no'|undefined }
-    if (typeof responses.q7 === 'object' && responses.q7 !== null) {
-      console.log('DEBUG q7 is object, no:', responses.q7.no, 'bas:', responses.q7.bas, 'ias:', responses.q7.ias);
+    if (typeof responses.q6 === 'object' && responses.q6 !== null) {
+      console.log('DEBUG q6 is object, no:', responses.q6.no, 'bas:', responses.q6.bas, 'ias:', responses.q6.ias);
       // Skip BAS/IAS pricing if "No" is selected
-      if (responses.q7.no === 'no') {
-        console.log('DEBUG q7 "No" is selected - skipping BAS/IAS pricing');
+      if (responses.q6.no === 'no') {
+        console.log('DEBUG q6 "No" is selected - skipping BAS/IAS pricing');
       } else {
-        console.log('DEBUG q7.no is not set, checking bas/ias');
-        if (responses.q7.bas === 'basQuarterly' || responses.q7.bas === 'basMonthly') {
+        console.log('DEBUG q6.no is not set, checking bas/ias');
+        if (responses.q6.bas === 'basQuarterly' || responses.q6.bas === 'basMonthly') {
           const basService = serviceValuesAccounting.taxServices.bas[segment];
           console.log('DEBUG BAS service found:', basService);
           if (basService) {
@@ -86,21 +127,21 @@ export const calculateTotalMonthlyPrice = (responses) => {
             total += basService.monthly;
           }
         }
-        if (responses.q7.ias === 'iasMonthly') {
+        if (responses.q6.ias === 'iasMonthly') {
           const iasService = serviceValuesAccounting.taxServices.ias[segment];
           if (iasService) {
             total += iasService.monthly;
           }
         }
       }
-    } else if (responses.q7 !== '' && responses.q7 !== 'no') {
+    } else if (responses.q6 !== '' && responses.q6 !== 'no') {
       // Handle old string format for backward compatibility
-      if (responses.q7 === 'basQuarterly' || responses.q7 === 'basMonthly') {
+      if (responses.q6 === 'basQuarterly' || responses.q6 === 'basMonthly') {
         const basService = serviceValuesAccounting.taxServices.bas[segment];
         if (basService) {
           total += basService.monthly;
         }
-      } else if (responses.q7 === 'iasMonthly') {
+      } else if (responses.q6 === 'iasMonthly') {
         const iasService = serviceValuesAccounting.taxServices.ias[segment];
         if (iasService) {
           total += iasService.monthly;
@@ -109,11 +150,11 @@ export const calculateTotalMonthlyPrice = (responses) => {
     }
   }
 
-  // q8: Run payroll - not directly a service cost
-  // q8a: Payroll processing - not directly mapped (varies by employee count)
-  // q9: Salaried employees
-  if (responses.q9 && typeof responses.q9 === 'object' && segment) {
-    const { weekly = 0, fortnightly = 0, monthly = 0 } = responses.q9;
+  // q7: Run payroll - not directly a service cost
+  // q7a: Payroll processing - not directly mapped (varies by employee count)
+  // q8: Salaried employees
+  if (responses.q8 && typeof responses.q8 === 'object' && segment) {
+    const { weekly = 0, fortnightly = 0, monthly = 0 } = responses.q8;
     const weeklyCount = parseInt(weekly, 10) || 0;
     const fortnightlyCount = parseInt(fortnightly, 10) || 0;
     const monthlyCount = parseInt(monthly, 10) || 0;
@@ -127,9 +168,9 @@ export const calculateTotalMonthlyPrice = (responses) => {
     }
   }
 
-  // q10: Timesheet employees
-  if (responses.q10 && typeof responses.q10 === 'object' && segment) {
-    const { weekly = 0, fortnightly = 0, monthly = 0 } = responses.q10;
+  // q9: Timesheet employees
+  if (responses.q9 && typeof responses.q9 === 'object' && segment) {
+    const { weekly = 0, fortnightly = 0, monthly = 0 } = responses.q9;
     const weeklyCount = parseInt(weekly, 10) || 0;
     const fortnightlyCount = parseInt(fortnightly, 10) || 0;
     const monthlyCount = parseInt(monthly, 10) || 0;
@@ -143,126 +184,126 @@ export const calculateTotalMonthlyPrice = (responses) => {
     }
   }
 
-  // q11: Single Touch Payroll
-  if (responses.q11 && responses.q11 !== 'no' && segment) {
+  // q10: Single Touch Payroll
+  if (responses.q10 && responses.q10 !== 'no' && segment) {
     const stpService = serviceValuesAccounting.payrollServices.stpReporting?.[segment];
     if (stpService) {
       total += stpService.monthly;
     }
   }
 
-  // q12: Superannuation lodgement
-  if (responses.q12 && responses.q12 !== 'no' && segment) {
+  // q11: Superannuation lodgement
+  if (responses.q11 && responses.q11 !== 'no' && segment) {
     const superService = serviceValuesAccounting.payrollServices.superPrepAndLodgement?.[segment];
     if (superService) {
       total += superService.monthly;
     }
   }
 
-  // q13: Payroll tax returns
-  if (responses.q13 === 'yes' && segment) {
+  // q12: Payroll tax returns
+  if (responses.q12 === 'yes' && segment) {
     const payrollTaxService = serviceValuesAccounting.payrollServices.payrollTaxReturns?.[segment];
     if (payrollTaxService) {
       total += payrollTaxService.monthly;
     }
   }
 
-  // q14: Workers compensation
-  if (responses.q14 === 'yes' && segment) {
+  // q13: Workers compensation
+  if (responses.q13 === 'yes' && segment) {
     const workersCompService = serviceValuesAccounting.payrollServices.workersCompensation?.[segment];
     if (workersCompService) {
       total += workersCompService.monthly;
     }
   }
 
-  // q15: Long service leave - not directly mapped in accountingServicesValues
-  // q16: TPAR
-  if (responses.q16 === 'yes' && segment) {
+  // q14: Long service leave - not directly mapped in accountingServicesValues
+  // q15: TPAR
+  if (responses.q15 === 'yes' && segment) {
     const tparService = serviceValuesAccounting.taxServices.tpar?.[segment];
     if (tparService) {
       total += tparService.monthly;
     }
   }
 
-  // q17: FBT return
-  if (responses.q17 === 'yes' && segment) {
+  // q16: FBT return
+  if (responses.q16 === 'yes' && segment) {
     const fbtService = serviceValuesAccounting.taxServices.fbtReturns?.[segment];
     if (fbtService) {
       total += fbtService.monthly;
     }
   }
 
-  // q18: Tax planning
-  if (responses.q18 === 'yes' && segment) {
+  // q17: Tax planning
+  if (responses.q17 === 'yes' && segment) {
     const taxPlanningService = serviceValuesAccounting.advisoryServices.taxPlanningReview?.[segment];
     if (taxPlanningService) {
       total += taxPlanningService.monthly;
     }
   }
 
-  // q19: Tax structuring
-  if (responses.q19 === 'yes' && segment) {
+  // q18: Tax structuring
+  if (responses.q18 === 'yes' && segment) {
     const taxStructuringService = serviceValuesAccounting.advisoryServices.taxStructuringAdvice?.[segment];
     if (taxStructuringService) {
       total += taxStructuringService.monthly;
     }
   }
 
-  // q20: Financial statements
-  if (responses.q20 === 'yes' && segment) {
+  // q19: Financial statements
+  if (responses.q19 === 'yes' && segment) {
     const fsService = serviceValuesAccounting.reporting.financialStatementsTax?.[segment];
     if (fsService) {
       total += fsService.monthly;
     }
   }
 
-  // q21: Statutory financial statements
-  if (responses.q21 === 'yes' && segment) {
+  // q20: Statutory financial statements
+  if (responses.q20 === 'yes' && segment) {
     const statutoryService = serviceValuesAccounting.reporting.statutoryFinancialStatements?.[segment];
     if (statutoryService) {
       total += statutoryService.monthly;
     }
   }
 
-  // q22: Management financial statements
-  if (responses.q22 && responses.q22 !== 'no' && segment) {
+  // q21: Management financial statements
+  if (responses.q21 && responses.q21 !== 'no' && segment) {
     const mfsService = serviceValuesAccounting.reporting.managementFinancialStatements?.[segment];
     if (mfsService) {
       total += mfsService.monthly;
     }
   }
 
-  // q23: Review the Numbers meetings
-  if (responses.q23 && responses.q23 !== 'no' && segment) {
+  // q22: Review the Numbers meetings
+  if (responses.q22 && responses.q22 !== 'no' && segment) {
     const reviewService = serviceValuesAccounting.meetings.reviewNumbers?.[segment];
     if (reviewService) {
       total += reviewService.monthly;
     }
   }
 
-  // q24: Annual tax meetings
-  if (responses.q24 === 'yes' && segment) {
+  // q23: Annual tax meetings
+  if (responses.q23 === 'yes' && segment) {
     const annualService = serviceValuesAccounting.meetings.annualTaxMeetings?.[segment];
     if (annualService) {
       total += annualService.monthly;
     }
   }
 
-  // q25: Support level
-  if (responses.q25 && responses.q25 !== '' && segment) {
-    if (responses.q25 === 'emailTeam' || responses.q25 === 'emailPhoneTeamCsm') {
+  // q24: Support level
+  if (responses.q24 && responses.q24 !== '' && segment) {
+    if (responses.q24 === 'emailTeam' || responses.q24 === 'emailPhoneTeamCsm') {
       const teamSupport = serviceValuesAccounting.supportServices.teamOrEmail?.[segment];
       if (teamSupport) {
         total += teamSupport.monthly;
       }
     }
-    if (responses.q25 === 'emailPhoneTeamCsm' || responses.q25 === 'emailPhoneCsmOwner') {
+    if (responses.q24 === 'emailPhoneTeamCsm' || responses.q24 === 'emailPhoneCsmOwner') {
       const csmSupport = serviceValuesAccounting.supportServices.clientServiceManager?.[segment];
       if (csmSupport) {
         total += csmSupport.monthly;
       }
     }
-    if (responses.q25 === 'emailPhoneCsmOwner') {
+    if (responses.q24 === 'emailPhoneCsmOwner') {
       const ownerSupport = serviceValuesAccounting.supportServices.principalOwner?.[segment];
       if (ownerSupport) {
         total += ownerSupport.monthly;
@@ -270,29 +311,47 @@ export const calculateTotalMonthlyPrice = (responses) => {
     }
   }
 
-  // q26: ASIC company secretarial work
-  if (responses.q26 && responses.q26 !== '' && responses.q26 !== 'no') {
-    if (responses.q26 === 'annualReturns') {
-      const asicService = serviceValuesAccounting.corporateSecretarial.asicAnnualReturn;
-      if (asicService) {
-        total += asicService.monthly;
+  // q25: ASIC company secretarial work
+  if (responses.q25) {
+    // Handle new object format (can select multiple)
+    if (typeof responses.q25 === 'object' && responses.q25 !== null) {
+      if (responses.q25.annualReturns) {
+        const asicService = serviceValuesAccounting.corporateSecretarial.asicAnnualReturn;
+        if (asicService) {
+          total += asicService.monthly;
+        }
       }
-    } else if (responses.q26 === 'detailChanges') {
-      const asicService = serviceValuesAccounting.corporateSecretarial.asicFormsLodgements;
-      if (asicService) {
-        total += asicService.monthly;
+      if (responses.q25.detailChanges) {
+        const asicService = serviceValuesAccounting.corporateSecretarial.asicFormsLodgements;
+        if (asicService) {
+          total += asicService.monthly;
+        }
+      }
+    } 
+    // Handle old string format for backward compatibility
+    else if (responses.q25 !== '' && responses.q25 !== 'no') {
+      if (responses.q25 === 'annualReturns') {
+        const asicService = serviceValuesAccounting.corporateSecretarial.asicAnnualReturn;
+        if (asicService) {
+          total += asicService.monthly;
+        }
+      } else if (responses.q25 === 'detailChanges') {
+        const asicService = serviceValuesAccounting.corporateSecretarial.asicFormsLodgements;
+        if (asicService) {
+          total += asicService.monthly;
+        }
       }
     }
   }
 
-  // q26b: ATO payment plans
-  if (responses.q26b && responses.q26b !== '' && responses.q26b !== 'no') {
-    if (responses.q26b === 'basicPlans') {
+  // q25b: ATO payment plans
+  if (responses.q25b && responses.q25b !== '' && responses.q25b !== 'no') {
+    if (responses.q25b === 'basicPlans') {
       const atoPlan = serviceValuesAccounting.atoPaymentPlans.basicPlans;
       if (atoPlan) {
         total += atoPlan.monthly || 0;
       }
-    } else if (responses.q26b === 'hardshipPlans') {
+    } else if (responses.q25b === 'hardshipPlans') {
       const atoPlan = serviceValuesAccounting.atoPaymentPlans.hardshipPlans;
       if (atoPlan) {
         total += atoPlan.monthly || 0;
@@ -300,17 +359,20 @@ export const calculateTotalMonthlyPrice = (responses) => {
     }
   }
 
-  console.log('calculateTotalMonthlyPrice returning:', Math.round(total * 100) / 100);
-  return Math.round(total * 100) / 100; // Round to 2 decimal places
+  const adjustedTotal = Math.round(total * multiplier * 100) / 100;
+  console.log('calculateTotalMonthlyPrice returning:', adjustedTotal, '(base:', total, 'x multiplier:', multiplier, ')');
+  return adjustedTotal; // Round to 2 decimal places with pricing modifier applied
 };
 
 /**
  * Calculates total once-off (yearly) fees based on question responses
  * @param {Object} responses - Question responses from Questions.js
+ * @param {number} pricingModifier - Optional pricing modifier from organisation (default 200)
  * @returns {number} Total once-off fee
  */
-export const calculateTotalOnceOffFee = (responses) => {
+export const calculateTotalOnceOffFee = (responses, pricingModifier = 200) => {
   let total = 0;
+  const multiplier = getPricingMultiplier(pricingModifier);
 
   // Helper function to get segment for service lookup
   const getSegment = (originalSegment) => {
@@ -323,15 +385,15 @@ export const calculateTotalOnceOffFee = (responses) => {
     return null;
   };
 
-  const segment = getSegment(responses.q2);
+  const segment = getSegment(responses.q1);
 
   // Debug logging
   if (process.env.NODE_ENV === 'development') {
-    console.log('calculateTotalOnceOffFee - q2:', responses.q2, 'segment:', segment, 'q3a:', responses.q3a);
+    console.log('calculateTotalOnceOffFee - q1:', responses.q1, 'segment:', segment, 'q2a:', responses.q2a);
   }
 
-  // q3a: System setup (Xero Setup)
-  if (responses.q3a === 'yes' && segment && serviceValuesAccounting?.advisoryServices?.xeroSetup) {
+  // q2a: System setup (Xero Setup)
+  if (responses.q2a === 'yes' && segment && serviceValuesAccounting?.advisoryServices?.xeroSetup) {
     const xeroSetup = serviceValuesAccounting.advisoryServices.xeroSetup[segment];
     if (process.env.NODE_ENV === 'development') {
       console.log('Adding xeroSetup:', xeroSetup);
@@ -341,9 +403,9 @@ export const calculateTotalOnceOffFee = (responses) => {
     }
   }
 
-  // q8a: System setup for employees (Xero Training)
-  if (responses.q8a === 'systemSetup' && responses.q8aEmployees && segment && serviceValuesAccounting?.advisoryServices?.xeroTraining) {
-    const employeeCount = parseInt(responses.q8aEmployees, 10);
+  // q7a: System setup for employees (Xero Training)
+  if (responses.q7a === 'systemSetup' && responses.q7aEmployees && segment && serviceValuesAccounting?.advisoryServices?.xeroTraining) {
+    const employeeCount = parseInt(responses.q7aEmployees, 10);
     if (!isNaN(employeeCount) && employeeCount > 0) {
       const xeroTraining = serviceValuesAccounting.advisoryServices.xeroTraining[segment];
       if (process.env.NODE_ENV === 'development') {
@@ -355,8 +417,8 @@ export const calculateTotalOnceOffFee = (responses) => {
     }
   }
 
-  // q19: Tax structuring
-  if (responses.q19 === 'yes' && segment && serviceValuesAccounting?.advisoryServices?.taxStructuringAdvice) {
+  // q18: Tax structuring
+  if (responses.q18 === 'yes' && segment && serviceValuesAccounting?.advisoryServices?.taxStructuringAdvice) {
     const taxStructuring = serviceValuesAccounting.advisoryServices.taxStructuringAdvice[segment];
     if (process.env.NODE_ENV === 'development') {
       console.log('Adding taxStructuringAdvice:', taxStructuring);
@@ -366,12 +428,12 @@ export const calculateTotalOnceOffFee = (responses) => {
     }
   }
 
-  // q26b: ATO payment plans
-  if (responses.q26b && responses.q26b !== '' && serviceValuesAccounting?.atoPaymentPlans) {
+  // q25b: ATO payment plans
+  if (responses.q25b && responses.q25b !== '' && serviceValuesAccounting?.atoPaymentPlans) {
     let atoPlan = null;
-    if (responses.q26b === 'basicPlans') {
+    if (responses.q25b === 'basicPlans') {
       atoPlan = serviceValuesAccounting.atoPaymentPlans.basicPlans;
-    } else if (responses.q26b === 'hardshipPlans') {
+    } else if (responses.q25b === 'hardshipPlans') {
       atoPlan = serviceValuesAccounting.atoPaymentPlans.hardshipPlans;
     }
     if (process.env.NODE_ENV === 'development') {
@@ -383,10 +445,10 @@ export const calculateTotalOnceOffFee = (responses) => {
   }
 
   // q27: Prior year lodgements (multiple return types)
-  if (responses.q27 && typeof responses.q27 === 'object' && segment) {
+  if (responses.q26 && typeof responses.q26 === 'object' && segment) {
     // Business returns
-    if (responses.q27.business) {
-      const businessCount = parseInt(responses.q27.business, 10);
+    if (responses.q26.business) {
+      const businessCount = parseInt(responses.q26.business, 10);
       if (!isNaN(businessCount) && businessCount > 0 && serviceValuesAccounting?.taxServices?.businessReturns) {
         const businessReturn = serviceValuesAccounting.taxServices.businessReturns[segment];
         if (businessReturn) {
@@ -396,8 +458,8 @@ export const calculateTotalOnceOffFee = (responses) => {
     }
 
     // Individual returns
-    if (responses.q27.individuals) {
-      const individualCount = parseInt(responses.q27.individuals, 10);
+    if (responses.q26.individuals) {
+      const individualCount = parseInt(responses.q26.individuals, 10);
       if (!isNaN(individualCount) && individualCount > 0 && serviceValuesAccounting?.taxServices?.individualReturns) {
         const individualReturn = serviceValuesAccounting.taxServices.individualReturns.all;
         if (individualReturn) {
@@ -407,8 +469,8 @@ export const calculateTotalOnceOffFee = (responses) => {
     }
 
     // BAS returns
-    if (responses.q27.bas) {
-      const basCount = parseInt(responses.q27.bas, 10);
+    if (responses.q26.bas) {
+      const basCount = parseInt(responses.q26.bas, 10);
       if (!isNaN(basCount) && basCount > 0 && serviceValuesAccounting?.taxServices?.bas) {
         const basService = serviceValuesAccounting.taxServices.bas[segment];
         if (basService) {
@@ -418,8 +480,8 @@ export const calculateTotalOnceOffFee = (responses) => {
     }
 
     // SMSF
-    if (responses.q27.smsf) {
-      const smsfCount = parseInt(responses.q27.smsf, 10);
+    if (responses.q26.smsf) {
+      const smsfCount = parseInt(responses.q26.smsf, 10);
       if (!isNaN(smsfCount) && smsfCount > 0 && serviceValuesAccounting?.taxServices?.smsf) {
         const smsfService = serviceValuesAccounting.taxServices.smsf[segment];
         if (smsfService) {
@@ -429,8 +491,8 @@ export const calculateTotalOnceOffFee = (responses) => {
     }
 
     // IAS returns
-    if (responses.q27.ias) {
-      const iasCount = parseInt(responses.q27.ias, 10);
+    if (responses.q26.ias) {
+      const iasCount = parseInt(responses.q26.ias, 10);
       if (!isNaN(iasCount) && iasCount > 0 && serviceValuesAccounting?.taxServices?.ias) {
         const iasService = serviceValuesAccounting.taxServices.ias[segment];
         if (iasService) {
@@ -440,8 +502,8 @@ export const calculateTotalOnceOffFee = (responses) => {
     }
 
     // FBT returns
-    if (responses.q27.fbt) {
-      const fbtCount = parseInt(responses.q27.fbt, 10);
+    if (responses.q26.fbt) {
+      const fbtCount = parseInt(responses.q26.fbt, 10);
       if (!isNaN(fbtCount) && fbtCount > 0 && serviceValuesAccounting?.taxServices?.fbtReturns) {
         const fbtService = serviceValuesAccounting.taxServices.fbtReturns[segment];
         if (fbtService) {
@@ -451,8 +513,8 @@ export const calculateTotalOnceOffFee = (responses) => {
     }
 
     // TPAR
-    if (responses.q27.tpar) {
-      const tparCount = parseInt(responses.q27.tpar, 10);
+    if (responses.q26.tpar) {
+      const tparCount = parseInt(responses.q26.tpar, 10);
       if (!isNaN(tparCount) && tparCount > 0 && serviceValuesAccounting?.taxServices?.tpar) {
         const tparService = serviceValuesAccounting.taxServices.tpar[segment];
         if (tparService) {
@@ -462,8 +524,8 @@ export const calculateTotalOnceOffFee = (responses) => {
     }
 
     // Workers Compensation
-    if (responses.q27.workersComp) {
-      const workersCompCount = parseInt(responses.q27.workersComp, 10);
+    if (responses.q26.workersComp) {
+      const workersCompCount = parseInt(responses.q26.workersComp, 10);
       if (!isNaN(workersCompCount) && workersCompCount > 0 && serviceValuesAccounting?.payrollServices?.workersCompensation) {
         const workersCompService = serviceValuesAccounting.payrollServices.workersCompensation[segment];
         if (workersCompService) {
@@ -473,8 +535,8 @@ export const calculateTotalOnceOffFee = (responses) => {
     }
 
     // Super Prep and Lodgement
-    if (responses.q27.super) {
-      const superCount = parseInt(responses.q27.super, 10);
+    if (responses.q26.super) {
+      const superCount = parseInt(responses.q26.super, 10);
       if (!isNaN(superCount) && superCount > 0 && serviceValuesAccounting?.payrollServices?.superPrepAndLodgement) {
         const superService = serviceValuesAccounting.payrollServices.superPrepAndLodgement[segment];
         if (superService) {
@@ -484,8 +546,8 @@ export const calculateTotalOnceOffFee = (responses) => {
     }
 
     // STP Reporting
-    if (responses.q27.stpEoy) {
-      const stpCount = parseInt(responses.q27.stpEoy, 10);
+    if (responses.q26.stpEoy) {
+      const stpCount = parseInt(responses.q26.stpEoy, 10);
       if (!isNaN(stpCount) && stpCount > 0 && serviceValuesAccounting?.payrollServices?.stpReporting) {
         const stpService = serviceValuesAccounting.payrollServices.stpReporting[segment];
         if (stpService) {
@@ -495,8 +557,8 @@ export const calculateTotalOnceOffFee = (responses) => {
     }
 
     // LSL Reporting
-    if (responses.q27.lslForms) {
-      const lslCount = parseInt(responses.q27.lslForms, 10);
+    if (responses.q26.lslForms) {
+      const lslCount = parseInt(responses.q26.lslForms, 10);
       if (!isNaN(lslCount) && lslCount > 0 && serviceValuesAccounting?.payrollServices?.lslReporting) {
         const lslService = serviceValuesAccounting.payrollServices.lslReporting[segment];
         if (lslService) {
@@ -506,8 +568,8 @@ export const calculateTotalOnceOffFee = (responses) => {
     }
 
     // Payroll Tax Returns
-    if (responses.q27.payrollTax) {
-      const payrollTaxCount = parseInt(responses.q27.payrollTax, 10);
+    if (responses.q26.payrollTax) {
+      const payrollTaxCount = parseInt(responses.q26.payrollTax, 10);
       if (!isNaN(payrollTaxCount) && payrollTaxCount > 0 && serviceValuesAccounting?.payrollServices?.payrollTaxReturns) {
         const payrollTaxService = serviceValuesAccounting.payrollServices.payrollTaxReturns[segment];
         if (payrollTaxService) {
@@ -517,8 +579,8 @@ export const calculateTotalOnceOffFee = (responses) => {
     }
 
     // ASIC Annual Return
-    if (responses.q27.asic) {
-      const asicCount = parseInt(responses.q27.asic, 10);
+    if (responses.q26.asic) {
+      const asicCount = parseInt(responses.q26.asic, 10);
       if (!isNaN(asicCount) && asicCount > 0 && serviceValuesAccounting?.corporateSecretarial?.asicAnnualReturn) {
         const asicService = serviceValuesAccounting.corporateSecretarial.asicAnnualReturn;
         if (asicService) {
@@ -532,5 +594,5 @@ export const calculateTotalOnceOffFee = (responses) => {
     }
   }
 
-  return Math.round(total * 100) / 100; // Round to 2 decimal places
+  return Math.round(total * multiplier * 100) / 100; // Round to 2 decimal places with pricing modifier applied
 };

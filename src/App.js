@@ -1,19 +1,21 @@
 import React, { useEffect, useState } from 'react';
-import { ThemeProvider, CssBaseline, AppBar, Toolbar, Button, Typography, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Menu, MenuItem, Box } from '@mui/material';
+import { ThemeProvider, CssBaseline, AppBar, Toolbar, Button, Typography, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Menu, MenuItem, Box, FormControl, FormLabel, RadioGroup, FormControlLabel, Radio } from '@mui/material';
 import { BrowserRouter, Routes, Route, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { loginSuccess, logout, setOrganisation } from './features/auth/authSlice';
-import { setClientName, setActivePriceId, resetPriceState } from './features/questions/responsesSlice';
+import { setClientName, setActivePriceId, resetPriceState, updateResponse } from './features/questions/responsesSlice';
 import { useAuth0 } from '@auth0/auth0-react';
 import { createPrice } from './services/priceApi';
 import theme from './theme';
 import About from './pages/About';
 import Questions from './pages/Questions';
+import BookkeepingQuestions from './pages/BookkeepingQuestions';
 import ServiceCatalog from './pages/ServiceCatalog';
 import Pricing from './pages/Pricing';
 import PricingQuote from './pages/PricingQuote';
 import ServiceValuesEditor from './pages/ServiceValuesEditor';
 import Onboarding from './pages/Onboarding';
+import PricingModifier from './pages/PricingModifier';
 import SelectPlan from './pages/SelectPlan';
 import BillingSettings from './pages/BillingSettings';
 import UserManagement from './pages/UserManagement';
@@ -33,6 +35,7 @@ function AppContent() {
   const { user, isLoading, isAuthenticated, logout: auth0Logout } = useAuth0();
   const [openModal, setOpenModal] = useState(false);
   const [clientNameInput, setClientNameInput] = useState('');
+  const [serviceType, setServiceType] = useState('');
   const [isCreating, setIsCreating] = useState(false);
   const [onboardingComplete, setOnboardingComplete] = useState(null);
   const [tokenReady, setTokenReady] = useState(!!localStorage.getItem('token'));
@@ -174,24 +177,33 @@ function AppContent() {
   const handleModalClose = () => {
     setOpenModal(false);
     setClientNameInput('');
+    setServiceType('');
   };
 
   const handleClientNameSubmit = async () => {
-    if (clientNameInput.trim()) {
+    if (clientNameInput.trim() && serviceType) {
       try {
         setIsCreating(true);
         // Reset previous price state
         dispatch(resetPriceState());
         const priceData = {
           clientName: clientNameInput,
+          questionResponses: {},
         };
         const response = await createPrice(priceData);
         dispatch(setClientName(clientNameInput));
         dispatch(setActivePriceId(response.id));
+        dispatch(updateResponse({ questionId: 'serviceType', value: serviceType }));
         setOpenModal(false);
         setClientNameInput('');
+        setServiceType('');
         setIsCreating(false);
-        navigate('/questions');
+        // Navigate to appropriate questions page based on service type
+        if (serviceType === 'bookkeeping') {
+          navigate('/bookkeeping-questions');
+        } else {
+          navigate('/questions');
+        }
       } catch (error) {
         console.error('Error creating price record:', error);
         setIsCreating(false);
@@ -225,9 +237,6 @@ function AppContent() {
           <Button color="inherit" component={Link} to="/clients" sx={{ fontWeight: 600 }}>Client Quotes</Button>
           <Box sx={{ flexGrow: 1 }} />
           <Button variant="contained" size="small" onClick={handleNewPriceClick} sx={{ mr: 2 }}>Create Pricing</Button>
-          {activeUser?.email && (
-            <Typography sx={{ mr: 3, color: 'text.secondary', fontWeight: 500 }}>{activeUser.email}</Typography>
-          )}
           <Button 
             color="inherit" 
             onClick={handleSettingsClick}
@@ -238,12 +247,18 @@ function AppContent() {
           >
             Menu
           </Button>
+          {activeUser?.email && (
+            <Typography sx={{ ml: 3, color: 'text.secondary', fontWeight: 500 }}>{activeUser.email}</Typography>
+          )}
           <Menu
             id="settings-menu"
             anchorEl={settingsAnchorEl}
             open={settingsMenuOpen}
             onClose={handleSettingsClose}
           >
+            <MenuItem onClick={() => { handleSettingsClose(); navigate('/settings/pricing-modifier'); }}>
+              Pricing Modifier
+            </MenuItem>
             <MenuItem onClick={() => { handleSettingsClose(); navigate('/service-values-editor'); }}>
               Service Values
             </MenuItem>
@@ -267,11 +282,13 @@ function AppContent() {
             <Route path="/about" element={<About />} />
             <Route path="/clients" element={<ProtectedRoute><SavedPrices /></ProtectedRoute>} />
             <Route path="/questions" element={<ProtectedRoute><Questions /></ProtectedRoute>} />
+            <Route path="/bookkeeping-questions" element={<ProtectedRoute><BookkeepingQuestions /></ProtectedRoute>} />
             <Route path="/pricing-quote" element={<ProtectedRoute><PricingQuote /></ProtectedRoute>} />
             <Route path="/service-values-editor" element={<ProtectedRoute><ServiceValuesEditor /></ProtectedRoute>} />
             <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
             <Route path="/onboarding/select-plan" element={<ProtectedRoute><SelectPlan /></ProtectedRoute>} />
             <Route path="/settings/billing" element={<ProtectedRoute><BillingSettings /></ProtectedRoute>} />
+            <Route path="/settings/pricing-modifier" element={<ProtectedRoute><PricingModifier /></ProtectedRoute>} />
             <Route path="/settings/users" element={<ProtectedRoute><UserManagement /></ProtectedRoute>} />
             <Route path="/settings/select-plan" element={<ProtectedRoute><SelectPlan /></ProtectedRoute>} />
             <Route path="/payment-required" element={<ProtectedRoute><PaymentRequired /></ProtectedRoute>} />
@@ -296,6 +313,18 @@ function AppContent() {
             sx={{ mt: 2 }}
             placeholder="Enter client name"
           />
+          <FormControl sx={{ mt: 3 }} fullWidth>
+            <FormLabel id="service-type-label">What services do you provide?</FormLabel>
+            <RadioGroup
+              aria-labelledby="service-type-label"
+              name="service-type"
+              value={serviceType}
+              onChange={(e) => setServiceType(e.target.value)}
+            >
+              <FormControlLabel value="accounting" control={<Radio />} label="Accounting" />
+              <FormControlLabel value="bookkeeping" control={<Radio />} label="Bookkeeping" />
+            </RadioGroup>
+          </FormControl>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleModalClose}>Cancel</Button>
@@ -303,7 +332,7 @@ function AppContent() {
             onClick={handleClientNameSubmit} 
             variant="contained" 
             color="primary"
-            disabled={!clientNameInput.trim() || isCreating}
+            disabled={!clientNameInput.trim() || !serviceType || isCreating}
           >
             {isCreating ? 'Creating...' : 'Continue'}
           </Button>

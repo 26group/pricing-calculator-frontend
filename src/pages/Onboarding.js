@@ -12,32 +12,59 @@ import {
   Slider,
   Alert,
   CircularProgress,
+  Tabs,
+  Tab,
 } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth0 } from '@auth0/auth0-react';
 
-const steps = ['Your Name', 'Create Organisation', 'Set Pricing Modifier'];
+const steps = ['Your Name', 'Create Organisation', 'Set Pricing Modifiers'];
 
-const marks = [
-  { value: -50, label: '-50%' },
-  { value: -25, label: '-25%' },
-  { value: 0, label: '0%' },
-  { value: 25, label: '+25%' },
-  { value: 50, label: '+50%' },
+// Accounting slider config
+const accountingMarks = [
+  { value: 0, label: '$0' },
+  { value: 100, label: '$100' },
+  { value: 200, label: '$200' },
+  { value: 300, label: '$300' },
+  { value: 400, label: '$400' },
 ];
 
+// Bookkeeping slider config
+const bookkeepingMarks = [
+  { value: 0, label: '$0' },
+  { value: 75, label: '$75' },
+  { value: 150, label: '$150' },
+  { value: 225, label: '$225' },
+  { value: 300, label: '$300' },
+];
+
+// Base pricing modifiers (standard hourly rates)
+const BASE_ACCOUNTING_MODIFIER = 200;
+const BASE_BOOKKEEPING_MODIFIER = 100;
+
 function valuetext(value) {
-  return `${value > 0 ? '+' : ''}${value}%`;
+  return `$${value}/hr`;
 }
 
 export default function Onboarding() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user } = useAuth0();
-  const [activeStep, setActiveStep] = useState(0);
+  
+  // Check if we should start at a specific step (e.g., ?step=pricing)
+  const getInitialStep = () => {
+    const stepParam = searchParams.get('step');
+    if (stepParam === 'pricing') return 2;
+    return 0;
+  };
+  
+  const [activeStep, setActiveStep] = useState(getInitialStep);
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [orgName, setOrgName] = useState('');
-  const [pricingModifier, setPricingModifier] = useState(0);
+  const [pricingModifier, setPricingModifier] = useState(200);
+  const [bookkeepingPricingModifier, setBookkeepingPricingModifier] = useState(100);
+  const [pricingTab, setPricingTab] = useState(0);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [checkingName, setCheckingName] = useState(false);
@@ -121,6 +148,7 @@ export default function Onboarding() {
         body: JSON.stringify({
           name: orgName.trim(),
           pricingModifier,
+          bookkeepingPricingModifier,
           firstName: firstName.trim(),
           lastName: lastName.trim(),
         }),
@@ -142,6 +170,14 @@ export default function Onboarding() {
 
   const handleSliderChange = (event, newValue) => {
     setPricingModifier(newValue);
+  };
+
+  const handleBookkeepingSliderChange = (event, newValue) => {
+    setBookkeepingPricingModifier(newValue);
+  };
+
+  const handlePricingTabChange = (event, newValue) => {
+    setPricingTab(newValue);
   };
 
   return (
@@ -212,47 +248,109 @@ export default function Onboarding() {
         {activeStep === 2 && (
           <Box>
             <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
-              Adjust your pricing modifier
+              Set your hourly rates
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-              Set a percentage to increase or decrease all service prices for your organisation.
-              This will be applied to all pricing calculations.
+              Set your base hourly rates for accounting and bookkeeping services.
+              These will be used to calculate pricing for your clients.
             </Typography>
 
-            <Box sx={{ px: 2, py: 4 }}>
-              <Slider
-                value={pricingModifier}
-                onChange={handleSliderChange}
-                aria-labelledby="pricing-modifier-slider"
-                getAriaValueText={valuetext}
-                valueLabelDisplay="on"
-                valueLabelFormat={valuetext}
-                step={5}
-                marks={marks}
-                min={-50}
-                max={50}
-                sx={{
-                  '& .MuiSlider-valueLabel': {
-                    backgroundColor: pricingModifier > 0 ? 'success.main' : pricingModifier < 0 ? 'error.main' : 'primary.main',
-                    borderRadius: '10px',
-                  },
-                  '& .MuiSlider-thumb': {
-                    backgroundColor: 'primary.main',
-                  },
-                  '& .MuiSlider-track': {
-                    background: 'linear-gradient(135deg, #868CFF 0%, #422AFB 100%)',
-                  },
-                }}
-              />
+            <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
+              <Tabs value={pricingTab} onChange={handlePricingTabChange} centered>
+                <Tab label="Accounting" />
+                <Tab label="Bookkeeping" />
+              </Tabs>
             </Box>
 
-            <Box sx={{ mt: 2, p: 2, bgcolor: 'background.default', borderRadius: '12px' }}>
-              <Typography variant="body2" align="center" sx={{ fontWeight: 500 }}>
-                {pricingModifier === 0 && 'Services will be priced at standard rates'}
-                {pricingModifier > 0 && `Services will be priced ${pricingModifier}% higher than standard`}
-                {pricingModifier < 0 && `Services will be priced ${Math.abs(pricingModifier)}% lower than standard`}
-              </Typography>
-            </Box>
+            {/* Accounting Tab */}
+            {pricingTab === 0 && (
+              <Box>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 2, textAlign: 'center' }}>
+                  Standard accounting rate: $200/hr
+                </Typography>
+                <Box sx={{ px: 2, py: 4 }}>
+                  <Slider
+                    value={pricingModifier}
+                    onChange={handleSliderChange}
+                    aria-labelledby="accounting-pricing-modifier-slider"
+                    getAriaValueText={valuetext}
+                    valueLabelDisplay="on"
+                    valueLabelFormat={valuetext}
+                    step={10}
+                    marks={accountingMarks}
+                    min={0}
+                    max={400}
+                    sx={{
+                      '& .MuiSlider-valueLabel': {
+                        backgroundColor: pricingModifier > BASE_ACCOUNTING_MODIFIER ? 'success.main' : pricingModifier < BASE_ACCOUNTING_MODIFIER ? 'error.main' : 'primary.main',
+                        borderRadius: '10px',
+                      },
+                      '& .MuiSlider-thumb': {
+                        backgroundColor: 'primary.main',
+                      },
+                      '& .MuiSlider-track': {
+                        background: 'linear-gradient(135deg, #868CFF 0%, #422AFB 100%)',
+                      },
+                    }}
+                  />
+                </Box>
+                <Box sx={{ mt: 2, p: 2, bgcolor: 'background.default', borderRadius: '12px' }}>
+                  <Typography variant="body2" align="center" sx={{ fontWeight: 500 }}>
+                    Accounting rate: ${pricingModifier}/hr
+                    {pricingModifier !== BASE_ACCOUNTING_MODIFIER && (
+                      <Typography component="span" variant="body2" color="text.secondary">
+                        {' '}({pricingModifier > BASE_ACCOUNTING_MODIFIER ? '+' : ''}{Math.round((pricingModifier / BASE_ACCOUNTING_MODIFIER - 1) * 100)}% from standard)
+                      </Typography>
+                    )}
+                  </Typography>
+                </Box>
+              </Box>
+            )}
+
+            {/* Bookkeeping Tab */}
+            {pricingTab === 1 && (
+              <Box>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 2, textAlign: 'center' }}>
+                  Standard bookkeeping rate: $100/hr
+                </Typography>
+                <Box sx={{ px: 2, py: 4 }}>
+                  <Slider
+                    value={bookkeepingPricingModifier}
+                    onChange={handleBookkeepingSliderChange}
+                    aria-labelledby="bookkeeping-pricing-modifier-slider"
+                    getAriaValueText={valuetext}
+                    valueLabelDisplay="on"
+                    valueLabelFormat={valuetext}
+                    step={10}
+                    marks={bookkeepingMarks}
+                    min={0}
+                    max={300}
+                    sx={{
+                      '& .MuiSlider-valueLabel': {
+                        backgroundColor: bookkeepingPricingModifier > BASE_BOOKKEEPING_MODIFIER ? 'success.main' : bookkeepingPricingModifier < BASE_BOOKKEEPING_MODIFIER ? 'error.main' : 'primary.main',
+                        borderRadius: '10px',
+                      },
+                      '& .MuiSlider-thumb': {
+                        backgroundColor: 'primary.main',
+                      },
+                      '& .MuiSlider-track': {
+                        background: 'linear-gradient(135deg, #868CFF 0%, #422AFB 100%)',
+                      },
+                    }}
+                  />
+                </Box>
+                <Box sx={{ mt: 2, p: 2, bgcolor: 'background.default', borderRadius: '12px' }}>
+                  <Typography variant="body2" align="center" sx={{ fontWeight: 500 }}>
+                    Bookkeeping rate: ${bookkeepingPricingModifier}/hr
+                    {bookkeepingPricingModifier !== BASE_BOOKKEEPING_MODIFIER && (
+                      <Typography component="span" variant="body2" color="text.secondary">
+                        {' '}({bookkeepingPricingModifier > BASE_BOOKKEEPING_MODIFIER ? '+' : ''}{Math.round((bookkeepingPricingModifier / BASE_BOOKKEEPING_MODIFIER - 1) * 100)}% from standard)
+                      </Typography>
+                    )}
+                  </Typography>
+                </Box>
+              </Box>
+            )}
           </Box>
         )}
 
