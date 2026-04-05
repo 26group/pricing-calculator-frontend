@@ -14,6 +14,7 @@ export default function Login() {
   const [isCheckingOnboarding, setIsCheckingOnboarding] = useState(false);
   const [redirectPath, setRedirectPath] = useState(null);
   const [sessionExpiredMessage, setSessionExpiredMessage] = useState(null);
+  const hasToken = !!localStorage.getItem('token');
 
   // Check for session expired message on mount
   useEffect(() => {
@@ -26,10 +27,18 @@ export default function Login() {
   // When Auth0 user is present, get token and check onboarding
   useEffect(() => {
     const handleAuth0User = async () => {
-      console.log('🔄 Login: handleAuth0User called', { user: !!user, isLoading });
-      if (!user || isLoading) return;
+      console.log('🔄 Login: handleAuth0User called', { user: !!user, isLoading, hasToken });
+      // Skip if still loading Auth0 or if there's no user and no token
+      if (isLoading) return;
+      if (!user && !hasToken) return;
       
-      console.log('🔄 Login: Auth0 user detected, checking onboarding...');
+      // If user has Auth0 and we haven't checked yet, check onboarding
+      if (!user && hasToken) {
+        console.log('🔄 Login: User has token but no Auth0 user, token likely valid, skipping auth0 check');
+        return;
+      }
+      
+      console.log('🔄 Login: Auth0 user detected, checking onboarding...', { email: user.email, sub: user.sub });
       setIsCheckingOnboarding(true);
       
       // Always get a fresh token for Auth0 user to ensure it's valid
@@ -45,8 +54,10 @@ export default function Login() {
           }),
         });
 
+        console.log('🔄 Login: Token response status:', response.status);
         if (response.ok) {
           const data = await response.json();
+          console.log('🔄 Login: Token response data:', { isNewUser: data.isNewUser, hasToken: !!data.tokens?.access?.token });
           if (data.tokens?.access?.token) {
             token = data.tokens.access.token;
             localStorage.setItem('token', token);
@@ -55,12 +66,13 @@ export default function Login() {
             console.log('🔄 Login: Token obtained and stored');
           }
         } else {
-          console.error('🔄 Login: Failed to get token, status:', response.status);
+          const errorText = await response.text();
+          console.error('🔄 Login: Failed to get token, status:', response.status, 'error:', errorText);
           setIsCheckingOnboarding(false);
           return;
         }
       } catch (error) {
-        console.error('Error getting token:', error);
+        console.error('🔄 Login: Error getting token:', error);
         setIsCheckingOnboarding(false);
         return;
       }
@@ -96,12 +108,13 @@ export default function Login() {
               setRedirectPath('/');
             }
           } else {
-            console.log('🔄 Login: Unexpected org response, redirecting to /onboarding');
+            const errorText = await orgResponse.text();
+            console.log('🔄 Login: Unexpected org response status, redirecting to /onboarding. Error:', errorText);
             // On 401 or other errors, assume new user and go to onboarding
             setRedirectPath('/onboarding');
           }
         } catch (error) {
-          console.error('Error checking org:', error);
+          console.error('🔄 Login: Error checking org:', error);
           setRedirectPath('/onboarding');
         }
       } else {
@@ -111,7 +124,7 @@ export default function Login() {
     };
 
     handleAuth0User();
-  }, [user, isLoading, dispatch]);
+  }, [user, isLoading, hasToken, dispatch]);
 
   const handleLogin = () => {
     loginWithRedirect();
@@ -131,7 +144,7 @@ export default function Login() {
     return <Navigate to={redirectPath} replace />;
   }
 
-  // Show loading while checking onboarding
+  // Show loading while checking onboarding if user is detected
   if (!isLoading && user && isCheckingOnboarding) {
     return (
       <Container sx={{ mt: 8, textAlign: 'center' }}>
