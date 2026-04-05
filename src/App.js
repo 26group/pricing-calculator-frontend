@@ -28,6 +28,7 @@ import SubscriptionGuard from './components/SubscriptionGuard';
 
 function AppContent() {
   const storedUser = useSelector((state) => state.auth.user);
+  const organisation = useSelector((state) => state.auth.organisation);
   const isOwner = useSelector((state) => state.auth.isOwner);
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -39,6 +40,9 @@ function AppContent() {
   const [isCreating, setIsCreating] = useState(false);
   const [onboardingComplete, setOnboardingComplete] = useState(null);
   const [tokenReady, setTokenReady] = useState(!!localStorage.getItem('token'));
+
+  // Check if user is on bookkeeper plan
+  const isBookkeeper = organisation?.planType === 'bookkeeper';
 
   // Check onboarding status
   const checkOnboardingStatus = async () => {
@@ -66,7 +70,7 @@ function AppContent() {
 
       if (response.ok) {
         const data = await response.json();
-        console.log('📦 App.js org data:', { isOwner: data.isOwner, owner: data.owner, name: data.name });
+        console.log('📦 App.js org data:', { isOwner: data.isOwner, owner: data.owner, name: data.name, planType: data.planType });
         setOnboardingComplete(true);
         
         // Set organisation and owner status in Redux
@@ -75,11 +79,11 @@ function AppContent() {
           isOwner: data.isOwner || false,
         }));
         
-        // Check if subscription plan is selected
-        if (!data.selectedPlanId) {
-          // Organisation exists but no plan selected - redirect to plan selection
+        // Check if plan type is selected (new onboarding flow uses planType)
+        if (!data.planType) {
+          // Organisation exists but no plan type selected - redirect to onboarding
           if (!location.pathname.startsWith('/onboarding')) {
-            navigate('/onboarding/select-plan');
+            navigate('/onboarding');
           }
         }
       } else if (response.status === 404) {
@@ -106,6 +110,10 @@ function AppContent() {
         email: user.email,
         name: user.name,
       }));
+      // Store email in localStorage for persistence
+      if (user.email) {
+        localStorage.setItem('userEmail', user.email);
+      }
       // Get JWT token from backend for this Auth0 user
       getJWTToken(user);
     }
@@ -153,12 +161,23 @@ function AppContent() {
     }
   };
 
-  const activeUser = user ? { id: user.sub, email: user.email, name: user.name } : storedUser;
-  const isLoggedIn = isAuthenticated || !!storedUser || !!localStorage.getItem('token');
+  // Get active user - prefer Auth0 user, then stored user from Redux, then localStorage
+  const storedEmail = localStorage.getItem('userEmail');
+  const activeUser = user 
+    ? { id: user.sub, email: user.email, name: user.name } 
+    : storedUser 
+      ? storedUser 
+      : storedEmail 
+        ? { email: storedEmail } 
+        : null;
+  
+  // Check if logged in - token in localStorage is the most reliable indicator
+  const isLoggedIn = !!localStorage.getItem('token') || isAuthenticated || !!storedUser;
 
   const handleLogout = () => {
     // Clear local state
     localStorage.removeItem('token');
+    localStorage.removeItem('userEmail');
     dispatch(logout());
     
     if (isAuthenticated) {
@@ -171,6 +190,10 @@ function AppContent() {
   };
 
   const handleNewPriceClick = () => {
+    // For bookkeeper plan, automatically set service type to bookkeeping
+    if (isBookkeeper) {
+      setServiceType('bookkeeping');
+    }
     setOpenModal(true);
   };
 
@@ -287,7 +310,6 @@ function AppContent() {
             <Route path="/pricing-quote" element={<ProtectedRoute><PricingQuote /></ProtectedRoute>} />
             <Route path="/service-values-editor" element={<ProtectedRoute><ServiceValuesEditor /></ProtectedRoute>} />
             <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
-            <Route path="/onboarding/select-plan" element={<ProtectedRoute><SelectPlan /></ProtectedRoute>} />
             <Route path="/settings/billing" element={<ProtectedRoute><BillingSettings /></ProtectedRoute>} />
             <Route path="/settings/pricing-modifier" element={<ProtectedRoute><PricingModifier /></ProtectedRoute>} />
             <Route path="/settings/users" element={<ProtectedRoute><UserManagement /></ProtectedRoute>} />
@@ -322,7 +344,9 @@ function AppContent() {
               value={serviceType}
               onChange={(e) => setServiceType(e.target.value)}
             >
-              <FormControlLabel value="accounting" control={<Radio />} label="Accounting" />
+              {!isBookkeeper && (
+                <FormControlLabel value="accounting" control={<Radio />} label="Accounting" />
+              )}
               <FormControlLabel value="bookkeeping" control={<Radio />} label="Bookkeeping" />
             </RadioGroup>
           </FormControl>

@@ -38,11 +38,15 @@ export default function PricingModifier() {
   const [activeTab, setActiveTab] = useState(0);
   const [pricingModifier, setPricingModifier] = useState(200);
   const [bookkeepingPricingModifier, setBookkeepingPricingModifier] = useState(100);
+  const [planType, setPlanType] = useState(null);
   const [error, setError] = useState('');
   const [saveStatus, setSaveStatus] = useState('idle'); // 'idle' | 'saving' | 'saved'
   const [loadingData, setLoadingData] = useState(true);
   const saveTimerRef = useRef(null);
   const initialLoadRef = useRef(true);
+
+  // Check if user is on bookkeeper plan
+  const isBookkeeper = planType === 'bookkeeper';
 
   // Load current pricing modifiers from organisation
   useEffect(() => {
@@ -62,6 +66,9 @@ export default function PricingModifier() {
 
         if (response.ok) {
           const data = await response.json();
+          if (data.planType) {
+            setPlanType(data.planType);
+          }
           if (data.pricingModifier !== undefined) {
             setPricingModifier(data.pricingModifier);
           } else {
@@ -183,7 +190,9 @@ export default function PricingModifier() {
           Pricing Modifiers
         </Typography>
         <Typography variant="body1" color="text.secondary" align="center" sx={{ mb: 4 }}>
-          Adjust the pricing modifiers for accounting and bookkeeping services.
+          {isBookkeeper 
+            ? 'Adjust the pricing modifier for bookkeeping services.'
+            : 'Adjust the pricing modifiers for accounting and bookkeeping services.'}
         </Typography>
 
         {error && (
@@ -192,15 +201,18 @@ export default function PricingModifier() {
           </Alert>
         )}
 
-        <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
-          <Tabs value={activeTab} onChange={handleTabChange} centered>
-            <Tab label="Accounting" />
-            <Tab label="Bookkeeping" />
-          </Tabs>
-        </Box>
+        {/* Only show tabs if not a bookkeeper (accounting practice has both) */}
+        {!isBookkeeper && (
+          <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
+            <Tabs value={activeTab} onChange={handleTabChange} centered>
+              <Tab label="Accounting" />
+              <Tab label="Bookkeeping" />
+            </Tabs>
+          </Box>
+        )}
 
-        {/* Accounting Tab */}
-        {activeTab === 0 && (
+        {/* Accounting Tab - only for accounting_practice plan */}
+        {!isBookkeeper && activeTab === 0 && (
           <Box>
             <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
               Accounting Hourly Rate
@@ -250,8 +262,8 @@ export default function PricingModifier() {
           </Box>
         )}
 
-        {/* Bookkeeping Tab */}
-        {activeTab === 1 && (
+        {/* Bookkeeping Tab - shown for both plans (tab 1 for accounting_practice, always visible for bookkeeper) */}
+        {(isBookkeeper || activeTab === 1) && (
           <Box>
             <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
               Bookkeeping Hourly Rate

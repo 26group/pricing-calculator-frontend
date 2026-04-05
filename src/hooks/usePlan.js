@@ -1,5 +1,5 @@
 import { useSelector } from 'react-redux';
-import { PLANS, PLAN_FEATURES, getPlanFromProductName, hasModuleAccess } from '../constants/planFeatures';
+import { PLANS, PLAN_FEATURES, getPlanFromProductName, hasModuleAccess, isBookkeeperPlan, hasAccountingAccess } from '../constants/planFeatures';
 
 /**
  * Hook to access current plan information and check feature access
@@ -69,7 +69,7 @@ export function usePlan() {
    */
   const hasAccess = (requiredPlan) => {
     if (!currentPlan) return false;
-    const planOrder = [PLANS.STARTER, PLANS.PRACTICE, PLANS.ENTERPRISE];
+    const planOrder = [PLANS.BOOKKEEPER, PLANS.ACCOUNTING_PRACTICE];
     const currentIndex = planOrder.indexOf(currentPlan);
     const requiredIndex = planOrder.indexOf(requiredPlan);
     return currentIndex >= requiredIndex;
@@ -81,9 +81,21 @@ export function usePlan() {
    * @returns {boolean}
    */
   const isPlan = (planKey) => currentPlan === planKey;
+
+  /**
+   * Check if user is on bookkeeper-only plan
+   * @returns {boolean}
+   */
+  const isBookkeeper = () => isBookkeeperPlan(currentPlan);
+
+  /**
+   * Check if user has access to accounting features
+   * @returns {boolean}
+   */
+  const canAccessAccounting = () => hasAccountingAccess(currentPlan);
   
   return {
-    // Current plan key (starter, practice, enterprise)
+    // Current plan key (bookkeeper, accounting_practice)
     currentPlan,
     // Plan display name
     planName: planConfig?.name || 'No Plan',
@@ -97,6 +109,10 @@ export function usePlan() {
     hasAccess,
     // Check specific plan
     isPlan,
+    // Is bookkeeper-only plan
+    isBookkeeper,
+    // Has accounting access
+    canAccessAccounting,
     // Is plan loaded
     isLoaded: !!subscription,
     // Plan constants for comparison

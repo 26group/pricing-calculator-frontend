@@ -16,7 +16,7 @@ import {
 } from '@mui/material';
 import CloudDoneIcon from '@mui/icons-material/CloudDone';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Navigate } from 'react-router-dom';
 
 import { useDispatch, useSelector } from 'react-redux';
 import { setResponses as setResponsesAction, setQuestionsPricing, setQuestionsOnceOffFee } from '../features/questions/responsesSlice';
@@ -694,9 +694,19 @@ const buildInitialState = () => {
 
 export default function Questions() {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const storeResponses = useSelector((state) => state.responses);
   const activePriceId = useSelector((state) => state.responses?.activePriceId);
   const clientName = useSelector((state) => state.responses?.clientName || '');
+  
+  // Get organisation for plan type check
+  const organisation = useSelector((state) => state.auth.organisation);
+  
+  // Redirect bookkeeper users to bookkeeping questions page
+  if (organisation?.planType === 'bookkeeper') {
+    return <Navigate to="/bookkeeping-questions" replace />;
+  }
+  
   const initialState = useMemo(() => {
     const built = buildInitialState();
     if (storeResponses && Object.keys(storeResponses).length) {
@@ -713,8 +723,7 @@ export default function Questions() {
   const [selectedServices, setSelectedServices] = useState({});
   const [requireQ1Message, setRequireQ1Message] = useState(false);
   
-  // Get pricing modifier from organisation
-  const organisation = useSelector((state) => state.auth.organisation);
+  // Get pricing modifier from organisation (already have organisation from above)
   const pricingModifier = organisation?.pricingModifier ?? DEFAULT_PRICING_MODIFIER;
   
   // Debug: Log when pricingModifier changes
@@ -783,8 +792,6 @@ export default function Questions() {
     saveTimerRef.current = setTimeout(() => autoSave(responses), 1500);
     return () => { if (saveTimerRef.current) clearTimeout(saveTimerRef.current); };
   }, [responses, activePriceId, autoSave]);
-
-  const dispatch = useDispatch();
   
   // Fetch organisation data to ensure pricingModifier is available
   useEffect(() => {

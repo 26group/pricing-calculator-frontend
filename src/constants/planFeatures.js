@@ -2,77 +2,55 @@
  * Plan Features Configuration
  * 
  * This file defines what features are available for each subscription plan.
- * Add new features here as they are developed.
+ * Two tiers: Bookkeeper (bookkeeping only) and Accounting Practice (full access)
  */
 
 // Plan identifiers (match Stripe product names)
 export const PLANS = {
-  STARTER: 'starter',
-  PRACTICE: 'practice',
-  ENTERPRISE: 'enterprise',
+  BOOKKEEPER: 'bookkeeper',
+  ACCOUNTING_PRACTICE: 'accounting_practice',
 };
 
 // Feature flags for each plan
 export const PLAN_FEATURES = {
-  [PLANS.STARTER]: {
-    name: 'Starter',
-    description: 'Essential pricing tools for individual accountants',
+  [PLANS.BOOKKEEPER]: {
+    name: 'Bookkeeper',
+    description: 'Essential pricing tools for bookkeepers',
     features: [
-      'Basic pricing calculator',
-      'Service catalog',
-      'Client quotes',
-      'Up to 50 clients',
+      'Bookkeeping pricing calculator',
+      'Client quotes for bookkeeping',
+      'Bookkeeping pricing modifier',
+      'Unlimited clients',
     ],
     modules: {
-      pricingCalculator: true,
-      serviceCatalog: true,
+      bookkeepingCalculator: true,
+      bookkeepingPricingModifier: true,
+      accountingCalculator: false,
+      accountingPricingModifier: false,
+      serviceCatalog: false,
       clientQuotes: true,
-      advancedReporting: false,
-      teamManagement: false,
-      customBranding: false,
-      apiAccess: false,
+      teamManagement: true,
       prioritySupport: false,
     },
   },
-  [PLANS.PRACTICE]: {
-    name: 'Practice',
-    description: 'Advanced tools for growing practices',
+  [PLANS.ACCOUNTING_PRACTICE]: {
+    name: 'Accounting Practice',
+    description: 'Full suite for accounting practices',
     features: [
-      'Everything in Starter',
-      'Advanced reporting',
-      'Team management',
-      'Unlimited clients',
+      'All bookkeeping features',
+      'Accounting pricing calculator',
+      'Accounting pricing modifier',
+      'Full service catalog',
       'Priority support',
     ],
     modules: {
-      pricingCalculator: true,
+      bookkeepingCalculator: true,
+      bookkeepingPricingModifier: true,
+      accountingCalculator: true,
+      accountingPricingModifier: true,
       serviceCatalog: true,
       clientQuotes: true,
-      advancedReporting: true,
       teamManagement: true,
-      customBranding: false,
-      apiAccess: false,
-      prioritySupport: true,
-    },
-  },
-  [PLANS.ENTERPRISE]: {
-    name: 'Enterprise',
-    description: 'Full suite for large accounting firms',
-    features: [
-      'Everything in Practice',
-      'Custom branding',
-      'API access',
-      'Dedicated account manager',
-      'Custom integrations',
-    ],
-    modules: {
-      pricingCalculator: true,
-      serviceCatalog: true,
-      clientQuotes: true,
-      advancedReporting: true,
-      teamManagement: true,
-      customBranding: true,
-      apiAccess: true,
       prioritySupport: true,
     },
   },
@@ -81,21 +59,20 @@ export const PLAN_FEATURES = {
 /**
  * Get the plan key from a Stripe product name
  * @param {string} productName - The Stripe product name
- * @returns {string} - The plan key (starter, practice, enterprise)
+ * @returns {string} - The plan key (bookkeeper, accounting_practice)
  */
 export const getPlanFromProductName = (productName) => {
   if (!productName) return null;
   const name = productName.toLowerCase();
-  if (name.includes('enterprise')) return PLANS.ENTERPRISE;
-  if (name.includes('practice')) return PLANS.PRACTICE;
-  if (name.includes('starter')) return PLANS.STARTER;
-  // Default to starter for unknown plans
-  return PLANS.STARTER;
+  if (name.includes('accounting') || name.includes('practice')) return PLANS.ACCOUNTING_PRACTICE;
+  if (name.includes('bookkeeper') || name.includes('bookkeeping')) return PLANS.BOOKKEEPER;
+  // Default to bookkeeper for unknown plans
+  return PLANS.BOOKKEEPER;
 };
 
 /**
  * Check if a plan has access to a specific module
- * @param {string} planKey - The plan key (starter, practice, enterprise)
+ * @param {string} planKey - The plan key (bookkeeper, accounting_practice)
  * @param {string} moduleName - The module to check
  * @returns {boolean}
  */
@@ -103,4 +80,22 @@ export const hasModuleAccess = (planKey, moduleName) => {
   const plan = PLAN_FEATURES[planKey];
   if (!plan) return false;
   return plan.modules[moduleName] === true;
+};
+
+/**
+ * Check if the plan is a bookkeeper-only plan
+ * @param {string} planKey - The plan key
+ * @returns {boolean}
+ */
+export const isBookkeeperPlan = (planKey) => {
+  return planKey === PLANS.BOOKKEEPER;
+};
+
+/**
+ * Check if the plan has accounting access
+ * @param {string} planKey - The plan key
+ * @returns {boolean}
+ */
+export const hasAccountingAccess = (planKey) => {
+  return planKey === PLANS.ACCOUNTING_PRACTICE;
 };
