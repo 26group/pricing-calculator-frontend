@@ -82,6 +82,16 @@ export default function Login() {
       }
 
       if (token) {
+        // Check for pending invite first
+        const pendingInviteToken = localStorage.getItem('pendingInviteToken');
+        if (pendingInviteToken) {
+          console.log('🔄 Login: Found pending invite, redirecting to accept it');
+          localStorage.removeItem('pendingInviteToken');
+          setRedirectPath(`/invite/${pendingInviteToken}`);
+          setIsCheckingOnboarding(false);
+          return;
+        }
+        
         // Check onboarding status
         console.log('🔄 Login: Checking organisation status...');
         try {

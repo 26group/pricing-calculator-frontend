@@ -16,7 +16,7 @@ const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:4000/v1';
 export default function InviteAccept() {
   const { token } = useParams();
   const navigate = useNavigate();
-  const { loginWithRedirect, isAuthenticated, isLoading: auth0Loading, getAccessTokenSilently } = useAuth0();
+  const { loginWithRedirect, isAuthenticated, isLoading: auth0Loading } = useAuth0();
   
   const [invite, setInvite] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -56,19 +56,29 @@ export default function InviteAccept() {
     if (isAuthenticated) {
       // User is already logged in - process the invite acceptance
       try {
-        const accessToken = await getAccessTokenSilently();
+        // Use our JWT token, not Auth0's access token
+        const jwtToken = localStorage.getItem('token');
+        if (!jwtToken) {
+          setError('Please log in again to accept the invitation');
+          return;
+        }
+        
         const response = await fetch(`${API_URL}/invites/${token}/accept`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${accessToken}`,
+            'Authorization': `Bearer ${jwtToken}`,
           },
         });
 
         if (!response.ok) {
-          throw new Error('Failed to accept invitation');
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.message || 'Failed to accept invitation');
         }
 
+        // Clear the pending invite token
+        localStorage.removeItem('pendingInviteToken');
+        
         // Success - redirect to home/dashboard
         navigate('/');
       } catch (err) {
