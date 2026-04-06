@@ -55,10 +55,5 @@ export default function SubscriptionGuard({ children }) {
     return <PaymentRequired />;
   }
 
-  // User has not selected a plan yet (during onboarding)
-  if (subscription && !subscription.stripePriceId && !subscription.selectedPlanId) {
-    return <Navigate to="/onboarding/select-plan" replace />;
-  }
-
   return children;
 }

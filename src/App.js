@@ -6,6 +6,7 @@ import { loginSuccess, logout, setOrganisation } from './features/auth/authSlice
 import { setClientName, setActivePriceId, resetPriceState, updateResponse } from './features/questions/responsesSlice';
 import { useAuth0 } from '@auth0/auth0-react';
 import { createPrice } from './services/priceApi';
+import * as authApi from './services/authApi';
 import theme from './theme';
 import About from './pages/About';
 import Questions from './pages/Questions';
@@ -174,10 +175,14 @@ function AppContent() {
   // Check if logged in - token in localStorage is the most reliable indicator
   const isLoggedIn = !!localStorage.getItem('token') || isAuthenticated || !!storedUser;
 
-  const handleLogout = () => {
-    // Clear local state
+  const handleLogout = async () => {
+    // Call backend logout endpoint first to invalidate refresh token
+    await authApi.logout();
+    
+    // Then clear local state
     localStorage.removeItem('token');
     localStorage.removeItem('userEmail');
+    localStorage.removeItem('refreshToken');
     dispatch(logout());
     
     if (isAuthenticated) {
