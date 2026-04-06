@@ -101,9 +101,7 @@ export default function UserManagement() {
       
       // In development, show the invite link
       if (result.inviteLink) {
-        setSuccessMessage(
-          `Invitation created for ${inviteEmail}. Share this link: ${result.inviteLink}`
-        );
+        setSuccessMessage(`Invitation sent to ${inviteEmail}`);
         console.log('🔗 Invite link:', result.inviteLink);
       } else {
         setSuccessMessage(`Invitation sent to ${inviteEmail}`);
@@ -126,9 +124,7 @@ export default function UserManagement() {
       const result = await organisationApi.resendInvite(organisation.id, email);
       
       if (result.inviteLink) {
-        setSuccessMessage(
-          `Invitation resent to ${email}. Share this link: ${result.inviteLink}`
-        );
+        setSuccessMessage(`Invitation resent to ${email}`);
       } else {
         setSuccessMessage(`Invitation resent to ${email}`);
       }

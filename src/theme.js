@@ -500,22 +500,35 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           borderRadius: '16px',
+          fontWeight: 500,
         },
         standardSuccess: {
-          backgroundColor: '#05cd991a',
-          color: '#05cd99',
+          backgroundColor: '#dcfce7',
+          color: '#166534',
+          '& .MuiAlert-icon': {
+            color: '#16a34a',
+          },
         },
         standardError: {
-          backgroundColor: '#ee5d501a',
-          color: '#f53939',
+          backgroundColor: '#fee2e2',
+          color: '#991b1b',
+          '& .MuiAlert-icon': {
+            color: '#dc2626',
+          },
         },
         standardWarning: {
-          backgroundColor: '#ffb5471a',
-          color: '#ffb547',
+          backgroundColor: '#fef3c7',
+          color: '#92400e',
+          '& .MuiAlert-icon': {
+            color: '#d97706',
+          },
         },
         standardInfo: {
-          backgroundColor: horizonColors.brand[50],
-          color: horizonColors.brand[500],
+          backgroundColor: '#dbeafe',
+          color: '#1e40af',
+          '& .MuiAlert-icon': {
+            color: '#2563eb',
+          },
         },
       },
     },
