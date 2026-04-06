@@ -217,6 +217,11 @@ export default function Onboarding() {
         throw new Error(data.message || `Failed to create organisation (${response.status})`);
       }
 
+      // Store user email for display persistence (from Auth0 user if available)
+      if (user?.email) {
+        localStorage.setItem('userEmail', user.email);
+      }
+
       // Select plan with Stripe if we have a price ID
       if (selectedPriceId) {
         try {

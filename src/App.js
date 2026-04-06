@@ -283,9 +283,6 @@ function AppContent() {
             <MenuItem onClick={() => { handleSettingsClose(); navigate('/settings/pricing-modifier'); }}>
               Pricing Modifier
             </MenuItem>
-            <MenuItem onClick={() => { handleSettingsClose(); navigate('/service-values-editor'); }}>
-              Service Values
-            </MenuItem>
             <MenuItem onClick={() => { handleSettingsClose(); navigate('/settings/billing'); }}>
               Billing & Subscription
             </MenuItem>

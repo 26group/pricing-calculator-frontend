@@ -61,6 +61,10 @@ export default function Login() {
           if (data.tokens?.access?.token) {
             token = data.tokens.access.token;
             localStorage.setItem('token', token);
+            // Store user email for display persistence
+            if (user.email) {
+              localStorage.setItem('userEmail', user.email);
+            }
             dispatch(setToken(token));
             dispatch(loginSuccess(data.user));
             console.log('🔄 Login: Token obtained and stored');
@@ -100,9 +104,9 @@ export default function Login() {
               isOwner: orgData.isOwner || false,
             }));
             
-            if (!orgData.selectedPlanId) {
-              console.log('🔄 Login: No plan selected, redirecting to /onboarding/select-plan');
-              setRedirectPath('/onboarding/select-plan');
+            if (!orgData.planType) {
+              console.log('🔄 Login: No plan type selected, redirecting to /onboarding');
+              setRedirectPath('/onboarding');
             } else {
               console.log('🔄 Login: Onboarding complete, redirecting to /');
               setRedirectPath('/');
