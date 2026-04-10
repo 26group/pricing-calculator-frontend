@@ -25,6 +25,7 @@ import InviteAccept from './pages/InviteAccept';
 import InvitedUserOnboarding from './pages/InvitedUserOnboarding';
 import SavedPrices from './pages/SavedPrices';
 import Login from './features/auth/Login';
+import Signup from './pages/Signup';
 import ProtectedRoute from './features/auth/ProtectedRoute';
 import OwnerRoute from './features/auth/OwnerRoute';
 import SubscriptionGuard from './components/SubscriptionGuard';
@@ -337,6 +338,7 @@ function AppContent() {
             <Route path="/invite/:token" element={<InviteAccept />} />
             <Route path="/invited-onboarding" element={<ProtectedRoute><InvitedUserOnboarding /></ProtectedRoute>} />
             <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
           </Routes>
         </SubscriptionGuard>
       </div>
