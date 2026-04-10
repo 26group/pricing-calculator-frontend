@@ -12,6 +12,16 @@ export default function ProtectedRoute({ children }) {
   const [isTokenValid, setIsTokenValid] = useState(null); // null = not checked, true = valid, false = invalid
   const validationAttempted = useRef(false);
 
+  console.log('🛡️ ProtectedRoute render:', { 
+    isLoading, 
+    auth0User: !!auth0User, 
+    hasToken, 
+    user: !!user,
+    isValidatingToken,
+    isTokenValid,
+    validationAttempted: validationAttempted.current
+  });
+
   // Validate token with backend only once when component mounts
   useEffect(() => {
     // Only validate if we haven't already
@@ -21,6 +31,7 @@ export default function ProtectedRoute({ children }) {
 
     validationAttempted.current = true;
     const token = localStorage.getItem('token');
+    console.log('🛡️ ProtectedRoute: Validating token, hasToken:', !!token);
     
     // If we have a token, validate it
     if (token) {
@@ -31,6 +42,7 @@ export default function ProtectedRoute({ children }) {
         },
       })
         .then((response) => {
+          console.log('🛡️ ProtectedRoute: Token validation response:', response.status);
           if (response.status === 401) {
             // Token expired
             localStorage.removeItem('token');
@@ -42,7 +54,8 @@ export default function ProtectedRoute({ children }) {
             setIsTokenValid(true);
           }
         })
-        .catch(() => {
+        .catch((err) => {
+          console.error('🛡️ ProtectedRoute: Token validation error:', err);
           // Network error - treat as invalid for security
           setIsTokenValid(false);
         })
@@ -51,6 +64,7 @@ export default function ProtectedRoute({ children }) {
         });
     } else {
       // No token, validation complete
+      console.log('🛡️ ProtectedRoute: No token found');
       setIsTokenValid(false);
     }
   }, []);

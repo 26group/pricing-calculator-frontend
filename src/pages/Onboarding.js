@@ -271,7 +271,7 @@ export default function Onboarding() {
     {
       type: PLAN_TYPES.ACCOUNTING_PRACTICE,
       name: 'Accounting Practice',
-      description: 'Full suite for accounting practices',
+      description: 'Full suite for accounting firms',
       features: [
         'Everything in Bookkeeper plan',
         'Accounting pricing calculator',

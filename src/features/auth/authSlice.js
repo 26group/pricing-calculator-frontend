@@ -7,6 +7,7 @@ const authSlice = createSlice({
     token: null,
     organisation: null,
     isOwner: false,
+    isManager: false,
   },
   reducers: {
     loginSuccess: (state, action) => {
@@ -18,12 +19,14 @@ const authSlice = createSlice({
     setOrganisation: (state, action) => {
       state.organisation = action.payload.organisation;
       state.isOwner = action.payload.isOwner;
+      state.isManager = action.payload.isManager || false;
     },
     logout: (state) => {
       state.user = null;
       state.token = null;
       state.organisation = null;
       state.isOwner = false;
+      state.isManager = false;
     },
   },
 });

@@ -22,9 +22,11 @@ import BillingSettings from './pages/BillingSettings';
 import UserManagement from './pages/UserManagement';
 import PaymentRequired from './pages/PaymentRequired';
 import InviteAccept from './pages/InviteAccept';
+import InvitedUserOnboarding from './pages/InvitedUserOnboarding';
 import SavedPrices from './pages/SavedPrices';
 import Login from './features/auth/Login';
 import ProtectedRoute from './features/auth/ProtectedRoute';
+import OwnerRoute from './features/auth/OwnerRoute';
 import SubscriptionGuard from './components/SubscriptionGuard';
 
 function AppContent() {
@@ -54,9 +56,11 @@ function AppContent() {
     }
 
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:4000/v1'}/organisations/me`, {
+      // Add timestamp to prevent browser caching
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:4000/v1'}/organisations/me?_t=${Date.now()}`, {
         headers: {
           Authorization: `Bearer ${token}`,
+          'Cache-Control': 'no-cache',
         },
       });
 
@@ -69,16 +73,22 @@ function AppContent() {
         return;
       }
 
+      console.log('🔍 checkOnboardingStatus response status:', response.status, 'ok:', response.ok);
       if (response.ok) {
         const data = await response.json();
-        console.log('📦 App.js org data:', { isOwner: data.isOwner, owner: data.owner, name: data.name, planType: data.planType });
+        console.log('📦 App.js org data:', { isOwner: data.isOwner, isManager: data.isManager, owner: data.owner, name: data.name, planType: data.planType });
+        console.log('📦 App.js: Setting isOwner to:', data.isOwner, 'isManager to:', data.isManager);
+        console.log('📦 Full organisation data:', JSON.stringify(data, null, 2));
         setOnboardingComplete(true);
         
-        // Set organisation and owner status in Redux
+        // Set organisation and owner/manager status in Redux
+        console.log('📦 DISPATCHING setOrganisation with isOwner:', data.isOwner, 'isManager:', data.isManager);
         dispatch(setOrganisation({
           organisation: data,
           isOwner: data.isOwner || false,
+          isManager: data.isManager || false,
         }));
+        console.log('📦 DISPATCH COMPLETE');
         
         // Check if plan type is selected (new onboarding flow uses planType)
         if (!data.planType) {
@@ -285,15 +295,22 @@ function AppContent() {
             open={settingsMenuOpen}
             onClose={handleSettingsClose}
           >
-            <MenuItem onClick={() => { handleSettingsClose(); navigate('/settings/pricing-modifier'); }}>
-              Pricing Modifier
-            </MenuItem>
-            <MenuItem onClick={() => { handleSettingsClose(); navigate('/settings/billing'); }}>
-              Billing & Subscription
-            </MenuItem>
-            <MenuItem onClick={() => { handleSettingsClose(); navigate('/settings/users'); }}>
-              User Management
-            </MenuItem>
+            {console.log('🔧 Menu rendering, isOwner:', isOwner)}
+            {isOwner && (
+              <MenuItem onClick={() => { handleSettingsClose(); navigate('/settings/pricing-modifier'); }}>
+                Pricing Modifier
+              </MenuItem>
+            )}
+            {isOwner && (
+              <MenuItem onClick={() => { handleSettingsClose(); navigate('/settings/billing'); }}>
+                Billing & Subscription
+              </MenuItem>
+            )}
+            {isOwner && (
+              <MenuItem onClick={() => { handleSettingsClose(); navigate('/settings/users'); }}>
+                User Management
+              </MenuItem>
+            )}
             <MenuItem onClick={() => { handleSettingsClose(); handleLogout(); }}>
               Logout
             </MenuItem>
@@ -312,12 +329,13 @@ function AppContent() {
             <Route path="/pricing-quote" element={<ProtectedRoute><PricingQuote /></ProtectedRoute>} />
             <Route path="/service-values-editor" element={<ProtectedRoute><ServiceValuesEditor /></ProtectedRoute>} />
             <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
-            <Route path="/settings/billing" element={<ProtectedRoute><BillingSettings /></ProtectedRoute>} />
-            <Route path="/settings/pricing-modifier" element={<ProtectedRoute><PricingModifier /></ProtectedRoute>} />
-            <Route path="/settings/users" element={<ProtectedRoute><UserManagement /></ProtectedRoute>} />
+            <Route path="/settings/billing" element={<ProtectedRoute><OwnerRoute><BillingSettings /></OwnerRoute></ProtectedRoute>} />
+            <Route path="/settings/pricing-modifier" element={<ProtectedRoute><OwnerRoute><PricingModifier /></OwnerRoute></ProtectedRoute>} />
+            <Route path="/settings/users" element={<ProtectedRoute><OwnerRoute><UserManagement /></OwnerRoute></ProtectedRoute>} />
             <Route path="/settings/select-plan" element={<ProtectedRoute><SelectPlan /></ProtectedRoute>} />
             <Route path="/payment-required" element={<ProtectedRoute><PaymentRequired /></ProtectedRoute>} />
             <Route path="/invite/:token" element={<InviteAccept />} />
+            <Route path="/invited-onboarding" element={<ProtectedRoute><InvitedUserOnboarding /></ProtectedRoute>} />
             <Route path="/login" element={<Login />} />
           </Routes>
         </SubscriptionGuard>

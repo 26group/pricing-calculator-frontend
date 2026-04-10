@@ -57,7 +57,7 @@ export default function Login() {
         console.log('🔄 Login: Token response status:', response.status);
         if (response.ok) {
           const data = await response.json();
-          console.log('🔄 Login: Token response data:', { isNewUser: data.isNewUser, hasToken: !!data.tokens?.access?.token });
+          console.log('🔄 Login: Token response data:', { isNewUser: data.isNewUser, hasToken: !!data.tokens?.access?.token, pendingInviteToken: !!data.pendingInviteToken });
           if (data.tokens?.access?.token) {
             token = data.tokens.access.token;
             localStorage.setItem('token', token);
@@ -68,6 +68,16 @@ export default function Login() {
             dispatch(setToken(token));
             dispatch(loginSuccess(data.user));
             console.log('🔄 Login: Token obtained and stored');
+            
+            // Check if backend returned a pending invite token (from Auth0 metadata)
+            // The backend auto-accepts the invite, so redirect to invited user onboarding
+            if (data.pendingInviteToken) {
+              console.log('🔄 Login: Backend auto-accepted invite, redirecting to invited-onboarding');
+              localStorage.removeItem('pendingInviteToken');
+              setRedirectPath('/invited-onboarding');
+              setIsCheckingOnboarding(false);
+              return;
+            }
           }
         } else {
           const errorText = await response.text();
@@ -82,10 +92,11 @@ export default function Login() {
       }
 
       if (token) {
-        // Check for pending invite first
+        // Check for pending invite first (from localStorage)
+        // This handles the case where user clicks invite link, gets redirected to Auth0, then comes back
         const pendingInviteToken = localStorage.getItem('pendingInviteToken');
         if (pendingInviteToken) {
-          console.log('🔄 Login: Found pending invite, redirecting to accept it');
+          console.log('🔄 Login: Found pending invite in localStorage, redirecting to accept it');
           localStorage.removeItem('pendingInviteToken');
           setRedirectPath(`/invite/${pendingInviteToken}`);
           setIsCheckingOnboarding(false);
@@ -114,8 +125,28 @@ export default function Login() {
               isOwner: orgData.isOwner || false,
             }));
             
-            if (!orgData.planType) {
-              console.log('🔄 Login: No plan type selected, redirecting to /onboarding');
+            // Check if user is an invited member (not owner) who hasn't completed their profile setup
+            if (!orgData.isOwner) {
+              // Invited users don't need to go through onboarding
+              // Check if they need to set their name
+              const userResponse = await fetch(`${API_URL}/users/me`, {
+                headers: { Authorization: `Bearer ${token}` },
+              });
+              if (userResponse.ok) {
+                const userData = await userResponse.json();
+                // If user hasn't completed their profile setup, send to invited-onboarding
+                if (!userData.onboardingComplete) {
+                  console.log('🔄 Login: Invited user needs to complete profile, redirecting to /invited-onboarding');
+                  setRedirectPath('/invited-onboarding');
+                } else {
+                  console.log('🔄 Login: Invited user profile complete, redirecting to /');
+                  setRedirectPath('/');
+                }
+              } else {
+                setRedirectPath('/');
+              }
+            } else if (!orgData.planType) {
+              console.log('🔄 Login: Owner has no plan type selected, redirecting to /onboarding');
               setRedirectPath('/onboarding');
             } else {
               console.log('🔄 Login: Onboarding complete, redirecting to /');
@@ -141,10 +172,22 @@ export default function Login() {
   }, [user, isLoading, hasToken, dispatch]);
 
   const handleLogin = () => {
+    console.log('handleLogin clicked, isLoading:', isLoading);
+    if (isLoading) {
+      console.log('Auth0 still loading, skipping login');
+      return;
+    }
+    console.log('Calling loginWithRedirect...');
     loginWithRedirect();
   };
 
   const handleSignUp = () => {
+    console.log('handleSignUp clicked, isLoading:', isLoading);
+    if (isLoading) {
+      console.log('Auth0 still loading, skipping signup');
+      return;
+    }
+    console.log('Calling loginWithRedirect with signup screen hint...');
     loginWithRedirect({
       authorizationParams: {
         screen_hint: 'signup',
@@ -155,6 +198,7 @@ export default function Login() {
   // Don't auto-redirect here - let AppContent handle the redirect after checking onboarding
   // The onboarding check in App.js will redirect appropriately
   if (redirectPath) {
+    console.log('🔄 Login: Redirecting to', redirectPath, 'token in localStorage:', !!localStorage.getItem('token'));
     return <Navigate to={redirectPath} replace />;
   }
 
@@ -210,7 +254,7 @@ export default function Login() {
             fullWidth
             sx={{ py: 1.5 }}
           >
-            Sign In
+            {isLoading ? 'Loading...' : 'Sign In'}
           </Button>
 
           <Button 
@@ -221,7 +265,7 @@ export default function Login() {
             fullWidth
             sx={{ py: 1.5 }}
           >
-            Create Account
+            {isLoading ? 'Loading...' : 'Create Account'}
           </Button>
         </Stack>
       </Stack>

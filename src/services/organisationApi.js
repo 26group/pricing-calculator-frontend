@@ -25,7 +25,8 @@ const handleResponse = async (response, errorMessage) => {
 };
 
 export const getOrganisation = async () => {
-  const response = await fetch(`${API_URL}/organisations/me`, {
+  // Add timestamp to prevent browser caching
+  const response = await fetch(`${API_URL}/organisations/me?_t=${Date.now()}`, {
     headers: getAuthHeaders(),
   });
   if (response.status === 401) {

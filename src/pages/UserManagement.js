@@ -35,7 +35,10 @@ const RoleChip = ({ role, isOwner }) => {
   if (isOwner) {
     return <Chip size="small" color="primary" label="Owner" />;
   }
-  return <Chip size="small" variant="outlined" label={role === 'user' ? 'User' : role} />;
+  if (role === 'manager') {
+    return <Chip size="small" color="secondary" label="Manager" />;
+  }
+  return <Chip size="small" variant="outlined" label="User" />;
 };
 
 export default function UserManagement() {
@@ -251,10 +254,10 @@ export default function UserManagement() {
                           onChange={(e) => handleRoleChange(member, e.target.value)}
                           size="small"
                           variant="outlined"
-                          sx={{ fontSize: '0.8125rem', height: 32, minWidth: 90 }}
+                          sx={{ fontSize: '0.8125rem', height: 32, minWidth: 100 }}
                         >
                           <MenuItem value="user" sx={{ fontSize: '0.8125rem' }}>User</MenuItem>
-                          <MenuItem value="owner" sx={{ fontSize: '0.8125rem' }}>Owner</MenuItem>
+                          <MenuItem value="manager" sx={{ fontSize: '0.8125rem' }}>Manager</MenuItem>
                         </Select>
                       ) : (
                         <RoleChip role={member.orgRole} isOwner={member.isOwner} />

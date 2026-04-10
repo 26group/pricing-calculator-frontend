@@ -216,12 +216,23 @@ export const calculateTotalMonthlyPrice = (responses, pricingModifier = 200) => 
     }
   }
 
-  // q14: Long service leave - not directly mapped in accountingServicesValues
+  // q14: Long service leave (LSL Construction Reporting)
+  if (responses.q14 === 'yes' && segment) {
+    const lslService = serviceValuesAccounting.payrollServices.lslReporting?.[segment];
+    if (lslService) {
+      total += lslService.monthly;
+    }
+  }
+
   // q15: TPAR
   if (responses.q15 === 'yes' && segment) {
     const tparService = serviceValuesAccounting.taxServices.tpar?.[segment];
     if (tparService) {
-      total += tparService.monthly;
+      // If number of suppliers provided (q15a), multiply by count, otherwise just add once
+      const supplierCount = responses.q15a ? parseInt(responses.q15a, 10) : 1;
+      if (!isNaN(supplierCount) && supplierCount > 0) {
+        total += tparService.monthly * supplierCount;
+      }
     }
   }
 
@@ -313,8 +324,23 @@ export const calculateTotalMonthlyPrice = (responses, pricingModifier = 200) => 
 
   // q25: ASIC company secretarial work
   if (responses.q25) {
-    // Handle new object format (can select multiple)
-    if (typeof responses.q25 === 'object' && responses.q25 !== null) {
+    // Handle array format (multiRadio - can select multiple)
+    if (Array.isArray(responses.q25)) {
+      if (responses.q25.includes('annualReturns')) {
+        const asicService = serviceValuesAccounting.corporateSecretarial.asicAnnualReturn;
+        if (asicService) {
+          total += asicService.monthly;
+        }
+      }
+      if (responses.q25.includes('detailChanges')) {
+        const asicService = serviceValuesAccounting.corporateSecretarial.asicFormsLodgements;
+        if (asicService) {
+          total += asicService.monthly;
+        }
+      }
+    }
+    // Handle old object format for backward compatibility
+    else if (typeof responses.q25 === 'object' && responses.q25 !== null) {
       if (responses.q25.annualReturns) {
         const asicService = serviceValuesAccounting.corporateSecretarial.asicAnnualReturn;
         if (asicService) {

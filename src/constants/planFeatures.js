@@ -35,7 +35,7 @@ export const PLAN_FEATURES = {
   },
   [PLANS.ACCOUNTING_PRACTICE]: {
     name: 'Accounting Practice',
-    description: 'Full suite for accounting practices',
+    description: 'Full suite for accounting firms',
     features: [
       'All bookkeeping features',
       'Accounting pricing calculator',

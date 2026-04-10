@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import {
   Container,
   Typography,
@@ -64,6 +64,9 @@ const getServiceTypeLabel = (price) => {
 export default function SavedPrices() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const isOwner = useSelector((state) => state.auth.isOwner);
+  const isManager = useSelector((state) => state.auth.isManager);
+  const canSeeAllQuotes = isOwner || isManager; // Owners and managers can see all quotes
   const [prices, setPrices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -376,6 +379,7 @@ export default function SavedPrices() {
             <TableHead>
               <TableRow>
                 <TableCell>Client Name</TableCell>
+                {canSeeAllQuotes && <TableCell>Created By</TableCell>}
                 <TableCell>Type</TableCell>
                 <TableCell>Monthly</TableCell>
                 <TableCell>Once Off</TableCell>
@@ -400,10 +404,17 @@ export default function SavedPrices() {
                   onClick={() => handleLoadPrice(price.id)}
                 >
                   <TableCell sx={{ py: 0.5, fontSize: '0.875rem' }}>
-                    <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                    <Typography variant="body2" sx={{ color: 'text.primary', fontWeight: 600 }}>
                       {price.clientName || 'Untitled'}
                     </Typography>
                   </TableCell>
+                  {canSeeAllQuotes && (
+                    <TableCell sx={{ py: 0.5, fontSize: '0.875rem' }}>
+                      <Typography variant="body2" sx={{ color: 'text.primary', fontWeight: 500 }}>
+                        {price.userId?.name || price.userId?.email || 'Unknown'}
+                      </Typography>
+                    </TableCell>
+                  )}
                   <TableCell sx={{ py: 0.5, fontSize: '0.875rem' }}>
                     <Chip
                       label={getServiceTypeLabel(price)}
@@ -423,7 +434,7 @@ export default function SavedPrices() {
                     </Typography>
                   </TableCell>
                   <TableCell sx={{ py: 0.5, fontSize: '0.875rem' }}>
-                    <Typography variant="body2" sx={{ fontWeight: 700, color: 'text.primary' }}>
+                    <Typography variant="body2" sx={{ color: 'text.primary' }}>
                       {(() => {
                         // Determine actual revenue segment from question responses
                         const revenueSegmentValue = price.questionResponses?.q1;
@@ -436,7 +447,7 @@ export default function SavedPrices() {
                     </Typography>
                   </TableCell>
                   <TableCell sx={{ py: 0.5, fontSize: '0.875rem' }}>
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography variant="body2" sx={{ color: 'text.primary', fontWeight: 500 }}>
                       {formatDate(price.updatedAt)}
                     </Typography>
                   </TableCell>

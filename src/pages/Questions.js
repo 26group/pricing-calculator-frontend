@@ -657,6 +657,11 @@ const buildInitialState = () => {
       return acc;
     }
 
+    if (question.type === 'multiRadio') {
+      acc[question.id] = [];
+      return acc;
+    }
+
     if (question.type === 'q7-custom') {
       acc[question.id] = { bas: '', ias: undefined, no: undefined };
       return acc;
@@ -1818,6 +1823,54 @@ export default function Questions() {
                 })}
               </ToggleButtonGroup>
             )}
+            {question.type === 'multiRadio' && (
+              <ToggleButtonGroup
+                value={Array.isArray(responses[question.id]) ? responses[question.id] : []}
+                onChange={(event, newValue) => {
+                  setFocusedQuestion(question.id);
+                  // Ensure newValue is always an array
+                  const arrayValue = Array.isArray(newValue) ? newValue : (newValue ? [newValue] : []);
+                  setResponses((prev) => ({
+                    ...prev,
+                    [question.id]: arrayValue,
+                  }));
+                }}
+                exclusive={false}
+                size="medium"
+                sx={{
+                  flexWrap: 'wrap',
+                  gap: 1,
+                  display: 'flex',
+                }}
+                disabled={!responses.q1}
+                onClick={!responses.q1 ? () => setRequireQ1Message(true) : undefined}
+              >
+                {question.options.map((option) => {
+                  if (option.showWhen && !option.showWhen(responses)) {
+                    return null;
+                  }
+                  return (
+                    <ToggleButton 
+                      key={option.value} 
+                      value={option.value}
+                      sx={{
+                        minWidth: '160px',
+                        flex: '0 1 160px',
+                        whiteSpace: 'normal',
+                        wordBreak: 'break-word',
+                        py: 1.2,
+                        px: 1.5,
+                        fontSize: '0.9rem',
+                      }}
+                      disabled={!responses.q1}
+                      onClick={!responses.q1 ? () => setRequireQ1Message(true) : undefined}
+                    >
+                      <Typography variant="body2" sx={{ fontWeight: 700, color: 'inherit' }}>{option.label}</Typography>
+                    </ToggleButton>
+                  );
+                })}
+              </ToggleButtonGroup>
+            )}
             {question.type === 'checkbox' && (
               <Stack spacing={1}>
                 {question.options.map((option) => (
@@ -1903,7 +1956,11 @@ export default function Questions() {
             )}
             {question.type === 'inputGroup' && (
               <Stack spacing={1.5}>
-                {question.options.map((option) =>
+                {question.options.map((option) => {
+                  if (option.showWhen && !option.showWhen(responses)) {
+                    return null;
+                  }
+                  return (
                   option.control === 'checkbox' ? (
                     <FormControlLabel
                       key={option.value}
@@ -2044,7 +2101,8 @@ export default function Questions() {
                       />
                     </div>
                   )
-                )}
+                  );
+                })}
               </Stack>
             )}
           </Stack>

@@ -91,26 +91,32 @@ const theme = createTheme({
   typography: {
     fontFamily: '"DM Sans", "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
     h1: {
+      fontFamily: '"Public Sans", sans-serif',
       fontWeight: 700,
       color: horizonColors.navy[700],
     },
     h2: {
+      fontFamily: '"Public Sans", sans-serif',
       fontWeight: 700,
       color: horizonColors.navy[700],
     },
     h3: {
+      fontFamily: '"Public Sans", sans-serif',
       fontWeight: 700,
       color: horizonColors.navy[700],
     },
     h4: {
+      fontFamily: '"Public Sans", sans-serif',
       fontWeight: 700,
       color: horizonColors.navy[700],
     },
     h5: {
+      fontFamily: '"Public Sans", sans-serif',
       fontWeight: 600,
       color: horizonColors.navy[700],
     },
     h6: {
+      fontFamily: '"Public Sans", sans-serif',
       fontWeight: 600,
       color: horizonColors.navy[700],
     },
@@ -394,6 +400,9 @@ const theme = createTheme({
           border: `1px solid ${horizonColors.gray[200]} !important`,
           borderRadius: '12px',
           transition: 'all 0.2s ease-in-out',
+          minHeight: '3.5em',
+          padding: '8px 12px',
+          lineHeight: 1.4,
           '&:hover:not(.Mui-disabled)': {
             backgroundColor: horizonColors.lightPrimary,
             borderColor: `${horizonColors.brand[500]} !important`,

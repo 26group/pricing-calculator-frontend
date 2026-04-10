@@ -200,6 +200,7 @@ export const accountingQuestionData = [
       { label: 'Yes', value: 'yes' },
       { label: 'No', value: 'no' },
     ],
+    showWhen: (responses) => ['medium', 'large', 'enterprise'].includes(responses.q1),
   },
   {
     id: 'q13',
@@ -323,7 +324,7 @@ export const accountingQuestionData = [
   {
     id: 'q25',
     prompt: '25. Do they need ASIC company secretarial work?',
-    type: 'radio',
+    type: 'multiRadio',
     options: [
       { label: 'Annual returns', value: 'annualReturns' },
       { label: 'Detail changes', value: 'detailChanges' },
@@ -336,6 +337,7 @@ export const accountingQuestionData = [
     options: [
       { label: 'Basic plans', value: 'basicPlans' },
       { label: 'Longer-term & hardship plans', value: 'hardshipPlans' },
+      { label: 'No', value: 'no' },
     ],
   },
   {
@@ -354,7 +356,7 @@ export const accountingQuestionData = [
       { label: 'Yes - please provide # of SGC lodgment', value: 'super', control: 'number' },
       { label: 'Yes - please provide # of STP EOY', value: 'stpEoy', control: 'number' },
       { label: 'Yes - please provide # of LSL forms', value: 'lslForms', control: 'number' },
-      { label: 'Yes - please provide # of Payroll Tax', value: 'payrollTax', control: 'number' },
+      { label: 'Yes - please provide # of Payroll Tax', value: 'payrollTax', control: 'number', showWhen: (responses) => ['large', 'enterprise'].includes(responses.q1) },
       { label: 'Yes - please provide # of ASIC', value: 'asic', control: 'number' },
       { label: 'No', value: 'none', control: 'checkbox' },
     ],

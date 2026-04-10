@@ -20,6 +20,7 @@ function Root() {
 
   const authorizationParams = {
     redirect_uri: redirectUri,
+    scope: 'openid profile email',
   };
   
   // Only include audience if it's set and not a placeholder
