@@ -95,7 +95,8 @@ export default function Onboarding() {
         setLastName(user.family_name);
       }
       // Fallback: parse the full name if given_name/family_name not available
-      if (!user.given_name && !user.family_name && user.name) {
+      // But only if it's not an email address
+      if (!user.given_name && !user.family_name && user.name && !user.name.includes('@')) {
         const nameParts = user.name.trim().split(' ');
         if (nameParts.length >= 1) {
           setFirstName(nameParts[0]);

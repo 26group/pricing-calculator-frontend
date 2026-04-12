@@ -25,6 +25,9 @@ const saveToStorage = (state) => {
   }
 };
 
+// Load saved responses from localStorage and merge with defaults
+const savedResponses = loadFromStorage();
+
 const initialState = {
   q1: '',
   q2: '',
@@ -39,6 +42,8 @@ const initialState = {
   serviceCatalogOnceOffFee: 0,
   clientName: '',
   activePriceId: null,
+  // Merge with saved responses from localStorage
+  ...savedResponses,
 };
 
 const responsesSlice = createSlice({

@@ -680,7 +680,7 @@ const buildInitialState = () => {
       return acc;
     }
 
-    if (question.type === 'inputGroup') {
+    if (question.type === 'inputGroup' || question.type === 'extrasGroup') {
       acc[question.id] = question.options.reduce((groupState, option) => {
         if (option.control === 'checkbox') {
           groupState[option.value] = false;
@@ -1729,6 +1729,7 @@ export default function Questions() {
                           flex: '0 1 160px',
                           whiteSpace: 'normal',
                           wordBreak: 'break-word',
+                          minHeight: '72px',
                           py: 1.2,
                           px: 1.5,
                           fontSize: '0.9rem',
@@ -1749,6 +1750,7 @@ export default function Questions() {
                       flex: '0 1 160px',
                       whiteSpace: 'normal',
                       wordBreak: 'break-word',
+                      minHeight: '72px',
                       py: 1.2,
                       px: 1.5,
                       fontSize: '0.9rem',
@@ -1767,6 +1769,7 @@ export default function Questions() {
                       flex: '0 1 160px',
                       whiteSpace: 'normal',
                       wordBreak: 'break-word',
+                      minHeight: '72px',
                       py: 1.2,
                       px: 1.5,
                       fontSize: '0.9rem',
@@ -1810,6 +1813,7 @@ export default function Questions() {
                       flex: ['q7', 'q25', 'q26b', 'q3b', 'q11'].includes(question.id) ? '0 1 160px' : '0 1 120px',
                       whiteSpace: 'normal',
                       wordBreak: 'break-word',
+                      minHeight: '72px',
                       py: 1.2,
                       px: 1.5,
                       fontSize: '0.9rem',
@@ -1858,6 +1862,7 @@ export default function Questions() {
                         flex: '0 1 160px',
                         whiteSpace: 'normal',
                         wordBreak: 'break-word',
+                        minHeight: '72px',
                         py: 1.2,
                         px: 1.5,
                         fontSize: '0.9rem',
@@ -1954,7 +1959,7 @@ export default function Questions() {
                 />
               </div>
             )}
-            {question.type === 'inputGroup' && (
+            {(question.type === 'inputGroup' || question.type === 'extrasGroup') && (
               <Stack spacing={1.5}>
                 {question.options.map((option) => {
                   if (option.showWhen && !option.showWhen(responses)) {

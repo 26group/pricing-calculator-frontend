@@ -1,814 +1,870 @@
+// Accounting Services Values based on Accounting Price List v3 CSV
+// Revenue segments: Micro (<$250K), Small ($250-500K), Medium ($500K-1M), Large ($1M-3M)
+// Structure matches pricingCalculator.js expectations
+
 export const serviceValuesAccounting = {
   revenueSegments: {
     micro: '< $250K',
     small: '$250K - $500K',
     medium: '$500K - $1M',
     large: '$1M - $3M',
-    enterprise: '$3M plus',
   },
+
+  // ===================
+  // TAX SERVICES (Q1)
+  // ===================
   taxServices: {
+    // Q1a: Individual Tax Returns
+    // Base individual return: $250/year = $25/month (same for all tiers)
     individualReturns: {
       all: {
-        monthly: 20.83,
         yearly: 250,
-        inclusion: 'Individual Returns ALL',
+        monthly: 25,
+        inclusion: 'Individual Returns — ALL',
       },
     },
+
+    // Q1a Individual Return Extras - prices vary by client/firm summary
     individualReturnExtras: {
       rentalProperty: {
         providedByClient: {
-          monthly: 12.5,
           yearly: 150,
-          inclusion: 'Rental Property - Summary provided by client',
+          monthly: 15,
+          inclusion: 'Rental Property — Summary by Client',
         },
         preparedByFirm: {
-          monthly: 25,
           yearly: 300,
-          inclusion: 'Rental Property - Summary prepared by the firm',
+          monthly: 30,
+          inclusion: 'Rental Property — Summary by Firm',
         },
       },
       managedFunds: {
         providedByClient: {
-          monthly: 4.17,
           yearly: 50,
-          inclusion: 'Managed Funds - Summary provided by client',
+          monthly: 5,
+          inclusion: 'Managed Funds — Summary by Client',
         },
         preparedByFirm: {
-          monthly: 8.33,
           yearly: 100,
-          inclusion: 'Managed Funds - Summary prepared by the firm',
+          monthly: 10,
+          inclusion: 'Managed Funds — Summary by Firm',
         },
       },
       dividendsNotReportedToATO: {
         providedByClient: {
-          monthly: 4.17,
           yearly: 50,
-          inclusion: 'Dividends not reported to ATO - Summary provided by client',
+          monthly: 5,
+          inclusion: 'Dividends not reported to ATO — Summary by Client',
         },
         preparedByFirm: {
-          monthly: 8.33,
           yearly: 100,
-          inclusion: 'Dividends not reported to ATO - Summary prepared by the firm',
+          monthly: 10,
+          inclusion: 'Dividends not reported to ATO — Summary by Firm',
         },
       },
       interestNotReportedToATO: {
         providedByClient: {
-          monthly: 4.17,
           yearly: 50,
-          inclusion: 'Interest not reported to ATO - Summary provided by client',
+          monthly: 5,
+          inclusion: 'Interest not reported to ATO — Summary by Client',
         },
         preparedByFirm: {
-          monthly: 8.33,
           yearly: 100,
-          inclusion: 'Interest not reported to ATO - Summary prepared by the firm',
+          monthly: 10,
+          inclusion: 'Interest not reported to ATO — Summary by Firm',
         },
       },
       cgtSharesAndEquities: {
         providedByClient: {
-          monthly: 12.5,
           yearly: 150,
-          inclusion: 'CGT - shares and equities etc - Summary provided by client',
+          monthly: 15,
+          inclusion: 'CGT — Shares and equities — Summary by Client',
         },
         preparedByFirm: {
-          monthly: 25,
           yearly: 300,
-          inclusion: 'CGT - shares and equities etc - Summary prepared by the firm',
+          monthly: 30,
+          inclusion: 'CGT — Shares and equities — Summary by Firm',
         },
       },
       cgtPropertySales: {
         providedByClient: {
-          monthly: 45.83,
           yearly: 550,
-          inclusion: 'CGT - Property sales - Summary provided by client',
+          monthly: 55,
+          inclusion: 'CGT — Property sales — Summary by Client',
         },
         preparedByFirm: {
-          monthly: 91.67,
           yearly: 1100,
-          inclusion: 'CGT - Property sales - Summary prepared by the firm',
+          monthly: 110,
+          inclusion: 'CGT — Property sales — Summary by Firm',
         },
       },
       balancingAdjustmentCalculation: {
         providedByClient: {
-          monthly: 4.17,
           yearly: 50,
-          inclusion: 'Balancing adjustment calculation (sale of business asset) - Summary provided by client',
+          monthly: 5,
+          inclusion: 'Balancing adjustment — sale of business asset — Summary by Client',
         },
         preparedByFirm: {
-          monthly: 8.33,
           yearly: 100,
-          inclusion: 'Balancing adjustment calculation (sale of business asset) - Summary prepared by the firm',
+          monthly: 10,
+          inclusion: 'Balancing adjustment — sale of business asset — Summary by Firm',
         },
       },
       deductionsMoreThan3Standard: {
         providedByClient: {
-          monthly: 4.17,
           yearly: 50,
-          inclusion: 'Deductions - more than 3 standard expenses - Summary provided by client',
+          monthly: 5,
+          inclusion: 'Deductions — more than 3 standard expenses — Summary by Client',
         },
         preparedByFirm: {
-          monthly: 8.33,
           yearly: 100,
-          inclusion: 'Deductions - more than 3 standard expenses - Summary prepared by the firm',
+          monthly: 10,
+          inclusion: 'Deductions — more than 3 standard expenses — Summary by Firm',
         },
       },
       motorVehicleLogBook: {
         providedByClient: {
-          monthly: 4.17,
           yearly: 50,
-          inclusion: 'Motor Vehicle Schedule - log book method - Summary provided by client',
+          monthly: 5,
+          inclusion: 'Motor Vehicle — log book method — Summary by Client',
         },
         preparedByFirm: {
-          monthly: 8.33,
           yearly: 100,
-          inclusion: 'Motor Vehicle Schedule - log book method - Summary prepared by the firm',
+          monthly: 10,
+          inclusion: 'Motor Vehicle — log book method — Summary by Firm',
         },
       },
       motorVehicleStatutoryRate: {
         providedByClient: {
-          monthly: 4.17,
           yearly: 50,
-          inclusion: 'Motor Vehicle claim statutory rate - Summary provided by client',
+          monthly: 5,
+          inclusion: 'Motor Vehicle — statutory rate — Summary by Client',
         },
         preparedByFirm: {
-          monthly: 8.33,
           yearly: 100,
-          inclusion: 'Motor Vehicle claim statutory rate - Summary prepared by the firm',
+          monthly: 10,
+          inclusion: 'Motor Vehicle — statutory rate — Summary by Firm',
         },
       },
       amendmentOriginalPreparedByFirm: {
         providedByClient: {
-          monthly: 8.33,
           yearly: 100,
-          inclusion: 'Amendment to lodge returns - Original prepared by firm - Summary provided by client',
+          monthly: 10,
+          inclusion: 'Amendment — original return prepared by firm — Summary by Client',
         },
         preparedByFirm: {
-          monthly: 16.67,
           yearly: 200,
-          inclusion: 'Amendment to lodge returns - Original prepared by firm - Summary prepared by the firm',
+          monthly: 20,
+          inclusion: 'Amendment — original return prepared by firm — Summary by Firm',
         },
       },
       amendmentOriginalNotPreparedByFirm: {
         providedByClient: {
-          monthly: 20.83,
-          yearly: 250,
-          inclusion: 'Amendment to lodge returns - Original not prepared by firm - Summary provided by client',
+          yearly: 200,
+          monthly: 20,
+          inclusion: 'Amendment — original return NOT prepared by firm — Summary by Client',
         },
         preparedByFirm: {
-          monthly: 33.33,
           yearly: 400,
-          inclusion: 'Amendment to lodge returns - Original not prepared by firm - Summary prepared by the firm',
+          monthly: 40,
+          inclusion: 'Amendment — original return NOT prepared by firm — Summary by Firm',
         },
       },
       returnNotNecessary: {
-        providedByClient: {
-          monthly: 4.17,
-          yearly: 50,
-          inclusion: 'Return not necessary',
-        },
-        preparedByFirm: null,
+        onceOff: 50, // Base price $50, multiplied at calculation time
+        inclusion: 'Return not necessary (once-off)',
       },
     },
+
+    // Q1b: Business Tax Returns
     businessReturns: {
       micro: {
-        monthly: 62.5,
         yearly: 750,
-        inclusion: 'Micro < $250K',
+        monthly: 75,
+        inclusion: 'Business Returns — Micro',
       },
       small: {
-        monthly: 125,
         yearly: 1500,
-        inclusion: 'Small < $500K',
+        monthly: 150,
+        inclusion: 'Business Returns — Small',
       },
       medium: {
-        monthly: 166.67,
         yearly: 2000,
-        inclusion: 'Medium < $1M',
+        monthly: 200,
+        inclusion: 'Business Returns — Medium',
       },
       large: {
-        monthly: 250,
         yearly: 3000,
-        inclusion: 'Large < $3M',
-      },
-      enterprise: {
-        monthly: 375,
-        yearly: 4500,
-        inclusion: 'Enterprise $3M plus',
+        monthly: 300,
+        inclusion: 'Business Returns — Large',
       },
     },
+
+    // Q1c: SMSF
     smsf: {
       micro: {
-        monthly: 166.67,
         yearly: 2000,
-        inclusion: 'SMSF - Micro < $250K',
+        monthly: 200,
+        inclusion: 'SMSF — Micro',
       },
       small: {
-        monthly: 166.67,
-        yearly: 2000,
-        inclusion: 'SMSF - Small < $500K',
+        yearly: 2500,
+        monthly: 250,
+        inclusion: 'SMSF — Small',
       },
       medium: {
-        monthly: 333.33,
         yearly: 4000,
-        inclusion: 'SMSF - Medium < $1M',
+        monthly: 400,
+        inclusion: 'SMSF — Medium',
+      },
+      large: {
+        yearly: 6000,
+        monthly: 600,
+        inclusion: 'SMSF — Large',
+      },
+    },
+
+    // Q1d: FBT Returns
+    fbtReturns: {
+      micro: {
+        yearly: 500,
+        monthly: 50,
+        inclusion: 'FBT — Micro',
+      },
+      small: {
+        yearly: 750,
+        monthly: 75,
+        inclusion: 'FBT — Small',
+      },
+      medium: {
+        yearly: 1000,
+        monthly: 100,
+        inclusion: 'FBT — Medium',
+      },
+      large: {
+        yearly: 1500,
+        monthly: 150,
+        inclusion: 'FBT — Large',
+      },
+    },
+
+    // Q1e: BAS (per return)
+    // Price × Frequency / 12 × Multiplier
+    bas: {
+      micro: {
+        perReturn: 150,
+        monthly: 60, // $150 × 4 / 12 (quarterly default)
+        quarterlyMonthly: 60,
+        monthlyMonthly: 150, // $150 × 12 / 12
+        inclusion: 'BAS — Micro',
+      },
+      small: {
+        perReturn: 150,
+        monthly: 60,
+        quarterlyMonthly: 60,
+        monthlyMonthly: 150,
+        inclusion: 'BAS — Small',
+      },
+      medium: {
+        perReturn: 200,
+        monthly: 80,
+        quarterlyMonthly: 80,
+        monthlyMonthly: 200,
+        inclusion: 'BAS — Medium',
+      },
+      large: {
+        perReturn: 300,
+        monthly: 120,
+        quarterlyMonthly: 120,
+        monthlyMonthly: 300,
+        inclusion: 'BAS — Large',
+      },
+    },
+
+    // Q1f: IAS (per return)
+    // Fixed frequency of 8 months for IAS
+    ias: {
+      micro: {
+        perReturn: 100,
+        monthly: 80, // $100 × 8 / 12
+        inclusion: 'IAS — Micro',
+      },
+      small: {
+        perReturn: 100,
+        monthly: 80,
+        inclusion: 'IAS — Small',
+      },
+      medium: {
+        perReturn: 125,
+        monthly: 100,
+        inclusion: 'IAS — Medium',
+      },
+      large: {
+        perReturn: 150,
+        monthly: 120,
+        inclusion: 'IAS — Large',
+      },
+    },
+
+    // Q1g: TPAR (per return)
+    tpar: {
+      micro: {
+        yearly: 220,
+        monthly: 22,
+        inclusion: 'TPAR — Micro',
+      },
+      small: {
+        yearly: 220,
+        monthly: 22,
+        inclusion: 'TPAR — Small',
+      },
+      medium: {
+        yearly: 220,
+        monthly: 22,
+        inclusion: 'TPAR — Medium',
+      },
+      large: {
+        yearly: 250,
+        monthly: 25,
+        inclusion: 'TPAR — Large',
+      },
+    },
+  },
+
+  // ===================
+  // PAYROLL SERVICES (Q2)
+  // ===================
+  payrollServices: {
+    // Q2a: Workers Compensation
+    workersCompensation: {
+      micro: {
+        yearly: 200,
+        monthly: 16.67,
+        inclusion: 'Workers Comp — Micro',
+      },
+      small: {
+        yearly: 400,
+        monthly: 33.33,
+        inclusion: 'Workers Comp — Small',
+      },
+      medium: {
+        yearly: 550,
+        monthly: 45.83,
+        inclusion: 'Workers Comp — Medium',
+      },
+      large: {
+        yearly: 750,
+        monthly: 62.5,
+        inclusion: 'Workers Comp — Large',
+      },
+    },
+
+    // Q2b: Payroll Processing
+    // Rate × Units × Frequency / 12 × Multiplier
+    payrollProcessing: {
+      salary: {
+        ratePerEmployeePerRun: 10,
+        perEmployee: 10,
+        monthly: 43.33, // $10 × 52 / 12 (weekly default)
+        inclusion: 'Salary employees',
+      },
+      timesheets: {
+        ratePerEmployeePerRun: 15,
+        perEmployee: 15,
+        monthly: 65, // $15 × 52 / 12 (weekly default)
+        inclusion: 'Timesheet employees',
+      },
+    },
+
+    // Q2c: Payroll Tax Returns (Medium & Large only)
+    payrollTaxReturns: {
+      medium: {
+        yearly: 250,
+        monthly: 20.83,
+        inclusion: 'Payroll Tax — Medium',
+      },
+      large: {
+        yearly: 500,
+        monthly: 41.67,
+        inclusion: 'Payroll Tax — Large',
+      },
+    },
+
+    // Q2d: Super Prep & Lodgement
+    superPrepAndLodgement: {
+      micro: {
+        perLodgement: 100,
+        monthly: 33.33, // quarterly default
+        quarterlyMonthly: 33.33,
+        monthlyMonthly: 100,
+        inclusion: 'Super Prep & Lodgement — Micro',
+      },
+      small: {
+        perLodgement: 150,
+        monthly: 50,
+        quarterlyMonthly: 50,
+        monthlyMonthly: 150,
+        inclusion: 'Super Prep & Lodgement — Small',
+      },
+      medium: {
+        perLodgement: 250,
+        monthly: 83.33,
+        quarterlyMonthly: 83.33,
+        monthlyMonthly: 250,
+        inclusion: 'Super Prep & Lodgement — Medium',
+      },
+      large: {
+        perLodgement: 500,
+        monthly: 500, // monthly default for large
+        quarterlyMonthly: 166.67,
+        monthlyMonthly: 500,
+        inclusion: 'Super Prep & Lodgement — Large',
+      },
+    },
+
+    // Q2e: STP Reporting
+    stpReporting: {
+      micro: {
+        perReport: 25,
+        monthly: 108.33, // weekly default
+        weeklyMonthly: 108.33,
+        fortnightlyMonthly: 54.17,
+        monthlyMonthly: 25,
+        inclusion: 'STP Reporting — Micro',
+      },
+      small: {
+        perReport: 35,
+        monthly: 151.67,
+        weeklyMonthly: 151.67,
+        fortnightlyMonthly: 75.83,
+        monthlyMonthly: 35,
+        inclusion: 'STP Reporting — Small',
+      },
+      medium: {
+        perReport: 50,
+        monthly: 216.67,
+        weeklyMonthly: 216.67,
+        fortnightlyMonthly: 108.33,
+        monthlyMonthly: 50,
+        inclusion: 'STP Reporting — Medium',
+      },
+      large: {
+        perReport: 75,
+        monthly: 325,
+        weeklyMonthly: 325,
+        fortnightlyMonthly: 162.5,
+        monthlyMonthly: 75,
+        inclusion: 'STP Reporting — Large',
+      },
+    },
+
+    // Q2f: LSL Construction Reporting
+    lslReporting: {
+      micro: {
+        yearly: 150,
+        monthly: 12.5,
+        inclusion: 'LSL Construction — Micro',
+      },
+      small: {
+        yearly: 150,
+        monthly: 12.5,
+        inclusion: 'LSL Construction — Small',
+      },
+      medium: {
+        yearly: 250,
+        monthly: 20.83,
+        inclusion: 'LSL Construction — Medium',
+      },
+      large: {
+        yearly: 500,
+        monthly: 41.67,
+        inclusion: 'LSL Construction — Large',
+      },
+    },
+  },
+
+  // ===================
+  // ADVISORY SERVICES (Q3)
+  // ===================
+  advisoryServices: {
+    // Q3a: Tax Planning / Review
+    taxPlanningReview: {
+      micro: {
+        yearly: 400,
+        monthly: 50,
+        inclusion: 'Tax Planning / Review — Micro',
+      },
+      small: {
+        yearly: 600,
+        monthly: 75,
+        inclusion: 'Tax Planning / Review — Small',
+      },
+      medium: {
+        yearly: 1000,
+        monthly: 125,
+        inclusion: 'Tax Planning / Review — Medium',
+      },
+      large: {
+        yearly: 2000,
+        monthly: 250,
+        inclusion: 'Tax Planning / Review — Large',
+      },
+    },
+
+    // Q3b: Tax Structuring Advice (Once-off)
+    taxStructuringAdvice: {
+      micro: {
+        basePrice: 1000,
+        onceOff: 1500,
+        inclusion: 'Tax Structuring Advice — Micro',
+      },
+      small: {
+        basePrice: 1500,
+        onceOff: 2250,
+        inclusion: 'Tax Structuring Advice — Small',
+      },
+      medium: {
+        basePrice: 3000,
+        onceOff: 4500,
+        inclusion: 'Tax Structuring Advice — Medium',
+      },
+      large: {
+        basePrice: 5000,
+        onceOff: 7500,
+        inclusion: 'Tax Structuring Advice — Large',
+      },
+    },
+
+    // Q3c: Xero Setup (Once-off)
+    xeroSetup: {
+      micro: {
+        basePrice: 750,
+        onceOff: 1125,
+        inclusion: 'Xero Setup — Micro',
+      },
+      small: {
+        basePrice: 1000,
+        onceOff: 1500,
+        inclusion: 'Xero Setup — Small',
+      },
+      medium: {
+        basePrice: 1500,
+        onceOff: 2250,
+        inclusion: 'Xero Setup — Medium',
+      },
+      large: {
+        basePrice: 2000,
+        onceOff: 3000,
+        inclusion: 'Xero Setup — Large',
+      },
+    },
+
+    // Q3d: Xero Training
+    xeroTraining: {
+      micro: {
+        yearly: 600,
+        monthly: 75,
+        inclusion: 'Xero Training — Micro',
+      },
+      small: {
+        yearly: 600,
+        monthly: 75,
+        inclusion: 'Xero Training — Small',
+      },
+      medium: {
+        yearly: 1200,
+        monthly: 150,
+        inclusion: 'Xero Training — Medium',
+      },
+      large: {
+        yearly: 1200,
+        monthly: 150,
+        inclusion: 'Xero Training — Large',
+      },
+    },
+  },
+
+  // ===================
+  // REPORTING (Q4)
+  // ===================
+  reporting: {
+    // Q4a: Financial Statements for Tax Returns
+    financialStatementsTax: {
+      micro: {
+        yearly: 500,
+        monthly: 41.67,
+        inclusion: 'Financial Statements — Micro',
+      },
+      small: {
+        yearly: 1000,
+        monthly: 83.33,
+        inclusion: 'Financial Statements — Small',
+      },
+      medium: {
+        yearly: 1500,
+        monthly: 125,
+        inclusion: 'Financial Statements — Medium',
+      },
+      large: {
+        yearly: 2000,
+        monthly: 166.67,
+        inclusion: 'Financial Statements — Large',
+      },
+    },
+
+    // Q4b: Statutory Financial Statements (Large only)
+    statutoryFinancialStatements: {
+      large: {
+        yearly: 3000,
+        monthly: 250,
+        inclusion: 'Statutory Financial Statements — Large',
+      },
+    },
+
+    // Q4c: Management Financial Statements
+    managementFinancialStatements: {
+      micro: {
+        perStatement: 500,
+        monthly: 250, // quarterly default
+        quarterlyMonthly: 250,
+        monthlyMonthly: 750,
+        inclusion: 'Mgt Financial Statements — Micro',
+      },
+      small: {
+        perStatement: 1000,
+        monthly: 500,
+        quarterlyMonthly: 500,
+        monthlyMonthly: 1500,
+        inclusion: 'Mgt Financial Statements — Small',
+      },
+      medium: {
+        perStatement: 1500,
+        monthly: 2250, // monthly default for medium
+        quarterlyMonthly: 750,
+        monthlyMonthly: 2250,
+        inclusion: 'Mgt Financial Statements — Medium',
+      },
+      large: {
+        perStatement: 2000,
+        monthly: 3000, // monthly default for large
+        quarterlyMonthly: 1000,
+        monthlyMonthly: 3000,
+        inclusion: 'Mgt Financial Statements — Large',
+      },
+    },
+  },
+
+  // ===================
+  // MEETINGS (Q5)
+  // ===================
+  meetings: {
+    // Q5a: Review The Numbers Meetings
+    reviewNumbers: {
+      micro: {
+        perMeeting: 200,
+        monthly: 100, // quarterly default
+        quarterlyMonthly: 100,
+        monthlyMonthly: 300,
+        inclusion: 'Review The Numbers — Micro',
+      },
+      small: {
+        perMeeting: 300,
+        monthly: 150,
+        quarterlyMonthly: 150,
+        monthlyMonthly: 450,
+        inclusion: 'Review The Numbers — Small',
+      },
+      medium: {
+        perMeeting: 500,
+        monthly: 750, // monthly default for medium
+        quarterlyMonthly: 250,
+        monthlyMonthly: 750,
+        inclusion: 'Review The Numbers — Medium',
+      },
+      large: {
+        perMeeting: 750,
+        monthly: 1125, // monthly default for large
+        quarterlyMonthly: 375,
+        monthlyMonthly: 1125,
+        inclusion: 'Review The Numbers — Large',
+      },
+    },
+
+    // Q5b: Annual Tax Meetings
+    annualTaxMeetings: {
+      micro: {
+        yearly: 200,
+        monthly: 20,
+        inclusion: 'Annual Tax Meeting — Micro',
+      },
+      small: {
+        yearly: 300,
+        monthly: 30,
+        inclusion: 'Annual Tax Meeting — Small',
+      },
+      medium: {
+        yearly: 500,
+        monthly: 50,
+        inclusion: 'Annual Tax Meeting — Medium',
+      },
+      large: {
+        yearly: 750,
+        monthly: 75,
+        inclusion: 'Annual Tax Meeting — Large',
+      },
+    },
+
+    // Q5c: Business Meetings
+    businessMeetings: {
+      micro: {
+        perMeeting: 250,
+        monthly: 125, // quarterly default
+        quarterlyMonthly: 125,
+        monthlyMonthly: 375,
+        inclusion: 'Business Meeting — Micro',
+      },
+      small: {
+        perMeeting: 350,
+        monthly: 175,
+        quarterlyMonthly: 175,
+        monthlyMonthly: 525,
+        inclusion: 'Business Meeting — Small',
+      },
+      medium: {
+        perMeeting: 600,
+        monthly: 900, // monthly default for medium
+        quarterlyMonthly: 300,
+        monthlyMonthly: 900,
+        inclusion: 'Business Meeting — Medium',
+      },
+      large: {
+        perMeeting: 1000,
+        monthly: 1500, // monthly default for large
+        quarterlyMonthly: 500,
+        monthlyMonthly: 1500,
+        inclusion: 'Business Meeting — Large',
+      },
+    },
+  },
+
+  // ===================
+  // SUPPORT SERVICES (Q6)
+  // ===================
+  support: {
+    // Q6a: Team / Email Support
+    emailOnlyTeam: {
+      micro: {
+        monthly: 100,
+        inclusion: 'Team or Email — Micro',
+      },
+      small: {
+        monthly: 150,
+        inclusion: 'Team or Email — Small',
+      },
+      medium: {
+        monthly: 200,
+        inclusion: 'Team or Email — Medium',
+      },
+      large: {
+        monthly: 300,
+        inclusion: 'Team or Email — Large',
+      },
+    },
+
+    // Q6b: Client Service Manager
+    clientServiceManager: {
+      micro: {
+        monthly: 150,
+        inclusion: 'Client Service Mgr — Micro',
+      },
+      small: {
+        monthly: 200,
+        inclusion: 'Client Service Mgr — Small',
+      },
+      medium: {
+        monthly: 250,
+        inclusion: 'Client Service Mgr — Medium',
+      },
+      large: {
+        monthly: 400,
+        inclusion: 'Client Service Mgr — Large',
+      },
+    },
+
+    // Q6c: Principal / Owner
+    principalOwner: {
+      micro: {
+        monthly: 400,
+        inclusion: 'Principal / Owner — Micro',
+      },
+      small: {
+        monthly: 400,
+        inclusion: 'Principal / Owner — Small',
+      },
+      medium: {
+        monthly: 400,
+        inclusion: 'Principal / Owner — Medium',
       },
       large: {
         monthly: 500,
-        yearly: 6000,
-        inclusion: 'SMSF - Large < $3M',
-      },
-      enterprise: {
-        monthly: 750,
-        yearly: 9000,
-        inclusion: 'SMSF - Enterprise $3M plus',
-      },
-    },
-    fbtReturns: {
-      micro: {
-        monthly: 41.67,
-        yearly: 500,
-        inclusion: 'FBT - Micro < $250K',
-      },
-      small: {
-        monthly: 62.5,
-        yearly: 750,
-        inclusion: 'FBT - Small < $500K',
-      },
-      medium: {
-        monthly: 83.33,
-        yearly: 1000,
-        inclusion: 'FBT - Medium < $1M',
-      },
-      large: {
-        monthly: 125,
-        yearly: 1500,
-        inclusion: 'FBT - Large < $3M',
-      },
-      enterprise: {
-        monthly: 187.5,
-        yearly: 2250,
-        inclusion: 'FBT - Enterprise $3M plus',
-      },
-    },
-    bas: {
-      micro: {
-        monthly: 12.5,
-        yearly: 150,
-        inclusion: 'BAS - Micro < $250K (per return)',
-      },
-      small: {
-        monthly: 12.5,
-        yearly: 150,
-        inclusion: 'BAS - Small < $500K (per return)',
-      },
-      medium: {
-        monthly: 16.67,
-        yearly: 200,
-        inclusion: 'BAS - Medium < $1M (per return)',
-      },
-      large: {
-        monthly: 25,
-        yearly: 300,
-        inclusion: 'BAS - Large < $3M (per return)',
-      },
-      enterprise: {
-        monthly: 37.5,
-        yearly: 450,
-        inclusion: 'BAS - Enterprise $3M plus (per return)',
-      },
-    },
-    ias: {
-      micro: {
-        monthly: 8.33,
-        yearly: 100,
-        inclusion: 'IAS - Micro < $250K (per return)',
-      },
-      small: {
-        monthly: 8.33,
-        yearly: 100,
-        inclusion: 'IAS - Small < $500K (per return)',
-      },
-      medium: {
-        monthly: 10.42,
-        yearly: 125,
-        inclusion: 'IAS - Medium < $1M (per return)',
-      },
-      large: {
-        monthly: 12.5,
-        yearly: 150,
-        inclusion: 'IAS - Large < $3M (per return)',
-      },
-      enterprise: {
-        monthly: 18.75,
-        yearly: 225,
-        inclusion: 'IAS - Enterprise $3M plus (per return)',
-      },
-    },
-    tpar: {
-      micro: {
-        monthly: 18.33,
-        yearly: 220,
-        inclusion: 'TPAR - Micro < $250K (per return)',
-      },
-      small: {
-        monthly: 18.33,
-        yearly: 220,
-        inclusion: 'TPAR - Small < $500K (per return)',
-      },
-      medium: {
-        monthly: 18.33,
-        yearly: 220,
-        inclusion: 'TPAR - Medium < $1M (per return)',
-      },
-      large: {
-        monthly: 20.83,
-        yearly: 250,
-        inclusion: 'TPAR - Large < $3M (per return)',
-      },
-      enterprise: {
-        monthly: 31.25,
-        yearly: 375,
-        inclusion: 'TPAR - Enterprise $3M plus (per return)',
+        inclusion: 'Principal / Owner — Large',
       },
     },
   },
+
+  // ===================
+  // CORPORATE SECRETARIAL & ATO PLANS (Q7)
+  // ===================
   corporateSecretarial: {
+    // Q7a: ASIC Annual Return
     asicAnnualReturn: {
-      monthly: 33.33,
       yearly: 400,
+      monthly: 33.33,
       inclusion: 'ASIC Annual Return',
     },
+
+    // Q7a: ASIC Form Lodgements
     asicFormsLodgements: {
-      monthly: 12.5,
-      yearly: 150,
-      inclusion: 'ASIC Forms Lodgements',
+      onceOff: 150,
+      monthly: 12.5, // Amortized for inclusion purposes
+      inclusion: 'ASIC Form Lodgements',
     },
   },
+
+  // Q7b: ATO Payment Plans
   atoPaymentPlans: {
-    basicPlans: {
-      monthly: null,
-      yearly: 500,
-      inclusion: 'Basic plans',
+    basic: {
+      onceOff: 500,
+      inclusion: 'ATO Payment Plan — Basic',
     },
-    hardshipPlans: {
-      monthly: null,
-      yearly: 1000,
-      inclusion: 'Longer term & hardship plans',
+    hardship: {
+      onceOff: 1000,
+      inclusion: 'ATO Payment Plan — Hardship',
     },
   },
-  payrollServices: {
-    workersCompensation: {
-      micro: {
-        monthly: 16.67,
-        yearly: 200,
-        inclusion: 'Workers Comp - Micro < $250K',
-      },
-      small: {
-        monthly: 33.33,
-        yearly: 400,
-        inclusion: 'Workers Comp - Small < $500K',
-      },
-      medium: {
-        monthly: 45.83,
-        yearly: 550,
-        inclusion: 'Workers Comp - Medium < $1M',
-      },
-      large: {
-        monthly: 62.5,
-        yearly: 750,
-        inclusion: 'Workers Comp - Large < $3M',
-      },
-      enterprise: {
-        monthly: 93.75,
-        yearly: 1125,
-        inclusion: 'Workers Comp - Enterprise $3M plus',
-      },
-    },
-    payrollProcessing: {
-      salary: {
-        monthly: 10,
-        yearly: null,
-        inclusion: 'Payroll processing per salaried employee',
-      },
-      timesheets: {
-        monthly: 15,
-        yearly: null,
-        inclusion: 'Payroll processing per timesheet employee',
-      },
-    },
-    payrollTaxReturns: {
-      medium: {
-        monthly: 16.67,
-        yearly: 200,
-        inclusion: 'Payroll Tax - Medium < $1M',
-      },
-      large: {
-        monthly: 41.67,
-        yearly: 500,
-        inclusion: 'Payroll Tax - Large < $3M',
-      },
-      enterprise: {
-        monthly: 62.5,
-        yearly: 750,
-        inclusion: 'Payroll Tax - Enterprise $3M plus',
-      },
-    },
-    superPrepAndLodgement: {
-      micro: {
-        monthly: 8.33,
-        yearly: 100,
-        inclusion: 'Super Prep and Lodgement - Micro < $250K',
-      },
-      small: {
-        monthly: 12.5,
-        yearly: 150,
-        inclusion: 'Super Prep and Lodgement - Small < $500K',
-      },
-      medium: {
-        monthly: 20.83,
-        yearly: 250,
-        inclusion: 'Super Prep and Lodgement - Medium < $1M',
-      },
-      large: {
-        monthly: 41.67,
-        yearly: 500,
-        inclusion: 'Super Prep and Lodgement - Large < $3M',
-      },
-      enterprise: {
-        monthly: 62.5,
-        yearly: 750,
-        inclusion: 'Super Prep and Lodgement - Enterprise $3M plus',
-      },
-    },
-    stpReporting: {
-      micro: {
-        monthly: 8.33,
-        yearly: 100,
-        inclusion: 'STP Reporting - Micro < $250K',
-      },
-      small: {
-        monthly: 12.5,
-        yearly: 150,
-        inclusion: 'STP Reporting - Small < $500K',
-      },
-      medium: {
-        monthly: 20.83,
-        yearly: 250,
-        inclusion: 'STP Reporting - Medium < $1M',
-      },
-      large: {
-        monthly: 41.67,
-        yearly: 500,
-        inclusion: 'STP Reporting - Large < $3M',
-      },
-      enterprise: {
-        monthly: 62.5,
-        yearly: 750,
-        inclusion: 'STP Reporting - Enterprise $3M plus',
-      },
-    },
-    lslReporting: {
-      micro: {
-        monthly: 12.5,
-        yearly: 150,
-        inclusion: 'LSL Construction Reporting - Micro < $250K',
-      },
-      small: {
-        monthly: 12.5,
-        yearly: 150,
-        inclusion: 'LSL Construction Reporting - Small < $500K',
-      },
-      medium: {
-        monthly: 20.83,
-        yearly: 250,
-        inclusion: 'LSL Construction Reporting - Medium < $1M',
-      },
-      large: {
-        monthly: 41.67,
-        yearly: 500,
-        inclusion: 'LSL Construction Reporting - Large < $3M',
-      },
-      enterprise: {
-        monthly: 62.5,
-        yearly: 750,
-        inclusion: 'LSL Construction Reporting - Enterprise $3M plus',
-      },
-    },
-  },
-  advisoryServices: {
-    taxPlanningReview: {
-      micro: {
-        monthly: 33.33,
-        yearly: 400,
-        inclusion: 'Tax Planning / Review - Micro < $250K',
-      },
-      small: {
-        monthly: 50,
-        yearly: 600,
-        inclusion: 'Tax Planning / Review - Small < $500K',
-      },
-      medium: {
-        monthly: 83.33,
-        yearly: 1000,
-        inclusion: 'Tax Planning / Review - Medium < $1M',
-      },
-      large: {
-        monthly: 166.67,
-        yearly: 2000,
-        inclusion: 'Tax Planning / Review - Large < $3M',
-      },
-      enterprise: {
-        monthly: 250,
-        yearly: 3000,
-        inclusion: 'Tax Planning / Review - Enterprise $3M plus',
-      },
-    },
-    taxStructuringAdvice: {
-      micro: {
-        monthly: 83.33,
-        yearly: 1000,
-        inclusion: 'Tax Structuring Advice - Micro < $250K',
-      },
-      small: {
-        monthly: 83.33,
-        yearly: 1000,
-        inclusion: 'Tax Structuring Advice - Small < $500K',
-      },
-      medium: {
-        monthly: 166.67,
-        yearly: 2000,
-        inclusion: 'Tax Structuring Advice - Medium < $1M',
-      },
-      large: {
-        monthly: 416.67,
-        yearly: 5000,
-        inclusion: 'Tax Structuring Advice - Large < $3M',
-      },
-      enterprise: {
-        monthly: 625,
-        yearly: 7500,
-        inclusion: 'Tax Structuring Advice - Enterprise $3M plus',
-      },
-    },
-    xeroSetup: {
-      micro: {
-        monthly: 62.5,
-        yearly: 750,
-        inclusion: 'Xero Setup - Micro < $250K',
-      },
-      small: {
-        monthly: 83.33,
-        yearly: 1000,
-        inclusion: 'Xero Setup - Small < $500K',
-      },
-      medium: {
-        monthly: 125,
-        yearly: 1500,
-        inclusion: 'Xero Setup - Medium < $1M',
-      },
-      large: {
-        monthly: 125,
-        yearly: 1500,
-        inclusion: 'Xero Setup - Large < $3M',
-      },
-      enterprise: {
-        monthly: 187.5,
-        yearly: 2250,
-        inclusion: 'Xero Setup - Enterprise $3M plus',
-      },
-    },
-    xeroTraining: {
-      micro: {
-        monthly: 41.67,
-        yearly: 500,
-        inclusion: 'Xero Training - Micro < $250K',
-      },
-      small: {
-        monthly: 41.67,
-        yearly: 500,
-        inclusion: 'Xero Training - Small < $500K',
-      },
-      medium: {
-        monthly: 66.67,
-        yearly: 800,
-        inclusion: 'Xero Training - Medium < $1M',
-      },
-      large: {
-        monthly: 100,
-        yearly: 1200,
-        inclusion: 'Xero Training - Large < $3M',
-      },
-      enterprise: {
-        monthly: 150,
-        yearly: 1800,
-        inclusion: 'Xero Training - Enterprise $3M plus',
-      },
-    },
-  },
-  reporting: {
-    financialStatementsTax: {
-      micro: {
-        monthly: 41.67,
-        yearly: 500,
-        inclusion: 'Financial Statements - Micro < $250K',
-      },
-      small: {
-        monthly: 83.33,
-        yearly: 1000,
-        inclusion: 'Financial Statements - Small < $500K',
-      },
-      medium: {
-        monthly: 125,
-        yearly: 1500,
-        inclusion: 'Financial Statements - Medium < $1M',
-      },
-      large: {
-        monthly: 166.67,
-        yearly: 2000,
-        inclusion: 'Financial Statements - Large < $3M',
-      },
-      enterprise: {
-        monthly: 250,
-        yearly: 3000,
-        inclusion: 'Financial Statements - Enterprise $3M plus',
-      },
-    },
-    statutoryFinancialStatements: {
-      large: {
-        monthly: 250,
-        yearly: 3000,
-        inclusion: 'Statutory Financial Statements - Large < $3M',
-      },
-      enterprise: {
-        monthly: 375,
-        yearly: 4500,
-        inclusion: 'Statutory Financial Statements - Enterprise $3M plus',
-      },
-    },
-    managementFinancialStatements: {
-      micro: {
-        monthly: 41.67,
-        yearly: 500,
-        inclusion: 'Management Financial Statements - Micro < $250K',
-      },
-      small: {
-        monthly: 83.33,
-        yearly: 1000,
-        inclusion: 'Management Financial Statements - Small < $500K',
-      },
-      medium: {
-        monthly: 125,
-        yearly: 1500,
-        inclusion: 'Management Financial Statements - Medium < $1M',
-      },
-      large: {
-        monthly: 166.67,
-        yearly: 2000,
-        inclusion: 'Management Financial Statements - Large < $3M',
-      },
-      enterprise: {
-        monthly: 250,
-        yearly: 3000,
-        inclusion: 'Management Financial Statements - Enterprise $3M plus',
-      },
-    },
-  },
-  meetings: {
-    reviewNumbers: {
-      micro: {
-        monthly: 16.67,
-        yearly: 200,
-        inclusion: 'Review The Numbers Meetings - Micro < $250K',
-      },
-      small: {
-        monthly: 25,
-        yearly: 300,
-        inclusion: 'Review The Numbers Meetings - Small < $500K',
-      },
-      medium: {
-        monthly: 41.67,
-        yearly: 500,
-        inclusion: 'Review The Numbers Meetings - Medium < $1M',
-      },
-      large: {
-        monthly: 62.5,
-        yearly: 750,
-        inclusion: 'Review The Numbers Meetings - Large < $3M',
-      },
-      enterprise: {
-        monthly: 93.75,
-        yearly: 1125,
-        inclusion: 'Review The Numbers Meetings - Enterprise $3M plus',
-      },
-    },
-    annualTaxMeetings: {
-      micro: {
-        monthly: 16.67,
-        yearly: 200,
-        inclusion: 'Annual Meetings - Micro < $250K',
-      },
-      small: {
-        monthly: 25,
-        yearly: 300,
-        inclusion: 'Annual Meetings - Small < $500K',
-      },
-      medium: {
-        monthly: 41.67,
-        yearly: 500,
-        inclusion: 'Annual Meetings - Medium < $1M',
-      },
-      large: {
-        monthly: 62.5,
-        yearly: 750,
-        inclusion: 'Annual Meetings - Large < $3M',
-      },
-      enterprise: {
-        monthly: 93.75,
-        yearly: 1125,
-        inclusion: 'Annual Meetings - Enterprise $3M plus',
-      },
-    },
-  },
-  supportServices: {
-    teamOrEmail: {
-      micro: {
-        monthly: 20.83,
-        yearly: 250,
-        inclusion: 'Team or Email - Micro < $250K',
-      },
-      small: {
-        monthly: 20.83,
-        yearly: 250,
-        inclusion: 'Team or Email - Small < $500K',
-      },
-      medium: {
-        monthly: 33.33,
-        yearly: 400,
-        inclusion: 'Team or Email - Medium < $1M',
-      },
-      large: {
-        monthly: 50,
-        yearly: 600,
-        inclusion: 'Team or Email - Large < $3M',
-      },
-      enterprise: {
-        monthly: 75,
-        yearly: 900,
-        inclusion: 'Team or Email - Enterprise $3M plus',
-      },
-    },
-    clientServiceManager: {
-      micro: {
-        monthly: 41.67,
-        yearly: 500,
-        inclusion: 'Client Service Manager - Micro < $250K',
-      },
-      small: {
-        monthly: 41.67,
-        yearly: 500,
-        inclusion: 'Client Service Manager - Small < $500K',
-      },
-      medium: {
-        monthly: 50,
-        yearly: 600,
-        inclusion: 'Client Service Manager - Medium < $1M',
-      },
-      large: {
-        monthly: 100,
-        yearly: 1200,
-        inclusion: 'Client Service Manager - Large < $3M',
-      },
-      enterprise: {
-        monthly: 150,
-        yearly: 1800,
-        inclusion: 'Client Service Manager - Enterprise $3M plus',
-      },
-    },
-    principalOwner: {
-      micro: {
-        monthly: 83.33,
-        yearly: 1000,
-        inclusion: 'Principal / Owner - Micro < $250K',
-      },
-      small: {
-        monthly: 83.33,
-        yearly: 1000,
-        inclusion: 'Principal / Owner - Small < $500K',
-      },
-      medium: {
-        monthly: 125,
-        yearly: 1500,
-        inclusion: 'Principal / Owner - Medium < $1M',
-      },
-      large: {
-        monthly: 208.33,
-        yearly: 2500,
-        inclusion: 'Principal / Owner - Large < $3M',
-      },
-      enterprise: {
-        monthly: 312.5,
-        yearly: 3750,
-        inclusion: 'Principal / Owner - Enterprise $3M plus',
-      },
-    },
+
+  // ===================
+  // PRIOR YEAR LODGEMENTS (Q8/Q27)
+  // ===================
+  priorYearLodgements: {
+    description:
+      'Prior year lodgements use the annual rate for each service type × number of returns × multiplier as a once-off fee.',
+    applicableServices: [
+      'Business Returns',
+      'Individuals',
+      'BAS',
+      'SMSF',
+      'IAS',
+      'FBT',
+      'TPAR',
+      'Workers Comp',
+      'Super Lodgement',
+      'STP EOY',
+      'LSL Forms',
+      'Payroll Tax',
+      'ASIC',
+    ],
   },
 };
+
+export default serviceValuesAccounting;
