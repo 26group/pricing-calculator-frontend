@@ -594,6 +594,8 @@ export const accountingQuestionData = [
     id: 'q1',
     title: 'Annual Revenue',
     prompt: "1. What is your potential client's current annual revenue?",
+    subheading: 'Annual Revenue',
+    category: 'CLIENT DETAILS',
     type: 'radio',
     options: [
       { label: '< $250K', value: 'micro' },

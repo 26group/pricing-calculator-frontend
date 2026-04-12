@@ -3,6 +3,7 @@ const questionData = [
   {
     id: 'q1',
     prompt: '1. What services do you provide? Please select one or more from below.',
+    category: 'CLIENT DETAILS',
     type: 'checkbox',
     options: [
       { label: 'Accounting', value: 'accounting' },
@@ -12,6 +13,7 @@ const questionData = [
   {
     id: 'q2',
     prompt: "2. What is your potential client's current annual revenue?",
+    category: 'TAX SERVICES',
     type: 'radio',
       options: [
         { label: '< $250K', value: 'micro' },
@@ -25,6 +27,7 @@ const questionData = [
   {
     id: 'q3',
     prompt: '3. Do they have an accounting system in place?',
+    category: 'PAYROLL SERVICES',
     type: 'radio',
     options: [
       { label: 'Yes', value: true },
@@ -59,16 +62,19 @@ const questionData = [
   {
     id: 'q4',
     prompt: '4. How many business entities do they want tax returns lodged for?',
+    category: 'ADVISORY SERVICES',
     type: 'number',
   },
   {
     id: 'q5',
     prompt: '5. How many individuals do they want tax returns lodged for?',
+    category: 'REPORTING',
     type: 'number',
   },
   {
     id: 'q6',
     prompt: '6. Do they have a Self Managed Superannuation Fund (SMSF)?',
+    category: 'MEETINGS',
     type: 'radio',
     options: [
       { label: 'Yes', value: true },
@@ -90,6 +96,7 @@ const questionData = [
   {
     id: 'q7',
     prompt: '7. Do they want you to lodge their BAS and/or IAS?',
+    category: 'SUPPORT SERVICES',
     type: 'radio',
     options: [
       { label: 'BAS Quarterly (Micro-Small)', value: 'basQuarterly' },
@@ -100,6 +107,7 @@ const questionData = [
   {
     id: 'q8',
     prompt: '8. Do they run payroll?',
+    category: 'CORPORATE SECRETARIAL & ATO PLANS',
     type: 'radio',
     options: [
       { label: 'Yes', value: true },
@@ -130,6 +138,7 @@ const questionData = [
   {
     id: 'q9',
     prompt: '9. How many salaried employees do they have?',
+    category: 'PRIOR YEAR LODGEMENTS',
     type: 'inputGroup',
     options: [
       { label: 'Weekly salary', value: 'weekly', control: 'number' },

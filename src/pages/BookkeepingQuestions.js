@@ -879,21 +879,25 @@ export default function BookkeepingQuestions() {
               return (
                 <React.Fragment key={question.id}>
                   {showSectionTitle && (
-                    <Typography
-                      variant="h6"
-                      sx={{
-                        fontWeight: 700,
-                        color: '#002060',
-                        mt: index === 0 ? 0 : 3,
-                        mb: 1,
-                        pt: index === 0 ? 0 : 2,
-                        borderTop: index === 0 ? 'none' : '1px solid #e0e0e0',
-                      }}
-                    >
-                      {question.sectionTitle}
-                    </Typography>
+                    <div style={{ marginTop: index > 0 ? '24px' : 0, paddingTop: index > 0 ? '16px' : 0, borderTop: index > 0 ? '1px solid #e0e0e0' : 'none' }}>
+                      <Typography
+                        variant="h6"
+                        sx={{
+                          fontWeight: 700,
+                          color: '#002060',
+                          fontSize: '1.1rem',
+                          mb: 0.5,
+                          mt: 0,
+                          px: 2,
+                          py: 1,
+                        }}
+                      >
+                        {question.sectionTitle}
+                      </Typography>
+                      {renderQuestion(question, 0, questionNumber)}
+                    </div>
                   )}
-                  {renderQuestion(question, 0, questionNumber)}
+                  {!showSectionTitle && renderQuestion(question, 0, questionNumber)}
                 </React.Fragment>
               );
             });

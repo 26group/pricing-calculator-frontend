@@ -1701,7 +1701,7 @@ export default function Questions() {
         >
           <Stack spacing={1.5}>
             {question.subheading && (
-              <Typography variant="subtitle2" sx={{ fontWeight: 600, color: 'primary.main', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 600, color: '#002060', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                 {question.subheading}
               </Typography>
             )}
@@ -2302,6 +2302,7 @@ export default function Questions() {
         <Stack spacing={2}>{(() => {
           // Map category to section numbers (based on CSV structure)
           const categoryToSection = {
+            'CLIENT DETAILS': { number: 'Q1', title: 'Client Details' },
             'TAX SERVICES': { number: 'Q2', title: 'Tax Services' },
             'PAYROLL SERVICES': { number: 'Q3', title: 'Payroll Services' },
             'ADVISORY SERVICES': { number: 'Q4', title: 'Advisory Services' },
@@ -2330,15 +2331,17 @@ export default function Questions() {
               if (section) {
                 // Wrap category header and first question together to avoid Stack spacing
                 elements.push(
-                  <div key={`category-wrapper-${question.category}`} style={{ marginTop: index > 0 ? '24px' : 0 }}>
+                  <div key={`category-wrapper-${question.category}`} style={{ marginTop: index > 0 ? '24px' : 0, paddingTop: index > 0 ? '16px' : 0, borderTop: index > 0 ? '1px solid #e0e0e0' : 'none' }}>
                     <Typography
                       variant="h6"
                       sx={{
                         fontWeight: 700,
-                        color: 'primary.main',
+                        color: '#002060',
                         fontSize: '1.1rem',
-                        mb: 0.5,
+                        mb: 1,
+                        mt: 0,
                         px: 2,
+                        py: 1,
                       }}
                     >
                       {section.number} {section.title}
