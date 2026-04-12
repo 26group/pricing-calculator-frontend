@@ -1,188 +1,287 @@
-// Bookkeeping Services Values - Based on Bookkeeping Pricing Calculator v4
-// All prices are base rates that can be adjusted by the bookkeepingPricingModifier
+// Bookkeeping Services Values - Based on Bookkeeping Pricing Calculator v11
+// All prices are base rates that can be adjusted by the pricing modifier (default 1.2x)
+// Formula: Base Rate × Units × Frequency / 12 × Multiplier = Monthly Fee
 
 export const serviceValuesBookkeeping = {
-  // Q3 - Accounting System Setup (once-off)
+  // ===================
+  // Q2: ACCOUNTING SYSTEM SETUP
+  // ===================
   setupServices: {
+    // Q2: Accounting Software Setup (once-off)
     accountingSoftwareSetup: {
       onceOff: 1000.00,
-      monthly: 83.33, // 1000/12 for monthly amortization display
-      inclusion: 'Accounting Software Setup - includes bank accounts, 1 credit card, conversion balances, payables/receivables & directors payroll',
-    },
-    payrollSetupPerEmployee: {
-      onceOff: 50.00,
-      monthly: null,
-      inclusion: 'Payroll Setup - per employee',
+      inclusion: 'Accounting Software Setup',
     },
   },
 
-  // Q5 - Salaried Employees Payroll Processing
+  // ===================
+  // Q3-8: PAYROLL SERVICES
+  // ===================
   payrollServices: {
-    salariedWeekly: {
-      perEmployeePerRun: 10.00,
-      runsPerYear: 52,
-      inclusion: 'Payroll Processing - Weekly Salaried Employee',
+    // Q3: Payroll System Setup (once-off, per employee)
+    payrollSetup: {
+      perEmployee: 50.00,
+      inclusion: 'Payroll System Setup - per employee',
     },
-    salariedFortnightly: {
-      perEmployeePerRun: 12.50,
-      runsPerYear: 26,
-      inclusion: 'Payroll Processing - Fortnightly Salaried Employee',
+
+    // Q4: Salaried Employees - Rate × Units × Frequency / 12 × Multiplier
+    salaried: {
+      weekly: {
+        ratePerEmployee: 10.00,
+        frequency: 52,
+        inclusion: 'Payroll Processing - Weekly Salaried Employee',
+      },
+      fortnightly: {
+        ratePerEmployee: 10.00,
+        frequency: 26,
+        inclusion: 'Payroll Processing - Fortnightly Salaried Employee',
+      },
+      monthly: {
+        ratePerEmployee: 10.00,
+        frequency: 12,
+        inclusion: 'Payroll Processing - Monthly Salaried Employee',
+      },
     },
-    salariedMonthly: {
-      perEmployeePerRun: 15.00,
-      runsPerYear: 12,
-      inclusion: 'Payroll Processing - Monthly Salaried Employee',
+
+    // Q5: Timesheet Employees - Rate × Units × Frequency / 12 × Multiplier
+    timesheet: {
+      weekly: {
+        ratePerEmployee: 15.00,
+        frequency: 52,
+        inclusion: 'Payroll Processing - Weekly Timesheet Employee',
+      },
+      fortnightly: {
+        ratePerEmployee: 20.00,
+        frequency: 26,
+        inclusion: 'Payroll Processing - Fortnightly Timesheet Employee',
+      },
+      monthly: {
+        ratePerEmployee: 25.00,
+        frequency: 12,
+        inclusion: 'Payroll Processing - Monthly Timesheet Employee',
+      },
     },
-    // Q6 - Timesheet Employees
-    timesheetWeekly: {
-      perEmployeePerRun: 15.00,
-      runsPerYear: 52,
-      inclusion: 'Payroll Processing - Weekly Timesheet Employee',
+
+    // Q6: Super Prep & Lodgement (per employee)
+    superLodgement: {
+      quarterly: {
+        ratePerEmployee: 5.00,
+        frequency: 4,
+        inclusion: 'Super Prep & Lodgement - Quarterly',
+      },
+      monthly: {
+        ratePerEmployee: 7.00,
+        frequency: 12,
+        inclusion: 'Super Prep & Lodgement - Monthly',
+      },
     },
-    timesheetFortnightly: {
-      perEmployeePerRun: 17.50,
-      runsPerYear: 26,
-      inclusion: 'Payroll Processing - Fortnightly Timesheet Employee',
+
+    // Q7: STP Reporting (per employee)
+    stpReporting: {
+      weekly: {
+        ratePerEmployee: 2.50,
+        frequency: 52,
+        inclusion: 'STP Reporting - Weekly',
+      },
+      fortnightly: {
+        ratePerEmployee: 2.50,
+        frequency: 26,
+        inclusion: 'STP Reporting - Fortnightly',
+      },
+      monthly: {
+        ratePerEmployee: 2.50,
+        frequency: 12,
+        inclusion: 'STP Reporting - Monthly',
+      },
     },
-    timesheetMonthly: {
-      perEmployeePerRun: 20.00,
-      runsPerYear: 12,
-      inclusion: 'Payroll Processing - Monthly Timesheet Employee',
+
+    // Q8: Workers Compensation (per lodgement, yearly)
+    workersComp: {
+      ratePerLodgement: 150.00,
+      frequency: 1,
+      inclusion: 'Workers Compensation Form Lodgement',
     },
   },
 
-  // Q7 - Bank & Credit Card Transactions
+  // ===================
+  // Q9: BOOKKEEPING - TRANSACTIONS & PAYABLES
+  // ===================
   bookkeepingServices: {
-    under100Transactions: {
-      monthly: 225.00,
-      inclusion: 'Bank & Credit Card Reconciliation - Up to 100 transactions',
+    // Q9a: Single Line Bank & Credit Card Transactions
+    singleLineTransactions: {
+      upTo100: {
+        ratePerUnit: 2.25,
+        maxUnits: 100,
+        inclusion: 'Bank & Credit Card Reconciliation - Up to 100 transactions',
+      },
+      upTo200: {
+        ratePerUnit: 2.00,
+        maxUnits: 200,
+        inclusion: 'Bank & Credit Card Reconciliation - 101-200 transactions',
+      },
+      upTo400: {
+        ratePerUnit: 1.50,
+        maxUnits: 400,
+        inclusion: 'Bank & Credit Card Reconciliation - 201-400 transactions',
+      },
+      over400: {
+        ratePerUnit: 1.10,
+        inclusion: 'Bank & Credit Card Reconciliation - 400+ transactions',
+      },
     },
-    transactions101to200: {
-      monthly: 400.00,
-      inclusion: 'Bank & Credit Card Reconciliation - 101 to 200 transactions',
+
+    // Q9b: Multi-Line Transactions
+    multiLineTransactions: {
+      ratePerLine: 1.50,
+      inclusion: 'Multi-Line Transactions - per line',
     },
-    transactions201to400: {
-      monthly: 600.00,
-      inclusion: 'Bank & Credit Card Reconciliation - 201 to 400 transactions',
-    },
-    transactionsOver400: {
-      perTransaction: 1.10,
-      inclusion: 'Bank & Credit Card Reconciliation - Per transaction (400+)',
+
+    // Q9c: Accounts Payable Management
+    accountsPayable: {
+      upTo20: {
+        ratePerSupplier: 2.00,
+        maxSuppliers: 20,
+        inclusion: 'Accounts Payable - Up to 20 suppliers/month',
+      },
+      upTo50: {
+        ratePerSupplier: 1.50,
+        maxSuppliers: 50,
+        inclusion: 'Accounts Payable - Up to 50 suppliers/month',
+      },
+      extra: {
+        ratePerSupplier: 1.00,
+        inclusion: 'Accounts Payable - Extra suppliers above threshold',
+      },
     },
   },
 
-  // Q8 - Accounts Payable
-  accountsPayable: {
-    under20SingleLine: {
-      monthly: 30.00,
-      inclusion: 'Accounts Payable - Up to 20 single-line supplier invoices/month',
+  // ===================
+  // Q10: TAX & COMPLIANCE LODGEMENTS
+  // ===================
+  complianceLodgements: {
+    // Q10a: TPAR
+    tpar: {
+      ratePerReport: 15.00,
+      frequency: 1,
+      inclusion: 'TPAR Annual Report',
     },
-    under50SingleLine: {
-      monthly: 75.00,
-      inclusion: 'Accounts Payable - 20-50 single-line supplier invoices/month',
-    },
-    over50SingleLine: {
-      monthly: 75.00,
-      perInvoice: 1.00,
-      inclusion: 'Accounts Payable - 50+ single-line supplier invoices/month (base + per extra)',
-    },
-    extraTransaction: {
-      each: 1.00,
-      inclusion: 'Accounts Payable - Extra transaction above threshold',
-    },
-    extraMultiLine: {
-      each: 0.50,
-      inclusion: 'Accounts Payable - Extra lines on multi-line invoices',
+
+    // Q10b: LSL Construction Reporting
+    lslConstruction: {
+      ratePerLodgement: 200.00,
+      frequency: 1,
+      inclusion: 'LSL Construction Reporting',
     },
   },
 
-  // Q9 - TPAR
-  tpar: {
-    perReport: {
-      yearly: 25.00,
-      inclusion: 'TPAR Annual Report - per report',
-    },
-  },
-
-  // Q10 - Accounts Receivable
+  // ===================
+  // Q11: ACCOUNTS RECEIVABLE
+  // ===================
   accountsReceivable: {
-    under20SingleLine: {
-      monthly: 30.00,
-      inclusion: 'Accounts Receivable - Up to 20 single-line sales invoices/month',
+    // Q11a: Single Line AR Invoices
+    singleLineInvoices: {
+      upTo20: {
+        ratePerInvoice: 3.00,
+        maxInvoices: 20,
+        inclusion: 'Accounts Receivable - Up to 20 invoices/month',
+      },
+      upTo50: {
+        ratePerInvoice: 2.75,
+        maxInvoices: 50,
+        inclusion: 'Accounts Receivable - 21-50 invoices/month',
+      },
+      upTo75: {
+        ratePerInvoice: 2.50,
+        maxInvoices: 75,
+        inclusion: 'Accounts Receivable - 51-75 invoices/month',
+      },
+      over75: {
+        ratePerInvoice: 2.00,
+        inclusion: 'Accounts Receivable - 75+ invoices/month',
+      },
     },
-    under50SingleLine: {
-      monthly: 75.00,
-      inclusion: 'Accounts Receivable - 20-50 single-line sales invoices/month',
+
+    // Q11b: Multi-Line AR Invoices
+    multiLineInvoices: {
+      ratePerLine: 1.00,
+      inclusion: 'Multi-Line AR Invoices - per line',
     },
-    over50SingleLine: {
-      monthly: 75.00,
-      perInvoice: 1.00,
-      inclusion: 'Accounts Receivable - 50+ single-line sales invoices/month (base + per extra)',
-    },
-    extraTransaction: {
-      each: 1.00,
-      inclusion: 'Accounts Receivable - Extra transaction above threshold',
-    },
-    extraMultiLine: {
-      each: 0.50,
-      inclusion: 'Accounts Receivable - Extra lines on multi-line invoices',
-    },
+
+    // Q11c: Debtor Management
     debtorManagement: {
-      each: 80.00,
-      inclusion: 'Accounts Receivable - Debtor management per debtor',
+      upTo20: {
+        ratePerDebtor: 5.00,
+        maxDebtors: 20,
+        inclusion: 'Debtor Management - Up to 20 debtors/month',
+      },
+      upTo50: {
+        ratePerDebtor: 4.00,
+        maxDebtors: 50,
+        inclusion: 'Debtor Management - Up to 50 debtors/month',
+      },
+      extra: {
+        ratePerDebtor: 3.00,
+        inclusion: 'Debtor Management - Extra debtors above threshold',
+      },
     },
   },
 
-  // Q11 - Financial Reporting (Management Reports)
-  managementReports: {
+  // ===================
+  // Q12: FINANCIAL REPORTING
+  // ===================
+  financialReporting: {
     monthly: {
-      yearly: 660.00,
-      monthly: 55.00, // 660/12
-      inclusion: 'Monthly Management Reports - P&L, Balance Sheet, Cash Flow, Aged Debtors/Creditors',
+      rate: 60.00,
+      frequency: 12,
+      inclusion: 'Monthly Management Reports',
     },
     quarterly: {
-      yearly: 330.00,
-      monthly: 27.50, // 330/12
-      inclusion: 'Quarterly Management Reports - P&L, Balance Sheet, Cash Flow, Aged Debtors/Creditors',
+      rate: 90.00,
+      frequency: 4,
+      inclusion: 'Quarterly Management Reports',
     },
   },
 
-  // Q12 - Management Meetings
+  // ===================
+  // Q13: MANAGEMENT MEETINGS
+  // ===================
   managementMeetings: {
     monthly: {
-      yearly: 2340.00,
-      monthly: 195.00, // 2340/12
-      inclusion: 'Monthly Meetings - 12 x 1-hour online meetings per year',
+      rate: 200.00,
+      frequency: 12,
+      inclusion: 'Monthly Management Meetings',
     },
     quarterly: {
-      yearly: 780.00,
-      monthly: 65.00, // 780/12
-      inclusion: 'Quarterly Meetings - 4 x 1-hour online meetings per year',
+      rate: 250.00,
+      frequency: 4,
+      inclusion: 'Quarterly Management Meetings',
     },
   },
 
-  // Q13 - Compliance Lodgement Services (BAS/IAS)
+  // ===================
+  // Q14: COMPLIANCE LODGEMENT SERVICES
+  // ===================
   complianceServices: {
     basQuarterly: {
-      micro: { yearly: 500.00, monthly: 41.67 },
-      small: { yearly: 500.00, monthly: 41.67 },
-      medium: { yearly: 740.00, monthly: 61.67 },
-      large: { yearly: 1000.00, monthly: 83.33 },
-      inclusion: 'BAS Quarterly Lodgement - Reconcile GST, Tax Authority accounts & correspondence',
+      rate: 150.00,
+      frequency: 4,
+      inclusion: 'BAS Quarterly Lodgement',
     },
     basMonthly: {
-      yearly: 2960.00,
-      monthly: 246.67, // 2960/12
-      inclusion: 'BAS Monthly Lodgement - Full GST reconciliation each month',
+      rate: 100.00,
+      frequency: 12,
+      inclusion: 'BAS Monthly Lodgement',
     },
-    iasMonthly: {
-      yearly: 2000.00,
-      monthly: 166.67, // 2000/12
-      inclusion: 'IAS Monthly Lodgement - Instalment Activity Statement',
+    ias: {
+      rate: 80.00,
+      frequency: 8,
+      inclusion: 'IAS Lodgement',
     },
   },
 
-  // Q14 - Support Level
+  // ===================
+  // Q15: SUPPORT LEVEL
+  // ===================
   support: {
     emailOnly: {
       monthly: 50.00,
@@ -190,61 +289,56 @@ export const serviceValuesBookkeeping = {
     },
     emailPhoneTeamCsm: {
       monthly: 75.00,
-      inclusion: 'Email & Phone Support - Team & Client Service Manager',
+      inclusion: 'Email & Phone - Team & Client Service Manager',
     },
     emailPhoneCsmOwner: {
       monthly: 130.00,
-      inclusion: 'Email & Phone Support - CSM & Owner/Partner (senior)',
+      inclusion: 'Email & Phone - CSM & Owner/Partner',
     },
   },
 
-  // Q15 - EOFY Process & Workpapers
-  eofy: {
+  // ===================
+  // Q16: EOFY PROCESS & WORKPAPERS
+  // ===================
+  eofyProcess: {
     microSmall: {
-      yearly: 495.00,
-      monthly: 41.25, // 495/12
-      inclusion: 'EOFY Package (Micro & Small) - GST/STP recon, balance sheet recs, payment summaries, EOFY lock, accountant handover',
+      annual: 495.00,
+      monthly: 49.50,
+      inclusion: 'EOFY Process & Workpapers - Micro & Small',
     },
     mediumLarge: {
-      yearly: 895.00,
-      monthly: 74.58, // 895/12
-      inclusion: 'EOFY Package (Medium & Large) - GST/STP recon, balance sheet recs, payment summaries, EOFY lock, accountant handover',
+      annual: 895.00,
+      monthly: 89.50,
+      inclusion: 'EOFY Process & Workpapers - Medium & Large',
     },
   },
 
-  // Q16 - Cleanup/Rescue Work (once-off, calculated as total monthly × months)
-  cleanup: {
-    perMonth: {
-      multiplier: 1, // Multiply total monthly package by number of months
-      inclusion: 'Rescue/Cleanup Work - Total monthly package × number of months',
-    },
+  // ===================
+  // Q17: RESCUE / CLEANUP WORK
+  // ===================
+  rescueCleanup: {
+    // Calculated as: Total monthly package × # months = once-off fee
+    description: 'Rescue/cleanup work is quoted as total monthly package × number of months',
+    inclusion: 'Rescue / Cleanup Work',
   },
 
-  // Additional Once-Off Services
+  // ===================
+  // ADDITIONAL ONCE-OFF SERVICES
+  // ===================
   additionalServices: {
     accountingSoftwareSetup: {
       onceOff: 1000.00,
-      inclusion: 'Accounting Software Setup - includes bank accounts, 1 credit card, conversion balances, payables/receivables, directors payroll',
+      inclusion: 'Accounting Software Setup',
     },
-    payablesReceivablesSetup: {
-      perBatch: 50.00,
-      inclusion: 'Payables & Receivables Setup - per 50 items',
+    onlineTraining1Session: {
+      onceOff: 99.00,
+      inclusion: '1 × Online Training Session (30 min)',
     },
-    extraPayablesReceivablesItem: {
-      each: 0.50,
-      inclusion: 'Extra Payables & Receivables items - per item above 50-batch threshold',
-    },
-    payrollSetupPerEmployee: {
-      onceOff: 50.00,
-      inclusion: 'Payroll Setup - per new employee',
-    },
-    training1Session: {
-      onceOff: 120.00,
-      inclusion: '1 × Online Training Session (30 min) - Recorded Zoom session',
-    },
-    training3Sessions: {
+    onlineTraining3Sessions: {
       onceOff: 250.00,
-      inclusion: '3 × Online Training Sessions (30 min each) - Recorded Zoom sessions',
+      inclusion: '3 × Online Training Sessions (30 min each)',
     },
   },
 };
+
+export default serviceValuesBookkeeping;

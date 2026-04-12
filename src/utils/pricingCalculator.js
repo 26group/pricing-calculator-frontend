@@ -25,7 +25,7 @@ const getPricingMultiplier = (pricingModifier) => {
  * q5: FBT return
  * q6: BAS frequency (quarterly/monthly/no)
  * q7: IAS yes/no
- * q8: TPAR yes/no
+ * q8: TPAR (number of suppliers)
  * q9: Workers Compensation
  * q10: Run payroll, q10a: Salary employees, q10b: Timesheet employees
  * q11: Payroll Tax (medium/large only)
@@ -85,8 +85,8 @@ export const calculateTotalMonthlyPrice = (responses, pricingModifier = 200) => 
     const extras = serviceValuesAccounting.taxServices.individualReturnExtras;
     
     Object.entries(responses.q2b).forEach(([extraKey, value]) => {
-      // Skip 'none' button and empty values
-      if (extraKey === 'none' || !value) return;
+      // Skip 'none' button, empty values, and returnNotNecessary (handled in once-off fees)
+      if (extraKey === 'none' || extraKey === 'returnNotNecessary' || !value) return;
       
       const extraPricing = extras[extraKey];
       if (extraPricing && extraPricing[summaryType]) {
@@ -162,11 +162,15 @@ export const calculateTotalMonthlyPrice = (responses, pricingModifier = 200) => 
     }
   }
 
-  // q8: TPAR
-  if (responses.q8 === 'yes' && segment) {
-    const tparService = serviceValuesAccounting.taxServices.tpar?.[segment];
-    if (tparService) {
-      total += tparService.monthly;
+  // q8: TPAR (number of suppliers)
+  if (responses.q8 && segment) {
+    const supplierCount = parseInt(responses.q8, 10);
+    if (!isNaN(supplierCount) && supplierCount > 0) {
+      const tparService = serviceValuesAccounting.taxServices.tpar?.[segment];
+      if (tparService) {
+        // TPAR pricing is per supplier
+        total += tparService.monthly * supplierCount;
+      }
     }
   }
 
@@ -333,44 +337,35 @@ export const calculateTotalMonthlyPrice = (responses, pricingModifier = 200) => 
     }
   }
 
-  // q23: Business Meetings (quarterly)
-  if (responses.q23 === 'yes' && segment) {
+  // q23: Business Meetings
+  if (responses.q23 && responses.q23 !== 'no' && segment) {
     const businessMeetings = serviceValuesAccounting.meetings.businessMeetings?.[segment];
     if (businessMeetings) {
-      total += businessMeetings.monthly;
+      // Use quarterly or monthly rate based on selection
+      if (responses.q23 === 'quarterly') {
+        total += businessMeetings.quarterlyMonthly || businessMeetings.monthly;
+      } else if (responses.q23 === 'monthly') {
+        total += businessMeetings.monthlyMonthly || businessMeetings.monthly;
+      }
     }
   }
 
-  // q24: Support level
+  // q24: Support level (each option is a standalone value, not cumulative)
   if (responses.q24 && responses.q24 !== '' && responses.q24 !== 'no' && segment) {
     if (responses.q24 === 'emailTeam') {
       const teamSupport = serviceValuesAccounting.support.emailOnlyTeam?.[segment];
       if (teamSupport) {
         total += teamSupport.monthly;
       }
-    }
-    if (responses.q24 === 'emailPhoneTeamCsm') {
-      // Email/Phone Team + CSM includes team support plus CSM
-      const teamSupport = serviceValuesAccounting.support.emailOnlyTeam?.[segment];
+    } else if (responses.q24 === 'emailPhoneTeamCsm') {
+      // Email/Phone Team + CSM - use CSM value only (standalone tier)
       const csmSupport = serviceValuesAccounting.support.clientServiceManager?.[segment];
-      if (teamSupport) {
-        total += teamSupport.monthly;
-      }
       if (csmSupport) {
         total += csmSupport.monthly;
       }
-    }
-    if (responses.q24 === 'emailPhoneCsmOwner') {
-      // CSM + Owner includes team support, CSM, and Owner
-      const teamSupport = serviceValuesAccounting.support.emailOnlyTeam?.[segment];
-      const csmSupport = serviceValuesAccounting.support.clientServiceManager?.[segment];
+    } else if (responses.q24 === 'emailPhoneCsmOwner') {
+      // CSM + Owner - use Owner value only (standalone tier)
       const ownerSupport = serviceValuesAccounting.support.principalOwner?.[segment];
-      if (teamSupport) {
-        total += teamSupport.monthly;
-      }
-      if (csmSupport) {
-        total += csmSupport.monthly;
-      }
       if (ownerSupport) {
         total += ownerSupport.monthly;
       }
@@ -387,12 +382,7 @@ export const calculateTotalMonthlyPrice = (responses, pricingModifier = 200) => 
           total += asicService.monthly;
         }
       }
-      if (responses.q25.includes('formLodgements')) {
-        const asicService = serviceValuesAccounting.corporateSecretarial.asicFormsLodgements;
-        if (asicService) {
-          total += asicService.monthly;
-        }
-      }
+      // formLodgements is handled in calculateTotalOnceOffFee
     }
     // Handle old object format for backward compatibility
     else if (typeof responses.q25 === 'object' && responses.q25 !== null) {
@@ -402,12 +392,7 @@ export const calculateTotalMonthlyPrice = (responses, pricingModifier = 200) => 
           total += asicService.monthly;
         }
       }
-      if (responses.q25.formLodgements) {
-        const asicService = serviceValuesAccounting.corporateSecretarial.asicFormsLodgements;
-        if (asicService) {
-          total += asicService.monthly;
-        }
-      }
+      // formLodgements is handled in calculateTotalOnceOffFee
     } 
     // Handle old string format for backward compatibility
     else if (responses.q25 !== '' && responses.q25 !== 'no') {
@@ -416,12 +401,8 @@ export const calculateTotalMonthlyPrice = (responses, pricingModifier = 200) => 
         if (asicService) {
           total += asicService.monthly;
         }
-      } else if (responses.q25 === 'detailChanges') {
-        const asicService = serviceValuesAccounting.corporateSecretarial.asicFormsLodgements;
-        if (asicService) {
-          total += asicService.monthly;
-        }
       }
+      // detailChanges/formLodgements handled in calculateTotalOnceOffFee
     }
   }
 
@@ -502,16 +483,39 @@ export const calculateTotalOnceOffFee = (responses, pricingModifier = 200) => {
   // q26: ATO payment plans (once-off setup fee)
   if (responses.q26 && responses.q26 !== '' && responses.q26 !== 'no') {
     let atoPlan = null;
-    if (responses.q26 === 'basicPlans') {
-      atoPlan = serviceValuesAccounting.corporateSecretarial?.atoPaymentPlanBasic;
-    } else if (responses.q26 === 'hardshipPlans') {
-      atoPlan = serviceValuesAccounting.corporateSecretarial?.atoPaymentPlanHardship;
+    if (responses.q26 === 'basic') {
+      atoPlan = serviceValuesAccounting.atoPaymentPlans?.basic;
+    } else if (responses.q26 === 'hardship') {
+      atoPlan = serviceValuesAccounting.atoPaymentPlans?.hardship;
     }
     if (process.env.NODE_ENV === 'development') {
       console.log('Adding atoPaymentPlans:', atoPlan);
     }
     if (atoPlan) {
       total += atoPlan.onceOff || 0;
+    }
+  }
+
+  // q2b: Return not necessary (once-off fee from individual return extras)
+  if (responses.q2b && typeof responses.q2b === 'object' && responses.q2b.returnNotNecessary) {
+    const count = parseInt(responses.q2b.returnNotNecessary, 10);
+    const returnNotNecessary = serviceValuesAccounting.taxServices?.individualReturnExtras?.returnNotNecessary;
+    if (!isNaN(count) && count > 0 && returnNotNecessary?.onceOff) {
+      total += returnNotNecessary.onceOff * count;
+    }
+  }
+
+  // q25: ASIC Form Lodgements (once-off)
+  if (responses.q25) {
+    const asicService = serviceValuesAccounting.corporateSecretarial?.asicFormsLodgements;
+    if (asicService) {
+      if (Array.isArray(responses.q25) && responses.q25.includes('formLodgements')) {
+        total += asicService.onceOff || 0;
+      } else if (typeof responses.q25 === 'object' && responses.q25 !== null && responses.q25.formLodgements) {
+        total += asicService.onceOff || 0;
+      } else if (responses.q25 === 'detailChanges') {
+        total += asicService.onceOff || 0;
+      }
     }
   }
 

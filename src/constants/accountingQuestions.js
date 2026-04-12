@@ -188,11 +188,11 @@ export const accountingQuestions = {
       Q1e: {
         id: 'Q1e',
         title: 'BAS (per return)',
-        prompt: 'Do they want you to lodge BAS? (Quarterly × 4 or Monthly × 12)',
+        prompt: 'Do they want you to lodge BAS?',
         type: 'frequency',
         frequencyOptions: [
-          { value: 4, label: 'Quarterly (4x per year)' },
-          { value: 12, label: 'Monthly (12x per year)' },
+          { value: 4, label: 'Quarterly' },
+          { value: 12, label: 'Monthly' },
         ],
         serviceKey: 'bas',
         tierBased: true,
@@ -254,9 +254,9 @@ export const accountingQuestions = {
             label: 'Pay runs per year',
             type: 'select',
             options: [
-              { value: 52, label: 'Weekly (52x)' },
-              { value: 26, label: 'Fortnightly (26x)' },
-              { value: 12, label: 'Monthly (12x)' },
+              { value: 52, label: 'Weekly' },
+              { value: 26, label: 'Fortnightly' },
+              { value: 12, label: 'Monthly' },
             ],
             default: 52,
           },
@@ -274,11 +274,11 @@ export const accountingQuestions = {
       Q2d: {
         id: 'Q2d',
         title: 'Super Prep & Lodgement',
-        prompt: 'Do they want you to lodge Superannuation payments? (Quarterly × 4 or Monthly × 12)',
+        prompt: 'Do they want you to lodge Superannuation payments?',
         type: 'frequency',
         frequencyOptions: [
-          { value: 4, label: 'Quarterly (4x per year)' },
-          { value: 12, label: 'Monthly (12x per year)' },
+          { value: 4, label: 'Quarterly' },
+          { value: 12, label: 'Monthly' },
         ],
         serviceKey: 'superPrep',
         tierBased: true,
@@ -289,9 +289,9 @@ export const accountingQuestions = {
         prompt: 'Do they want you to lodge Single Touch Payroll (STP)?',
         type: 'frequency',
         frequencyOptions: [
-          { value: 52, label: 'Weekly (52x)' },
-          { value: 26, label: 'Fortnightly (26x)' },
-          { value: 12, label: 'Monthly (12x)' },
+          { value: 52, label: 'Weekly' },
+          { value: 26, label: 'Fortnightly' },
+          { value: 12, label: 'Monthly' },
         ],
         serviceKey: 'stpReporting',
         tierBased: true,
@@ -368,7 +368,7 @@ export const accountingQuestions = {
       Q4b: {
         id: 'Q4b',
         title: 'Statutory Financial Statements',
-        prompt: 'Do they require Statutory Financial Statements? (Large only)',
+        prompt: 'Do they require Statutory Financial Statements?',
         type: 'boolean',
         serviceKey: 'statutoryFinancialStatements',
         tierBased: true,
@@ -377,11 +377,11 @@ export const accountingQuestions = {
       Q4c: {
         id: 'Q4c',
         title: 'Management Financial Statements',
-        prompt: 'Do they require Management Financial Statements? (Monthly or Quarterly)',
+        prompt: 'Do they require Management Financial Statements?',
         type: 'frequency',
         frequencyOptions: [
-          { value: 4, label: 'Quarterly (4x per year)' },
-          { value: 12, label: 'Monthly (12x per year)' },
+          { value: 4, label: 'Quarterly' },
+          { value: 12, label: 'Monthly' },
         ],
         serviceKey: 'managementFinancialStatements',
         tierBased: true,
@@ -398,11 +398,11 @@ export const accountingQuestions = {
       Q5a: {
         id: 'Q5a',
         title: 'Review The Numbers Meetings',
-        prompt: 'Do they require Review The Numbers meetings? (Monthly × 12 or Quarterly × 4)',
+        prompt: 'Do they require Review The Numbers meetings?',
         type: 'frequency',
         frequencyOptions: [
-          { value: 4, label: 'Quarterly (4x per year)' },
-          { value: 12, label: 'Monthly (12x per year)' },
+          { value: 4, label: 'Quarterly' },
+          { value: 12, label: 'Monthly' },
         ],
         serviceKey: 'reviewTheNumbers',
         tierBased: true,
@@ -418,11 +418,11 @@ export const accountingQuestions = {
       Q5c: {
         id: 'Q5c',
         title: 'Business Meetings',
-        prompt: 'Do they require Business Meetings? (Monthly × 12 or Quarterly × 4)',
+        prompt: 'Do they require Business Meetings?',
         type: 'frequency',
         frequencyOptions: [
-          { value: 4, label: 'Quarterly (4x per year)' },
-          { value: 12, label: 'Monthly (12x per year)' },
+          { value: 4, label: 'Quarterly' },
+          { value: 12, label: 'Monthly' },
         ],
         serviceKey: 'businessMeetings',
         tierBased: true,
@@ -497,7 +497,7 @@ export const accountingQuestions = {
       Q7b: {
         id: 'Q7b',
         title: 'ATO Payment Plans',
-        prompt: 'Do they need ATO Payment Plans set up? (Basic / Longer-term & Hardship) — Once-off fee',
+        prompt: 'Do they need ATO Payment Plans set up?',
         type: 'select',
         options: [
           { value: 'none', label: 'None' },
@@ -520,7 +520,7 @@ export const accountingQuestions = {
         id: 'Q8',
         title: 'Prior Year Lodgements',
         prompt:
-          'Do they require prior year lodgements? Enter # of returns. Price = annual rate × # returns × multiplier — once-off per type.',
+          'Do they require prior year lodgements? Enter # of returns.',
         type: 'priorYear',
         feeType: 'onceOff',
         applicableServices: [
@@ -592,6 +592,7 @@ export const accountingQuestionData = [
   // 1: Revenue Segment
   {
     id: 'q1',
+    title: 'Annual Revenue',
     prompt: "1. What is your potential client's current annual revenue?",
     type: 'radio',
     options: [
@@ -599,7 +600,6 @@ export const accountingQuestionData = [
       { label: '$250K - $500K', value: 'small' },
       { label: '$500K - $1M', value: 'medium' },
       { label: '$1M - $3M', value: 'large' },
-      { label: '$3M plus', value: 'enterprise' },
     ],
   },
 
@@ -686,13 +686,13 @@ export const accountingQuestionData = [
   // 2e: BAS
   {
     id: 'q6',
-    prompt: '2e. Do they want you to lodge BAS? (Quarterly × 4 or Monthly × 12)',
+    prompt: '2e. Do they want you to lodge BAS?',
     subheading: 'BAS (per return)',
     type: 'radio',
     category: 'TAX SERVICES',
     options: [
-      { label: 'Quarterly (4x per year)', value: 'quarterly' },
-      { label: 'Monthly (12x per year)', value: 'monthly' },
+      { label: 'Quarterly', value: 'quarterly' },
+      { label: 'Monthly', value: 'monthly' },
       { label: 'No', value: 'no' },
     ],
   },
@@ -713,14 +713,11 @@ export const accountingQuestionData = [
   // 2g: TPAR
   {
     id: 'q8',
-    prompt: '2g. Does the client require TPAR? Please provide # suppliers.',
+    prompt: '2g. Does the client require TPAR? Enter # of suppliers.',
     subheading: 'TPAR (per return)',
-    type: 'radio',
+    type: 'number',
     category: 'TAX SERVICES',
-    options: [
-      { label: 'Yes', value: 'yes' },
-      { label: 'No', value: 'no' },
-    ],
+    placeholder: 'Enter number',
   },
 
   // =================== 3: PAYROLL SERVICES ===================
@@ -741,7 +738,7 @@ export const accountingQuestionData = [
   // 3b: Payroll Processing
   {
     id: 'q10',
-    prompt: '3b. Do they run payroll? Enter # salaried and timesheet employees × pay runs/yr.',
+    prompt: '3b. Do they run payroll? Enter # SALARIED and TIMESHEET employees.',
     subheading: 'Payroll Processing',
     type: 'radio',
     category: 'PAYROLL SERVICES',
@@ -752,24 +749,24 @@ export const accountingQuestionData = [
     children: [
       {
         id: 'q10a',
-        prompt: 'How many salaried employees per pay frequency?',
+        prompt: 'How many SALARIED employees per pay frequency?',
         type: 'inputGroup',
         showWhen: (responses) => responses.q10 === 'yes',
         options: [
-          { label: 'Weekly (52x/yr)', value: 'salaryWeekly', control: 'number' },
-          { label: 'Fortnightly (26x/yr)', value: 'salaryFortnightly', control: 'number' },
-          { label: 'Monthly (12x/yr)', value: 'salaryMonthly', control: 'number' },
+          { label: 'Weekly', value: 'salaryWeekly', control: 'number' },
+          { label: 'Fortnightly', value: 'salaryFortnightly', control: 'number' },
+          { label: 'Monthly', value: 'salaryMonthly', control: 'number' },
         ],
       },
       {
         id: 'q10b',
-        prompt: 'How many timesheet employees per pay frequency?',
+        prompt: 'How many TIMESHEET employees per pay frequency?',
         type: 'inputGroup',
         showWhen: (responses) => responses.q10 === 'yes',
         options: [
-          { label: 'Weekly (52x/yr)', value: 'timesheetWeekly', control: 'number' },
-          { label: 'Fortnightly (26x/yr)', value: 'timesheetFortnightly', control: 'number' },
-          { label: 'Monthly (12x/yr)', value: 'timesheetMonthly', control: 'number' },
+          { label: 'Weekly', value: 'timesheetWeekly', control: 'number' },
+          { label: 'Fortnightly', value: 'timesheetFortnightly', control: 'number' },
+          { label: 'Monthly', value: 'timesheetMonthly', control: 'number' },
         ],
       },
     ],
@@ -778,7 +775,7 @@ export const accountingQuestionData = [
   // 3c: Payroll Tax Returns (Medium & Large only)
   {
     id: 'q11',
-    prompt: '3c. Do they want you to lodge Payroll Tax returns for them? (Medium & Large only)',
+    prompt: '3c. Do they want you to lodge Payroll Tax returns for them?',
     subheading: 'Payroll Tax Returns',
     type: 'radio',
     category: 'PAYROLL SERVICES',
@@ -786,19 +783,19 @@ export const accountingQuestionData = [
       { label: 'Yes', value: 'yes' },
       { label: 'No', value: 'no' },
     ],
-    showWhen: (responses) => responses.q1 === 'medium' || responses.q1 === 'large' || responses.q1 === 'enterprise',
+    showWhen: (responses) => responses.q1 === 'medium' || responses.q1 === 'large',
   },
 
   // 3d: Super Prep & Lodgement
   {
     id: 'q12',
-    prompt: '3d. Do they want you to lodge Superannuation payments? (Quarterly × 4 or Monthly × 12)',
+    prompt: '3d. Do they want you to lodge Superannuation payments?',
     subheading: 'Super Prep & Lodgement',
     type: 'radio',
     category: 'PAYROLL SERVICES',
     options: [
-      { label: 'Quarterly (4x per year)', value: 'quarterly' },
-      { label: 'Monthly (12x per year)', value: 'monthly' },
+      { label: 'Quarterly', value: 'quarterly' },
+      { label: 'Monthly', value: 'monthly' },
       { label: 'No', value: 'no' },
     ],
   },
@@ -806,14 +803,14 @@ export const accountingQuestionData = [
   // 3e: STP Reporting
   {
     id: 'q13',
-    prompt: '3e. Do they want you to lodge Single Touch Payroll (STP)? (Weekly × 52 / Fortnightly × 26 / Monthly × 12)',
+    prompt: '3e. Do they want you to lodge Single Touch Payroll (STP)?',
     subheading: 'STP Reporting',
     type: 'radio',
     category: 'PAYROLL SERVICES',
     options: [
-      { label: 'Weekly (52x per year)', value: 'weekly' },
-      { label: 'Fortnightly (26x per year)', value: 'fortnightly' },
-      { label: 'Monthly (12x per year)', value: 'monthly' },
+      { label: 'Weekly', value: 'weekly' },
+      { label: 'Fortnightly', value: 'fortnightly' },
+      { label: 'Monthly', value: 'monthly' },
       { label: 'No', value: 'no' },
     ],
   },
@@ -903,7 +900,7 @@ export const accountingQuestionData = [
   // 5b: Statutory Financial Statements (Large only)
   {
     id: 'q19',
-    prompt: '5b. Do they require Statutory Financial Statements? (Large only)',
+    prompt: '5b. Do they require Statutory Financial Statements?',
     subheading: 'Statutory Financial Statements',
     type: 'radio',
     category: 'REPORTING',
@@ -917,13 +914,13 @@ export const accountingQuestionData = [
   // 5c: Management Financial Statements
   {
     id: 'q20',
-    prompt: '5c. Do they require Management Financial Statements? (Monthly or Quarterly)',
+    prompt: '5c. Do they require Management Financial Statements?',
     subheading: 'Management Financial Statements',
     type: 'radio',
     category: 'REPORTING',
     options: [
-      { label: 'Monthly (12x per year)', value: 'monthly' },
-      { label: 'Quarterly (4x per year)', value: 'quarterly' },
+      { label: 'Monthly', value: 'monthly' },
+      { label: 'Quarterly', value: 'quarterly' },
       { label: 'No', value: 'no' },
     ],
   },
@@ -933,13 +930,13 @@ export const accountingQuestionData = [
   // 6a: Review The Numbers Meetings
   {
     id: 'q21',
-    prompt: '6a. Do they require Review The Numbers meetings? (Monthly × 12 or Quarterly × 4)',
+    prompt: '6a. Do they require Review The Numbers meetings?',
     subheading: 'Review The Numbers Meetings',
     type: 'radio',
     category: 'MEETINGS',
     options: [
-      { label: 'Monthly (12x per year)', value: 'monthly' },
-      { label: 'Quarterly (4x per year)', value: 'quarterly' },
+      { label: 'Monthly', value: 'monthly' },
+      { label: 'Quarterly', value: 'quarterly' },
       { label: 'No', value: 'no' },
     ],
   },
@@ -960,13 +957,13 @@ export const accountingQuestionData = [
   // 6c: Business Meetings
   {
     id: 'q23',
-    prompt: '6c. Do they require Business Meetings? (Monthly × 12 or Quarterly × 4)',
+    prompt: '6c. Do they require Business Meetings?',
     subheading: 'Business Meetings',
     type: 'radio',
     category: 'MEETINGS',
     options: [
-      { label: 'Monthly (12x per year)', value: 'monthly' },
-      { label: 'Quarterly (4x per year)', value: 'quarterly' },
+      { label: 'Monthly', value: 'monthly' },
+      { label: 'Quarterly', value: 'quarterly' },
       { label: 'No', value: 'no' },
     ],
   },
@@ -997,6 +994,7 @@ export const accountingQuestionData = [
     subheading: 'Corporate Secretarial',
     type: 'multiRadio',
     category: 'CORPORATE SECRETARIAL & ATO PLANS',
+    clearOnValue: 'none',
     options: [
       { label: 'ASIC Annual Return', value: 'annualReturns' },
       { label: 'ASIC Form Lodgements (once-off)', value: 'formLodgements' },
@@ -1007,7 +1005,7 @@ export const accountingQuestionData = [
   // 8b: ATO Payment Plans (Once-off)
   {
     id: 'q26',
-    prompt: '8b. Do they need ATO Payment Plans set up? (Basic / Longer-term & Hardship) — Once-off fee',
+    prompt: '8b. Do they need ATO Payment Plans set up?',
     subheading: 'ATO Payment Plans',
     type: 'radio',
     category: 'CORPORATE SECRETARIAL & ATO PLANS',
@@ -1023,7 +1021,7 @@ export const accountingQuestionData = [
   // 9: Prior Year Lodgements (Once-off)
   {
     id: 'q27',
-    prompt: '9. Do they require prior year lodgements? Enter # of returns. Price = annual rate × # returns × multiplier — once-off per type.',
+    prompt: '9. Do they require prior year lodgements? Enter # of returns.',
     subheading: 'Prior Year Lodgements',
     type: 'inputGroup',
     category: 'PRIOR YEAR LODGEMENTS',

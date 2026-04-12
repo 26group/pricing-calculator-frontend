@@ -28,7 +28,8 @@ const saveToStorage = (state) => {
 // Load saved responses from localStorage and merge with defaults
 const savedResponses = loadFromStorage();
 
-const initialState = {
+// Base state without any saved responses (used for reset)
+const baseState = {
   q1: '',
   q2: '',
   q3: '',
@@ -42,6 +43,10 @@ const initialState = {
   serviceCatalogOnceOffFee: 0,
   clientName: '',
   activePriceId: null,
+};
+
+const initialState = {
+  ...baseState,
   // Merge with saved responses from localStorage
   ...savedResponses,
 };
@@ -118,7 +123,7 @@ const responsesSlice = createSlice({
     },
     resetPriceState: () => {
       localStorage.removeItem(STORAGE_KEY);
-      return initialState;
+      return { ...baseState };
     },
   }
 });

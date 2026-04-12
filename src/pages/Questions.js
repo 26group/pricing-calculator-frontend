@@ -1539,10 +1539,25 @@ export default function Questions() {
 
   const handleNumberChange = (questionId) => (event) => {
     console.log(`Response updated`, { questionId, value: event.target.value });
-    setResponses((prev) => ({
-      ...prev,
-      [questionId]: event.target.value,
-    }));
+    const value = event.target.value;
+    
+    setResponses((prev) => {
+      const newState = {
+        ...prev,
+        [questionId]: value,
+      };
+      
+      // If q2 (Individual Tax Returns) is set to 0 or empty, clear its child fields
+      if (questionId === 'q2') {
+        const numValue = parseInt(value, 10);
+        if (!value || numValue === 0 || isNaN(numValue)) {
+          newState.q2a = '';
+          newState.q2b = {};
+        }
+      }
+      
+      return newState;
+    });
   };
 
   const handleInputGroupChange = (questionId, optionValue) => (event) => {
@@ -1574,10 +1589,12 @@ export default function Questions() {
   };
 
   // Calculate dynamic question numbers based on which questions are visible
-  // NOTE: We no longer dynamically renumber - we use the prompt numbers as-is
   const getQuestionNumberMapping = () => {
     const mapping = {};
     const parentMap = {}; // Track parent-child relationships
+    
+    // Track visible questions per category to assign dynamic numbers
+    const categoryCounters = {};
     
     // Recursive function to track all children
     const trackChildren = (children, parentId) => {
@@ -1590,10 +1607,43 @@ export default function Questions() {
       });
     };
     
-    // Track parent-child relationships only - don't renumber
+    // First pass: track parent-child relationships
     questionData.forEach((question) => {
-      // Track all children recursively
       trackChildren(question.children, question.id);
+    });
+    
+    // Second pass: calculate dynamic numbers for visible questions
+    questionData.forEach((question) => {
+      // Skip if question has showWhen and it returns false
+      if (question.showWhen && !question.showWhen(responses)) {
+        return;
+      }
+      
+      const category = question.category;
+      if (category) {
+        if (!categoryCounters[category]) {
+          categoryCounters[category] = 0;
+        }
+        categoryCounters[category]++;
+        
+        // Get section number from category
+        const sectionNumbers = {
+          'TAX SERVICES': '2',
+          'PAYROLL SERVICES': '3',
+          'ADVISORY SERVICES': '4',
+          'REPORTING': '5',
+          'MEETINGS': '6',
+          'SUPPORT SERVICES': '7',
+          'CORPORATE SECRETARIAL & ATO PLANS': '8',
+          'PRIOR YEAR LODGEMENTS': '9',
+        };
+        const sectionNum = sectionNumbers[category] || '';
+        const letterIndex = categoryCounters[category] - 1;
+        const letter = String.fromCharCode(97 + letterIndex); // a, b, c, d...
+        mapping[question.id] = `${sectionNum}${letter}`;
+      } else if (question.id === 'q1') {
+        mapping[question.id] = '1';
+      }
     });
     
     return { mapping, parentMap };
@@ -1616,8 +1666,18 @@ export default function Questions() {
       return null;
     }
 
-    // Use the prompt as-is without dynamic renumbering
-    const promptText = question.prompt;
+    // Strip the hardcoded number prefix (e.g., "2a. ", "3c. ", "1. ") and add dynamic number
+    let promptText = question.prompt;
+    const dynamicNumber = questionNumberMapping[question.id];
+    
+    // Remove existing number prefix like "2a. " or "1. "
+    const numberPrefixPattern = /^\d+[a-z]?\.\s*/;
+    promptText = promptText.replace(numberPrefixPattern, '');
+    
+    // Prepend dynamic number if available (only for top-level questions)
+    if (dynamicNumber && depth === 0) {
+      promptText = `${dynamicNumber}. ${promptText}`;
+    }
 
     return (
       <div key={question.id} style={{ marginLeft: depth > 0 ? `${depth * 32}px` : 0 }}>
@@ -1848,7 +1908,23 @@ export default function Questions() {
                 onChange={(event, newValue) => {
                   setFocusedQuestion(question.id);
                   // Ensure newValue is always an array
-                  const arrayValue = Array.isArray(newValue) ? newValue : (newValue ? [newValue] : []);
+                  let arrayValue = Array.isArray(newValue) ? newValue : (newValue ? [newValue] : []);
+                  
+                  // Handle clearOnValue behavior - if the clear value is selected, clear all others
+                  if (question.clearOnValue) {
+                    const prevValue = Array.isArray(responses[question.id]) ? responses[question.id] : [];
+                    const clearValue = question.clearOnValue;
+                    
+                    // If clearValue was just added
+                    if (arrayValue.includes(clearValue) && !prevValue.includes(clearValue)) {
+                      arrayValue = [clearValue];
+                    }
+                    // If another value was added while clearValue is selected, remove clearValue
+                    else if (prevValue.includes(clearValue) && arrayValue.length > 1) {
+                      arrayValue = arrayValue.filter(v => v !== clearValue);
+                    }
+                  }
+                  
                   setResponses((prev) => ({
                     ...prev,
                     [question.id]: arrayValue,
