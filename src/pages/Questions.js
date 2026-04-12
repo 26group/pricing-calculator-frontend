@@ -649,6 +649,39 @@ const flattenQuestions = (questions) => {
   return collected;
 };
 
+// Helper function to get price from nested serviceValues using dot notation
+const getPriceFromKey = (priceKey, segment, fixedPrice = false) => {
+  if (!priceKey) return null;
+  
+  const parts = priceKey.split('.');
+  let value = serviceValues;
+  
+  for (const part of parts) {
+    if (value && typeof value === 'object') {
+      value = value[part];
+    } else {
+      return null;
+    }
+  }
+  
+  // If fixedPrice is true (e.g., Individual Returns), use the value directly
+  if (fixedPrice && value && value.yearly) {
+    return value.yearly;
+  }
+  
+  // Check if value is flat (no segment-based pricing, has yearly directly)
+  if (value && value.yearly !== undefined) {
+    return value.yearly;
+  }
+  
+  // Otherwise get the segment-specific price
+  if (value && segment && value[segment] && value[segment].yearly) {
+    return value[segment].yearly;
+  }
+  
+  return null;
+};
+
 const buildInitialState = () => {
   const flat = flattenQuestions(questionData);
   return flat.reduce((acc, question) => {
@@ -1541,10 +1574,10 @@ export default function Questions() {
   };
 
   // Calculate dynamic question numbers based on which questions are visible
+  // NOTE: We no longer dynamically renumber - we use the prompt numbers as-is
   const getQuestionNumberMapping = () => {
     const mapping = {};
     const parentMap = {}; // Track parent-child relationships
-    let counter = 1;
     
     // Recursive function to track all children
     const trackChildren = (children, parentId) => {
@@ -1557,11 +1590,8 @@ export default function Questions() {
       });
     };
     
-    // First pass: Only count top-level questions and track parent-child relationships
+    // Track parent-child relationships only - don't renumber
     questionData.forEach((question) => {
-      if (!question.showWhen || question.showWhen(responses)) {
-        mapping[question.id] = counter++;
-      }
       // Track all children recursively
       trackChildren(question.children, question.id);
     });
@@ -1586,28 +1616,8 @@ export default function Questions() {
       return null;
     }
 
-    // Extract the base prompt and replace the number with the dynamic one
-    let questionNumber = questionNumberMapping[question.id];
-    
-    // If this question doesn't have a direct mapping, it might be a sub-question
-    if (questionNumber === undefined && parentMap[question.id]) {
-      const parentId = parentMap[question.id];
-      const parentNumber = questionNumberMapping[parentId];
-      if (parentNumber !== undefined) {
-        // Extract the sub-question part (e.g., "a", "b", etc.)
-        const match = question.prompt.match(/^(\d+)\.([a-z]+)/);
-        if (match) {
-          const subPart = match[2];
-          questionNumber = `${parentNumber}.${subPart}`;
-        }
-      }
-    }
-
-    // Replace the number in the prompt
-    let promptWithDynamicNumber = question.prompt;
-    if (questionNumber !== undefined) {
-      promptWithDynamicNumber = question.prompt.replace(/^\d+\.([a-z]*)?/, `${questionNumber}.`);
-    }
+    // Use the prompt as-is without dynamic renumbering
+    const promptText = question.prompt;
 
     return (
       <div key={question.id} style={{ marginLeft: depth > 0 ? `${depth * 32}px` : 0 }}>
@@ -1630,7 +1640,12 @@ export default function Questions() {
           }}
         >
           <Stack spacing={1.5}>
-            <Typography variant="subtitle1" sx={{ fontWeight: 700, color: 'text.primary', fontSize: '1rem' }}>{promptWithDynamicNumber}</Typography>
+            {question.subheading && (
+              <Typography variant="subtitle2" sx={{ fontWeight: 600, color: 'primary.main', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                {question.subheading}
+              </Typography>
+            )}
+            <Typography variant="subtitle1" sx={{ fontWeight: 700, color: 'text.primary', fontSize: '1rem' }}>{promptText}</Typography>
             {question.type === 'q7-custom' && (
               <Stack spacing={2}>
                 {/* Combined BAS and IAS Options in single button group */}
@@ -2208,7 +2223,61 @@ export default function Questions() {
             </div>
           </div>
         )}
-        <Stack spacing={2}>{questionData.map((question) => renderQuestion(question))}</Stack>
+        <Stack spacing={2}>{(() => {
+          // Map category to section numbers (based on CSV structure)
+          const categoryToSection = {
+            'TAX SERVICES': { number: 'Q2', title: 'Tax Services' },
+            'PAYROLL SERVICES': { number: 'Q3', title: 'Payroll Services' },
+            'ADVISORY SERVICES': { number: 'Q4', title: 'Advisory Services' },
+            'REPORTING': { number: 'Q5', title: 'Reporting' },
+            'MEETINGS': { number: 'Q6', title: 'Meetings' },
+            'SUPPORT SERVICES': { number: 'Q7', title: 'Support Services' },
+            'CORPORATE SECRETARIAL & ATO PLANS': { number: 'Q8', title: 'Corporate Secretarial & ATO Plans' },
+            'PRIOR YEAR LODGEMENTS': { number: 'Q9', title: 'Prior Year Lodgements' },
+          };
+          
+          let lastCategory = null;
+          const elements = [];
+          
+          questionData.forEach((question, index) => {
+            // Check if we need to add a category header
+            const isNewCategory = question.category && question.category !== lastCategory;
+            const section = isNewCategory ? categoryToSection[question.category] : null;
+            
+            if (isNewCategory) {
+              lastCategory = question.category;
+            }
+            
+            // Render the question
+            const rendered = renderQuestion(question);
+            if (rendered) {
+              if (section) {
+                // Wrap category header and first question together to avoid Stack spacing
+                elements.push(
+                  <div key={`category-wrapper-${question.category}`} style={{ marginTop: index > 0 ? '24px' : 0 }}>
+                    <Typography
+                      variant="h6"
+                      sx={{
+                        fontWeight: 700,
+                        color: 'primary.main',
+                        fontSize: '1.1rem',
+                        mb: 0.5,
+                        px: 2,
+                      }}
+                    >
+                      {section.number} {section.title}
+                    </Typography>
+                    {rendered}
+                  </div>
+                );
+              } else {
+                elements.push(rendered);
+              }
+            }
+          });
+          
+          return elements;
+        })()}</Stack>
       </Container>
       
       {/* Sticky Footer Bar with Pricing */}

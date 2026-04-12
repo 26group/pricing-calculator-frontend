@@ -609,6 +609,7 @@ export const accountingQuestionData = [
   {
     id: 'q2',
     prompt: '2a. How many Individuals do they want tax returns lodged for? Enter number.',
+    subheading: 'Individual Tax Returns',
     type: 'number',
     category: 'TAX SERVICES',
     children: [
@@ -651,6 +652,7 @@ export const accountingQuestionData = [
   {
     id: 'q3',
     prompt: '2b. How many Business Entities do they want tax returns lodged for? Enter number.',
+    subheading: 'Business Tax Returns',
     type: 'number',
     category: 'TAX SERVICES',
   },
@@ -659,6 +661,7 @@ export const accountingQuestionData = [
   {
     id: 'q4',
     prompt: '2c. Do they have a Self Managed Superannuation Fund (SMSF)? Do they want you to complete the audit and tax return?',
+    subheading: 'SMSF',
     type: 'radio',
     category: 'TAX SERVICES',
     options: [
@@ -671,6 +674,7 @@ export const accountingQuestionData = [
   {
     id: 'q5',
     prompt: '2d. Do they require an FBT return to be lodged?',
+    subheading: 'FBT Returns',
     type: 'radio',
     category: 'TAX SERVICES',
     options: [
@@ -683,6 +687,7 @@ export const accountingQuestionData = [
   {
     id: 'q6',
     prompt: '2e. Do they want you to lodge BAS? (Quarterly × 4 or Monthly × 12)',
+    subheading: 'BAS (per return)',
     type: 'radio',
     category: 'TAX SERVICES',
     options: [
@@ -696,6 +701,7 @@ export const accountingQuestionData = [
   {
     id: 'q7',
     prompt: '2f. Do they want you to lodge IAS monthly reporting?',
+    subheading: 'IAS (per return)',
     type: 'radio',
     category: 'TAX SERVICES',
     options: [
@@ -708,6 +714,7 @@ export const accountingQuestionData = [
   {
     id: 'q8',
     prompt: '2g. Does the client require TPAR? Please provide # suppliers.',
+    subheading: 'TPAR (per return)',
     type: 'radio',
     category: 'TAX SERVICES',
     options: [
@@ -722,6 +729,7 @@ export const accountingQuestionData = [
   {
     id: 'q9',
     prompt: '3a. Do they want you to lodge Workers Compensation forms for them?',
+    subheading: 'Workers Compensation',
     type: 'radio',
     category: 'PAYROLL SERVICES',
     options: [
@@ -734,6 +742,7 @@ export const accountingQuestionData = [
   {
     id: 'q10',
     prompt: '3b. Do they run payroll? Enter # salaried and timesheet employees × pay runs/yr.',
+    subheading: 'Payroll Processing',
     type: 'radio',
     category: 'PAYROLL SERVICES',
     options: [
@@ -770,6 +779,7 @@ export const accountingQuestionData = [
   {
     id: 'q11',
     prompt: '3c. Do they want you to lodge Payroll Tax returns for them? (Medium & Large only)',
+    subheading: 'Payroll Tax Returns',
     type: 'radio',
     category: 'PAYROLL SERVICES',
     options: [
@@ -783,6 +793,7 @@ export const accountingQuestionData = [
   {
     id: 'q12',
     prompt: '3d. Do they want you to lodge Superannuation payments? (Quarterly × 4 or Monthly × 12)',
+    subheading: 'Super Prep & Lodgement',
     type: 'radio',
     category: 'PAYROLL SERVICES',
     options: [
@@ -796,6 +807,7 @@ export const accountingQuestionData = [
   {
     id: 'q13',
     prompt: '3e. Do they want you to lodge Single Touch Payroll (STP)? (Weekly × 52 / Fortnightly × 26 / Monthly × 12)',
+    subheading: 'STP Reporting',
     type: 'radio',
     category: 'PAYROLL SERVICES',
     options: [
@@ -810,6 +822,7 @@ export const accountingQuestionData = [
   {
     id: 'q14',
     prompt: '3f. Do they want you to lodge Long Service Leave forms for them?',
+    subheading: 'LSL Construction Reporting',
     type: 'radio',
     category: 'PAYROLL SERVICES',
     options: [
@@ -824,6 +837,7 @@ export const accountingQuestionData = [
   {
     id: 'q15',
     prompt: '4a. Do they require Tax Planning / Review?',
+    subheading: 'Tax Planning / Review',
     type: 'radio',
     category: 'ADVISORY SERVICES',
     options: [
@@ -836,6 +850,7 @@ export const accountingQuestionData = [
   {
     id: 'q16',
     prompt: '4b. Do they require Tax Restructuring Review? (Once-off fee)',
+    subheading: 'Tax Structuring Advice',
     type: 'radio',
     category: 'ADVISORY SERVICES',
     options: [
@@ -848,6 +863,7 @@ export const accountingQuestionData = [
   {
     id: 'q17',
     prompt: '4c. Do they have an accounting system? If not, would they like you to set one up? (Once-off fee)',
+    subheading: 'Xero Setup',
     type: 'radio',
     category: 'ADVISORY SERVICES',
     options: [
@@ -858,6 +874,7 @@ export const accountingQuestionData = [
       {
         id: 'q17a',
         prompt: '4d. Would they like Xero Training? (follows Xero Setup)',
+        subheading: 'Xero Training',
         type: 'radio',
         options: [
           { label: 'Yes', value: 'yes' },
@@ -874,6 +891,7 @@ export const accountingQuestionData = [
   {
     id: 'q18',
     prompt: '5a. Do they require Financial Statements for Tax Returns preparation?',
+    subheading: 'Financial Statements for Tax Returns',
     type: 'radio',
     category: 'REPORTING',
     options: [
@@ -886,6 +904,7 @@ export const accountingQuestionData = [
   {
     id: 'q19',
     prompt: '5b. Do they require Statutory Financial Statements? (Large only)',
+    subheading: 'Statutory Financial Statements',
     type: 'radio',
     category: 'REPORTING',
     options: [
@@ -899,6 +918,7 @@ export const accountingQuestionData = [
   {
     id: 'q20',
     prompt: '5c. Do they require Management Financial Statements? (Monthly or Quarterly)',
+    subheading: 'Management Financial Statements',
     type: 'radio',
     category: 'REPORTING',
     options: [
@@ -914,6 +934,7 @@ export const accountingQuestionData = [
   {
     id: 'q21',
     prompt: '6a. Do they require Review The Numbers meetings? (Monthly × 12 or Quarterly × 4)',
+    subheading: 'Review The Numbers Meetings',
     type: 'radio',
     category: 'MEETINGS',
     options: [
@@ -927,6 +948,7 @@ export const accountingQuestionData = [
   {
     id: 'q22',
     prompt: '6b. Do they require Annual Tax Meetings?',
+    subheading: 'Annual Tax Meetings',
     type: 'radio',
     category: 'MEETINGS',
     options: [
@@ -939,6 +961,7 @@ export const accountingQuestionData = [
   {
     id: 'q23',
     prompt: '6c. Do they require Business Meetings? (Monthly × 12 or Quarterly × 4)',
+    subheading: 'Business Meetings',
     type: 'radio',
     category: 'MEETINGS',
     options: [
@@ -954,6 +977,7 @@ export const accountingQuestionData = [
   {
     id: 'q24',
     prompt: '7. Do you offer them support?',
+    subheading: 'Support Level',
     type: 'radio',
     category: 'SUPPORT SERVICES',
     options: [
@@ -970,6 +994,7 @@ export const accountingQuestionData = [
   {
     id: 'q25',
     prompt: '8a. Do they need ASIC company secretarial work? (Annual returns / Detail changes)',
+    subheading: 'Corporate Secretarial',
     type: 'multiRadio',
     category: 'CORPORATE SECRETARIAL & ATO PLANS',
     options: [
@@ -983,6 +1008,7 @@ export const accountingQuestionData = [
   {
     id: 'q26',
     prompt: '8b. Do they need ATO Payment Plans set up? (Basic / Longer-term & Hardship) — Once-off fee',
+    subheading: 'ATO Payment Plans',
     type: 'radio',
     category: 'CORPORATE SECRETARIAL & ATO PLANS',
     options: [
@@ -998,22 +1024,25 @@ export const accountingQuestionData = [
   {
     id: 'q27',
     prompt: '9. Do they require prior year lodgements? Enter # of returns. Price = annual rate × # returns × multiplier — once-off per type.',
+    subheading: 'Prior Year Lodgements',
     type: 'inputGroup',
     category: 'PRIOR YEAR LODGEMENTS',
+    showPrices: true,
+    priorYearMultiplier: 1.5,
     options: [
-      { label: 'Business Returns', value: 'businessReturns', control: 'number' },
-      { label: 'Individuals', value: 'individuals', control: 'number' },
-      { label: 'BAS', value: 'bas', control: 'number' },
-      { label: 'SMSF', value: 'smsf', control: 'number' },
-      { label: 'IAS', value: 'ias', control: 'number' },
-      { label: 'FBT', value: 'fbt', control: 'number' },
-      { label: 'TPAR', value: 'tpar', control: 'number' },
-      { label: 'Workers Comp', value: 'workersComp', control: 'number' },
-      { label: 'Super Lodgement', value: 'superLodgement', control: 'number' },
-      { label: 'STP EOY', value: 'stpEoy', control: 'number' },
-      { label: 'LSL Forms', value: 'lslForms', control: 'number' },
-      { label: 'Payroll Tax', value: 'payrollTax', control: 'number' },
-      { label: 'ASIC', value: 'asic', control: 'number' },
+      { label: 'Business Returns', value: 'businessReturns', control: 'number', priceKey: 'taxServices.businessReturns' },
+      { label: 'Individuals', value: 'individuals', control: 'number', priceKey: 'taxServices.individualReturns.all', fixedPrice: true },
+      { label: 'BAS', value: 'bas', control: 'number', priceKey: 'taxServices.bas' },
+      { label: 'SMSF', value: 'smsf', control: 'number', priceKey: 'taxServices.smsf' },
+      { label: 'IAS', value: 'ias', control: 'number', priceKey: 'taxServices.ias' },
+      { label: 'FBT', value: 'fbt', control: 'number', priceKey: 'taxServices.fbtReturns' },
+      { label: 'TPAR', value: 'tpar', control: 'number', priceKey: 'taxServices.tpar' },
+      { label: 'Workers Comp', value: 'workersComp', control: 'number', priceKey: 'payrollServices.workersCompensation' },
+      { label: 'Super Lodgement', value: 'superLodgement', control: 'number', priceKey: 'payrollServices.superPrepAndLodgement' },
+      { label: 'STP EOY', value: 'stpEoy', control: 'number', priceKey: 'payrollServices.stpReporting' },
+      { label: 'LSL Forms', value: 'lslForms', control: 'number', priceKey: 'payrollServices.lslReporting' },
+      { label: 'Payroll Tax', value: 'payrollTax', control: 'number', priceKey: 'payrollServices.payrollTaxReturns' },
+      { label: 'ASIC', value: 'asic', control: 'number', priceKey: 'corporateSecretarial.asicAnnualReturn' },
       { label: 'None', value: 'none', control: 'button' },
     ],
   },

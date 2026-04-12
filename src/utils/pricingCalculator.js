@@ -219,10 +219,17 @@ export const calculateTotalMonthlyPrice = (responses, pricingModifier = 200) => 
   }
 
   // q11: Payroll tax returns (medium/large only)
+  console.log('Q11 Debug:', {
+    q11Value: responses.q11,
+    segment,
+    payrollTaxReturns: serviceValuesAccounting.payrollServices.payrollTaxReturns,
+    segmentValue: serviceValuesAccounting.payrollServices.payrollTaxReturns?.[segment],
+  });
   if (responses.q11 === 'yes' && segment) {
     const payrollTaxService = serviceValuesAccounting.payrollServices.payrollTaxReturns?.[segment];
     if (payrollTaxService) {
       total += payrollTaxService.monthly;
+      console.log('Q11 adding to total:', payrollTaxService.monthly, 'new total:', total);
     }
   }
 
@@ -509,110 +516,128 @@ export const calculateTotalOnceOffFee = (responses, pricingModifier = 200) => {
   }
 
   // q27: Prior year lodgements (multiple return types)
+  // Uses annual rate from original service × number of returns × 1.5 multiplier as once-off fee
   if (responses.q27 && typeof responses.q27 === 'object' && segment) {
-    const priorYear = serviceValuesAccounting.priorYearLodgements;
+    const PRIOR_YEAR_MULTIPLIER = 1.5;
 
-    // Business returns
-    if (responses.q27.business) {
-      const businessCount = parseInt(responses.q27.business, 10);
-      if (!isNaN(businessCount) && businessCount > 0 && priorYear?.businessReturns?.[segment]) {
-        total += priorYear.businessReturns[segment].onceOff * businessCount;
+    // Business returns (uses taxServices.businessReturns)
+    if (responses.q27.businessReturns) {
+      const count = parseInt(responses.q27.businessReturns, 10);
+      const service = serviceValuesAccounting.taxServices?.businessReturns?.[segment];
+      if (!isNaN(count) && count > 0 && service?.yearly) {
+        total += service.yearly * count * PRIOR_YEAR_MULTIPLIER;
       }
     }
 
-    // Individual returns
+    // Individual returns (flat rate for all segments)
     if (responses.q27.individuals) {
-      const individualCount = parseInt(responses.q27.individuals, 10);
-      if (!isNaN(individualCount) && individualCount > 0 && priorYear?.individuals?.all) {
-        total += priorYear.individuals.all.onceOff * individualCount;
+      const count = parseInt(responses.q27.individuals, 10);
+      const service = serviceValuesAccounting.taxServices?.individualReturns?.all;
+      if (!isNaN(count) && count > 0 && service?.yearly) {
+        total += service.yearly * count * PRIOR_YEAR_MULTIPLIER;
       }
     }
 
-    // BAS returns
+    // BAS returns (uses perReturn, assuming 4 returns per year for annual calculation)
     if (responses.q27.bas) {
-      const basCount = parseInt(responses.q27.bas, 10);
-      if (!isNaN(basCount) && basCount > 0 && priorYear?.bas?.[segment]) {
-        total += priorYear.bas[segment].onceOff * basCount;
+      const count = parseInt(responses.q27.bas, 10);
+      const service = serviceValuesAccounting.taxServices?.bas?.[segment];
+      if (!isNaN(count) && count > 0 && service?.perReturn) {
+        // perReturn × 4 (quarterly) = yearly rate
+        total += (service.perReturn * 4) * count * PRIOR_YEAR_MULTIPLIER;
       }
     }
 
     // SMSF
     if (responses.q27.smsf) {
-      const smsfCount = parseInt(responses.q27.smsf, 10);
-      if (!isNaN(smsfCount) && smsfCount > 0 && priorYear?.smsf?.[segment]) {
-        total += priorYear.smsf[segment].onceOff * smsfCount;
+      const count = parseInt(responses.q27.smsf, 10);
+      const service = serviceValuesAccounting.taxServices?.smsf?.[segment];
+      if (!isNaN(count) && count > 0 && service?.yearly) {
+        total += service.yearly * count * PRIOR_YEAR_MULTIPLIER;
       }
     }
 
-    // IAS returns
+    // IAS returns (uses perReturn, assuming 8 returns per year)
     if (responses.q27.ias) {
-      const iasCount = parseInt(responses.q27.ias, 10);
-      if (!isNaN(iasCount) && iasCount > 0 && priorYear?.ias?.[segment]) {
-        total += priorYear.ias[segment].onceOff * iasCount;
+      const count = parseInt(responses.q27.ias, 10);
+      const service = serviceValuesAccounting.taxServices?.ias?.[segment];
+      if (!isNaN(count) && count > 0 && service?.perReturn) {
+        // perReturn × 8 = yearly rate
+        total += (service.perReturn * 8) * count * PRIOR_YEAR_MULTIPLIER;
       }
     }
 
     // FBT returns
     if (responses.q27.fbt) {
-      const fbtCount = parseInt(responses.q27.fbt, 10);
-      if (!isNaN(fbtCount) && fbtCount > 0 && priorYear?.fbt?.[segment]) {
-        total += priorYear.fbt[segment].onceOff * fbtCount;
+      const count = parseInt(responses.q27.fbt, 10);
+      const service = serviceValuesAccounting.taxServices?.fbtReturns?.[segment];
+      if (!isNaN(count) && count > 0 && service?.yearly) {
+        total += service.yearly * count * PRIOR_YEAR_MULTIPLIER;
       }
     }
 
     // TPAR
     if (responses.q27.tpar) {
-      const tparCount = parseInt(responses.q27.tpar, 10);
-      if (!isNaN(tparCount) && tparCount > 0 && priorYear?.tpar?.[segment]) {
-        total += priorYear.tpar[segment].onceOff * tparCount;
+      const count = parseInt(responses.q27.tpar, 10);
+      const service = serviceValuesAccounting.taxServices?.tpar?.[segment];
+      if (!isNaN(count) && count > 0 && service?.yearly) {
+        total += service.yearly * count * PRIOR_YEAR_MULTIPLIER;
       }
     }
 
     // Workers Compensation
     if (responses.q27.workersComp) {
-      const workersCompCount = parseInt(responses.q27.workersComp, 10);
-      if (!isNaN(workersCompCount) && workersCompCount > 0 && priorYear?.workersComp?.[segment]) {
-        total += priorYear.workersComp[segment].onceOff * workersCompCount;
+      const count = parseInt(responses.q27.workersComp, 10);
+      const service = serviceValuesAccounting.payrollServices?.workersCompensation?.[segment];
+      if (!isNaN(count) && count > 0 && service?.yearly) {
+        total += service.yearly * count * PRIOR_YEAR_MULTIPLIER;
       }
     }
 
-    // Super Prep and Lodgement
-    if (responses.q27.super) {
-      const superCount = parseInt(responses.q27.super, 10);
-      if (!isNaN(superCount) && superCount > 0 && priorYear?.superLodgement?.[segment]) {
-        total += priorYear.superLodgement[segment].onceOff * superCount;
+    // Super Prep and Lodgement (uses perLodgement, assuming 4 lodgements per year)
+    if (responses.q27.superLodgement) {
+      const count = parseInt(responses.q27.superLodgement, 10);
+      const service = serviceValuesAccounting.payrollServices?.superPrepAndLodgement?.[segment];
+      if (!isNaN(count) && count > 0 && service?.perLodgement) {
+        // perLodgement × 4 (quarterly) = yearly rate
+        total += (service.perLodgement * 4) * count * PRIOR_YEAR_MULTIPLIER;
       }
     }
 
-    // STP EOY Reporting
+    // STP EOY Reporting (uses perReport × 12 for yearly, or just use monthly × 12)
     if (responses.q27.stpEoy) {
-      const stpCount = parseInt(responses.q27.stpEoy, 10);
-      if (!isNaN(stpCount) && stpCount > 0 && priorYear?.stpEoy?.[segment]) {
-        total += priorYear.stpEoy[segment].onceOff * stpCount;
+      const count = parseInt(responses.q27.stpEoy, 10);
+      const service = serviceValuesAccounting.payrollServices?.stpReporting?.[segment];
+      if (!isNaN(count) && count > 0 && service?.perReport) {
+        // For EOY, use perReport as annual rate (it's a single annual report)
+        total += service.perReport * count * PRIOR_YEAR_MULTIPLIER;
       }
     }
 
-    // LSL Reporting
+    // LSL Forms (uses lslReporting)
     if (responses.q27.lslForms) {
-      const lslCount = parseInt(responses.q27.lslForms, 10);
-      if (!isNaN(lslCount) && lslCount > 0 && priorYear?.lslForms?.[segment]) {
-        total += priorYear.lslForms[segment].onceOff * lslCount;
+      const count = parseInt(responses.q27.lslForms, 10);
+      const service = serviceValuesAccounting.payrollServices?.lslReporting?.[segment];
+      if (!isNaN(count) && count > 0 && service?.yearly) {
+        total += service.yearly * count * PRIOR_YEAR_MULTIPLIER;
       }
     }
 
     // Payroll Tax Returns (medium/large only)
     if (responses.q27.payrollTax && ['medium', 'large'].includes(segment)) {
-      const payrollTaxCount = parseInt(responses.q27.payrollTax, 10);
-      if (!isNaN(payrollTaxCount) && payrollTaxCount > 0 && priorYear?.payrollTax?.[segment]) {
-        total += priorYear.payrollTax[segment].onceOff * payrollTaxCount;
+      const count = parseInt(responses.q27.payrollTax, 10);
+      const service = serviceValuesAccounting.payrollServices?.payrollTaxReturns?.[segment];
+      if (!isNaN(count) && count > 0 && service?.yearly) {
+        total += service.yearly * count * PRIOR_YEAR_MULTIPLIER;
       }
     }
 
-    // ASIC Annual Return
+    // ASIC (flat rate)
     if (responses.q27.asic) {
-      const asicCount = parseInt(responses.q27.asic, 10);
-      if (!isNaN(asicCount) && asicCount > 0 && priorYear?.asic?.all) {
-        total += priorYear.asic.all.onceOff * asicCount;
+      const count = parseInt(responses.q27.asic, 10);
+      const service = serviceValuesAccounting.corporateSecretarial?.asicAnnualReturn;
+      if (!isNaN(count) && count > 0 && service?.yearly) {
+        total += service.yearly * count * PRIOR_YEAR_MULTIPLIER;
       }
     }
 
