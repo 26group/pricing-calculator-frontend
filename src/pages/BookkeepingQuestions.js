@@ -50,6 +50,11 @@ const buildInitialState = () => {
       return acc;
     }
 
+    if (question.type === 'multiRadio') {
+      acc[question.id] = {};
+      return acc;
+    }
+
     if (question.type === 'checkbox') {
       acc[question.id] = question.options.reduce((optionState, option) => {
         optionState[option.value] = false;
@@ -266,10 +271,15 @@ export default function BookkeepingQuestions() {
     }));
   };
 
-  const renderQuestion = (question, depth = 0) => {
+  const renderQuestion = (question, depth = 0, questionNumber = null) => {
     if (question.showWhen && !question.showWhen(responses)) {
       return null;
     }
+
+    // Format prompt with dynamic number if provided
+    const displayPrompt = questionNumber !== null 
+      ? `${questionNumber}. ${question.prompt}`
+      : question.prompt;
 
     return (
       <div key={question.id} style={{ marginLeft: depth > 0 ? `${depth * 32}px` : 0, marginTop: depth > 0 ? '8px' : '20px' }}>
@@ -292,7 +302,7 @@ export default function BookkeepingQuestions() {
           }}
         >
           <Stack spacing={1.5}>
-            <Typography variant="subtitle1" sx={{ fontWeight: 700, color: 'text.primary', fontSize: '1rem' }}>{question.prompt}</Typography>
+            <Typography variant="subtitle1" sx={{ fontWeight: 700, color: 'text.primary', fontSize: '1rem' }}>{displayPrompt}</Typography>
             
             {question.type === 'radio' && (
               <ToggleButtonGroup
@@ -338,6 +348,82 @@ export default function BookkeepingQuestions() {
                     </ToggleButton>
                   );
                 })}
+              </ToggleButtonGroup>
+            )}
+
+            {question.type === 'multiRadio' && (
+              <ToggleButtonGroup
+                value={Object.keys(responses[question.id] || {}).filter(k => responses[question.id][k])}
+                onChange={(event, newValue) => {
+                  setFocusedQuestion(question.id);
+                  const clickedValue = event.currentTarget.value;
+                  
+                  // Handle clearOnValue behavior
+                  if (question.clearOnValue && clickedValue === question.clearOnValue) {
+                    // Clicking "None" clears all selections
+                    setResponses((prev) => ({
+                      ...prev,
+                      [question.id]: { [question.clearOnValue]: true },
+                    }));
+                  } else if (question.clearOnValue) {
+                    // Clicking any other value - remove clearOnValue and toggle the clicked value
+                    const current = responses[question.id] || {};
+                    const newState = { ...current };
+                    delete newState[question.clearOnValue];
+                    
+                    // Handle mutually exclusive options (e.g., basQuarterly and basMonthly)
+                    if (question.mutuallyExclusive && question.mutuallyExclusive.includes(clickedValue)) {
+                      question.mutuallyExclusive.forEach(v => {
+                        if (v !== clickedValue) delete newState[v];
+                      });
+                    }
+                    
+                    newState[clickedValue] = !current[clickedValue];
+                    setResponses((prev) => ({
+                      ...prev,
+                      [question.id]: newState,
+                    }));
+                  } else {
+                    // Standard toggle behavior
+                    setResponses((prev) => ({
+                      ...prev,
+                      [question.id]: {
+                        ...(prev[question.id] || {}),
+                        [clickedValue]: !(prev[question.id]?.[clickedValue]),
+                      },
+                    }));
+                  }
+                }}
+                size="medium"
+                sx={{
+                  flexWrap: 'wrap',
+                  gap: 1,
+                  display: 'flex',
+                }}
+                disabled={!responses.q1}
+                onClick={!responses.q1 ? () => setRequireQ1Message(true) : undefined}
+              >
+                {question.options.map((option) => (
+                  <ToggleButton 
+                    key={option.value} 
+                    value={option.value}
+                    selected={responses[question.id]?.[option.value] || false}
+                    sx={{
+                      minWidth: '120px',
+                      flex: '0 1 120px',
+                      whiteSpace: 'normal',
+                      wordBreak: 'break-word',
+                      minHeight: '72px',
+                      py: 1.2,
+                      px: 1.5,
+                      fontSize: '0.9rem',
+                    }}
+                    disabled={!responses.q1}
+                    onClick={!responses.q1 ? () => setRequireQ1Message(true) : undefined}
+                  >
+                    <Typography variant="body2" sx={{ fontWeight: 700, color: 'inherit' }}>{option.label}</Typography>
+                  </ToggleButton>
+                ))}
               </ToggleButtonGroup>
             )}
 
@@ -773,7 +859,46 @@ export default function BookkeepingQuestions() {
             </div>
           </div>
         )}
-        <Stack spacing={2}>{bookkeepingQuestionData.map((question) => renderQuestion(question))}</Stack>
+        <Stack spacing={2}>
+          {(() => {
+            let questionNumber = 0;
+            return bookkeepingQuestionData.map((question, index) => {
+              // Check if question is visible
+              const isVisible = !question.showWhen || question.showWhen(responses);
+              if (isVisible) {
+                questionNumber++;
+              }
+              
+              const showSectionTitle = question.sectionTitle && (
+                index === 0 || bookkeepingQuestionData[index - 1]?.sectionTitle !== question.sectionTitle
+              );
+              
+              // Only render if visible
+              if (!isVisible) return null;
+              
+              return (
+                <React.Fragment key={question.id}>
+                  {showSectionTitle && (
+                    <Typography
+                      variant="h6"
+                      sx={{
+                        fontWeight: 700,
+                        color: '#002060',
+                        mt: index === 0 ? 0 : 3,
+                        mb: 1,
+                        pt: index === 0 ? 0 : 2,
+                        borderTop: index === 0 ? 'none' : '1px solid #e0e0e0',
+                      }}
+                    >
+                      {question.sectionTitle}
+                    </Typography>
+                  )}
+                  {renderQuestion(question, 0, questionNumber)}
+                </React.Fragment>
+              );
+            });
+          })()}
+        </Stack>
       </Container>
       
       {/* Sticky Footer Bar with Pricing */}

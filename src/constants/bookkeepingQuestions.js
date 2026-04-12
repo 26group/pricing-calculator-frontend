@@ -1,12 +1,16 @@
-// Bookkeeping Questions - Based on Bookkeeping Pricing Calculator v4
-// Q1 (Service Type) is handled in App.js routing - not shown here
-// Questions start from Q2 (Revenue) which maps to q1 in the code
+// Bookkeeping Questions - Based on Bookkeeping Pricing Calculator v11
+// Questions use flat array format for BookkeepingQuestions.js page
+// Includes sectionTitle for grouping display
+// Formula: Base Rate × Units × Frequency / 12 × Multiplier = Monthly Fee
 
 export const bookkeepingQuestionData = [
-  // Q2 in CSV -> q1 in code: Revenue Segment
+  // ===================
+  // SECTION: CLIENT DETAILS
+  // ===================
   {
     id: 'q1',
-    prompt: "1. What is the potential client's current annual revenue?",
+    sectionTitle: 'Client Details',
+    prompt: "What is the potential client's current annual revenue?",
     type: 'radio',
     options: [
       { label: '< $250K', value: 'micro' },
@@ -16,215 +20,302 @@ export const bookkeepingQuestionData = [
       { label: '$3M+', value: 'enterprise' },
     ],
   },
-  // Q3 in CSV -> q2 in code: Accounting System
+
+  // ===================
+  // SECTION: SETUP SERVICES
+  // ===================
   {
     id: 'q2',
-    prompt: '2. Do they have an accounting system in place?',
+    sectionTitle: 'Setup Services',
+    prompt: 'Do they have an accounting system in place?',
     type: 'radio',
     options: [
       { label: 'Yes - existing system', value: 'yes' },
-      { label: 'No - require software setup (once-off)', value: 'no' },
+      { label: 'No - require software setup', value: 'no' },
     ],
     children: [
       {
         id: 'q2a',
-        prompt: '2.a Enter system name',
+        prompt: 'Enter system name',
         type: 'text',
         showWhen: (responses) => responses.q2 === 'yes',
       },
     ],
   },
-  // Q4 in CSV -> q3 in code: Run Payroll
+
+  // ===================
+  // SECTION: PAYROLL SERVICES
+  // ===================
   {
     id: 'q3',
-    prompt: '3. Do they run payroll?',
+    sectionTitle: 'Payroll Services',
+    prompt: 'Do they want you to run payroll?',
     type: 'radio',
     options: [
       { label: 'Yes', value: 'yes' },
-      { label: 'Yes - require payroll system setup (per employee)', value: 'yesSetup' },
+      { label: 'Yes - require payroll system setup', value: 'yesSetup' },
       { label: 'No', value: 'no' },
     ],
     children: [
       {
         id: 'q3a',
-        prompt: '3.a How many employees require payroll setup?',
+        prompt: 'How many employees require payroll setup?',
         type: 'number',
         showWhen: (responses) => responses.q3 === 'yesSetup',
       },
     ],
   },
-  // Q5 in CSV -> q4 in code: Salaried Employees
   {
     id: 'q4',
-    prompt: '4. How many SALARIED employees do they have?',
+    prompt: 'How many SALARIED employees do they have?',
     type: 'inputGroup',
     showWhen: (responses) => responses.q3 === 'yes' || responses.q3 === 'yesSetup',
     options: [
-      { label: 'Weekly Salary (# employees)', value: 'weekly', control: 'number' },
-      { label: 'Fortnightly Salary (# employees)', value: 'fortnightly', control: 'number' },
-      { label: 'Monthly Salary (# employees)', value: 'monthly', control: 'number' },
+      { label: 'Weekly', value: 'weekly', control: 'number' },
+      { label: 'Fortnightly', value: 'fortnightly', control: 'number' },
+      { label: 'Monthly', value: 'monthly', control: 'number' },
     ],
   },
-  // Q6 in CSV -> q5 in code: Timesheet Employees
   {
     id: 'q5',
-    prompt: '5. How many TIMESHEET employees do they have?',
+    prompt: 'How many TIMESHEET employees do they have?',
     type: 'inputGroup',
     showWhen: (responses) => responses.q3 === 'yes' || responses.q3 === 'yesSetup',
     options: [
-      { label: 'Weekly Timesheet (# employees)', value: 'weekly', control: 'number' },
-      { label: 'Fortnightly Timesheet (# employees)', value: 'fortnightly', control: 'number' },
-      { label: 'Monthly Timesheet (# employees)', value: 'monthly', control: 'number' },
+      { label: 'Weekly', value: 'weekly', control: 'number' },
+      { label: 'Fortnightly', value: 'fortnightly', control: 'number' },
+      { label: 'Monthly', value: 'monthly', control: 'number' },
     ],
   },
-  // Q7 in CSV -> q6 in code: Transactions per month
   {
     id: 'q6',
-    prompt: '6. How many transactions per month across all bank & credit card accounts?',
+    prompt: 'Do they require Superannuation Preparation & Lodgement?',
+    type: 'radio',
+    showWhen: (responses) => responses.q3 === 'yes' || responses.q3 === 'yesSetup',
+    options: [
+      { label: 'Quarterly', value: 'quarterly' },
+      { label: 'Monthly', value: 'monthly' },
+      { label: 'No', value: 'no' },
+    ],
+  },
+  {
+    id: 'q7',
+    prompt: 'Do they require STP (Single Touch Payroll) Reporting?',
+    type: 'radio',
+    showWhen: (responses) => responses.q3 === 'yes' || responses.q3 === 'yesSetup',
+    options: [
+      { label: 'Weekly', value: 'weekly' },
+      { label: 'Fortnightly', value: 'fortnightly' },
+      { label: 'Monthly', value: 'monthly' },
+      { label: 'No', value: 'no' },
+    ],
+  },
+  {
+    id: 'q8',
+    prompt: 'Do they require Workers Compensation lodgement?',
+    type: 'radio',
+    showWhen: (responses) => responses.q3 === 'yes' || responses.q3 === 'yesSetup',
+    options: [
+      { label: 'Yes', value: 'yes' },
+      { label: 'No', value: 'no' },
+    ],
+  },
+
+  // ===================
+  // SECTION: BOOKKEEPING - TRANSACTIONS & PAYABLES
+  // ===================
+  {
+    id: 'q9',
+    sectionTitle: 'Bookkeeping - Transactions & Payables',
+    prompt: 'How many transactions per month across all bank & credit card accounts?',
     type: 'radio',
     options: [
-      { label: '< 100 transactions', value: 'under100' },
-      { label: '101 - 200 transactions', value: '101to200' },
-      { label: '201 - 400 transactions', value: '201to400' },
+      { label: '< 100 transactions', value: 'upTo100' },
+      { label: '101 - 200 transactions', value: 'upTo200' },
+      { label: '201 - 400 transactions', value: 'upTo400' },
       { label: '400+ transactions', value: 'over400' },
     ],
     children: [
       {
-        id: 'q6a',
-        prompt: '6.a How many transactions above 400?',
+        id: 'q9a',
+        prompt: 'How many transactions above 400?',
         type: 'number',
-        showWhen: (responses) => responses.q6 === 'over400',
+        showWhen: (responses) => responses.q9 === 'over400',
       },
     ],
   },
-  // Q8 in CSV -> q7 in code: Accounts Payable
   {
-    id: 'q7',
-    prompt: '7. Does the client require Accounts Payable (Payables) management?',
+    id: 'q10',
+    prompt: 'How many multi-line transactions per month?',
+    type: 'inputGroup',
+    options: [
+      { label: '# Invoices', value: 'invoices', control: 'number' },
+      { label: 'Avg Lines per Invoice', value: 'avgLines', control: 'number' },
+    ],
+  },
+  {
+    id: 'q11',
+    prompt: 'Does the client require Accounts Payable management?',
     type: 'radio',
     options: [
-      { label: '< 20 single-line supplier invoices/month', value: 'under20' },
-      { label: '20-50 single-line supplier invoices/month', value: '20to50' },
-      { label: '50+ single-line supplier invoices/month', value: 'over50' },
+      { label: '< 20 suppliers/month', value: 'upTo20' },
+      { label: '20-50 suppliers/month', value: 'upTo50' },
+      { label: '50+ suppliers/month', value: 'extra' },
       { label: 'No', value: 'no' },
     ],
     children: [
       {
-        id: 'q7a',
-        prompt: '7.a How many invoices above 50?',
+        id: 'q11a',
+        prompt: 'How many suppliers above 50?',
         type: 'number',
-        placeholder: 'Enter extra invoices',
-        showWhen: (responses) => responses.q7 === 'over50',
-      },
-      {
-        id: 'q7b',
-        prompt: '7.b Multi-line invoices - extra lines (enter # lines)',
-        type: 'number',
-        showWhen: (responses) => responses.q7 !== 'no',
+        showWhen: (responses) => responses.q11 === 'extra',
       },
     ],
   },
-  // Q9 in CSV -> q8 in code: TPAR
+
+  // ===================
+  // SECTION: COMPLIANCE LODGEMENTS
+  // ===================
   {
-    id: 'q8',
-    prompt: '8. Does the client require TPAR (Taxable Payments Annual Report)?',
+    id: 'q12',
+    sectionTitle: 'Compliance Lodgements',
+    prompt: 'Does the client require TPAR (Taxable Payments Annual Report)?',
     type: 'radio',
     options: [
       { label: 'Yes', value: 'yes' },
       { label: 'No', value: 'no' },
     ],
-    children: [
-      {
-        id: 'q8a',
-        prompt: '8.a Enter number of TPAR reports to lodge',
-        type: 'number',
-        showWhen: (responses) => responses.q8 === 'yes',
-      },
-    ],
   },
-  // Q10 in CSV -> q9 in code: Accounts Receivable
-  {
-    id: 'q9',
-    prompt: '9. Does the client require Accounts Receivable (Receivables) management?',
-    type: 'radio',
-    options: [
-      { label: '< 20 single-line sales invoices/month', value: 'under20' },
-      { label: '20-50 single-line sales invoices/month', value: '20to50' },
-      { label: '50+ single-line sales invoices/month', value: 'over50' },
-      { label: 'No', value: 'no' },
-    ],
-    children: [
-      {
-        id: 'q9a',
-        prompt: '9.a How many invoices above 50?',
-        type: 'number',
-        placeholder: 'Enter extra invoices',
-        showWhen: (responses) => responses.q9 === 'over50',
-      },
-      {
-        id: 'q9b',
-        prompt: '9.b Extra lines on multi-line invoices (enter # lines)',
-        type: 'number',
-        showWhen: (responses) => responses.q9 !== 'no',
-      },
-      {
-        id: 'q9c',
-        prompt: '9.c Debtor management required (enter # debtors)',
-        type: 'number',
-        showWhen: (responses) => responses.q9 !== 'no',
-      },
-    ],
-  },
-  // Q11 in CSV -> q10 in code: Financial Reporting
-  {
-    id: 'q10',
-    prompt: '10. Does the client require Financial Reporting (Management Reports)?',
-    type: 'radio',
-    options: [
-      { label: 'Monthly Management Reports', value: 'monthly' },
-      { label: 'Quarterly Management Reports', value: 'quarterly' },
-      { label: 'No', value: 'no' },
-    ],
-  },
-  // Q12 in CSV -> q11 in code: Management Meetings
-  {
-    id: 'q11',
-    prompt: '11. Does the client require Management Meetings?',
-    type: 'radio',
-    options: [
-      { label: 'Monthly Meetings (12 per year)', value: 'monthly' },
-      { label: 'Quarterly Meetings (4 per year)', value: 'quarterly' },
-      { label: 'No', value: 'no' },
-    ],
-  },
-  // Q13 in CSV -> q12 in code: Compliance Lodgement Services
-  {
-    id: 'q12',
-    prompt: '12. Which compliance lodgement services does the client require?',
-    type: 'mixed',
-    basOptions: [
-      { label: 'BAS Quarterly Lodgement', value: 'basQuarterly' },
-      { label: 'BAS Monthly Lodgement', value: 'basMonthly' },
-    ],
-    independentOptions: [
-      { label: 'IAS Monthly Lodgement', value: 'iasMonthly' },
-    ],
-  },
-  // Q14 in CSV -> q13 in code: Support Level
   {
     id: 'q13',
-    prompt: '13. What level of support do you offer the client?',
+    prompt: 'Does the client require LSL Construction Reporting?',
     type: 'radio',
     options: [
-      { label: 'Email only (Unlimited)', value: 'emailOnly' },
-      { label: 'Email & Phone - Team & Client Service Manager', value: 'emailPhoneTeamCsm' },
-      { label: 'Email & Phone - CSM & Owner/Partner (senior)', value: 'emailPhoneCsmOwner' },
+      { label: 'Yes', value: 'yes' },
+      { label: 'No', value: 'no' },
     ],
   },
-  // Q15 in CSV -> q14 in code: EOFY Process
+
+  // ===================
+  // SECTION: ACCOUNTS RECEIVABLE
+  // ===================
   {
     id: 'q14',
-    prompt: '14. Does the client require an EOFY process & workpapers? (Bookkeeping only clients)',
+    sectionTitle: 'Accounts Receivable',
+    prompt: 'Does the client require Accounts Receivable invoicing?',
+    type: 'radio',
+    options: [
+      { label: '< 20 invoices/month', value: 'upTo20' },
+      { label: '21-50 invoices/month', value: 'upTo50' },
+      { label: '51-75 invoices/month', value: 'upTo75' },
+      { label: '75+ invoices/month', value: 'over75' },
+      { label: 'No', value: 'no' },
+    ],
+    children: [
+      {
+        id: 'q14a',
+        prompt: 'How many invoices above 75?',
+        type: 'number',
+        showWhen: (responses) => responses.q14 === 'over75',
+      },
+    ],
+  },
+  {
+    id: 'q15',
+    prompt: 'How many multi-line AR invoices per month?',
+    type: 'inputGroup',
+    showWhen: (responses) => responses.q14 && responses.q14 !== 'no',
+    options: [
+      { label: '# Invoices', value: 'invoices', control: 'number' },
+      { label: 'Avg Lines per Invoice', value: 'avgLines', control: 'number' },
+    ],
+  },
+  {
+    id: 'q16',
+    prompt: 'Does the client require Debtor Management?',
+    type: 'radio',
+    showWhen: (responses) => responses.q14 && responses.q14 !== 'no',
+    options: [
+      { label: '< 20 debtors/month', value: 'upTo20' },
+      { label: '21-50 debtors/month', value: 'upTo50' },
+      { label: '50+ debtors/month', value: 'extra' },
+      { label: 'No', value: 'no' },
+    ],
+    children: [
+      {
+        id: 'q16a',
+        prompt: 'How many debtors above 50?',
+        type: 'number',
+        showWhen: (responses) => responses.q16 === 'extra',
+      },
+    ],
+  },
+
+  // ===================
+  // SECTION: REPORTING
+  // ===================
+  {
+    id: 'q17',
+    sectionTitle: 'Reporting',
+    prompt: 'Does the client require Financial Reporting (Management Reports)?',
+    type: 'radio',
+    options: [
+      { label: 'Monthly', value: 'monthly' },
+      { label: 'Quarterly', value: 'quarterly' },
+      { label: 'No', value: 'no' },
+    ],
+  },
+  {
+    id: 'q18',
+    prompt: 'Does the client require Management Meetings?',
+    type: 'radio',
+    options: [
+      { label: 'Monthly', value: 'monthly' },
+      { label: 'Quarterly', value: 'quarterly' },
+      { label: 'No', value: 'no' },
+    ],
+  },
+
+  // ===================
+  // SECTION: COMPLIANCE SERVICES
+  // ===================
+  {
+    id: 'q19',
+    sectionTitle: 'Compliance Services',
+    prompt: 'Which compliance lodgement services does the client require?',
+    type: 'multiRadio',
+    options: [
+      { label: 'BAS Quarterly', value: 'basQuarterly' },
+      { label: 'BAS Monthly', value: 'basMonthly' },
+      { label: 'IAS', value: 'ias' },
+      { label: 'None', value: 'none' },
+    ],
+    clearOnValue: 'none',
+    mutuallyExclusive: ['basQuarterly', 'basMonthly'],
+  },
+
+  // ===================
+  // SECTION: SUPPORT
+  // ===================
+  {
+    id: 'q20',
+    sectionTitle: 'Support',
+    prompt: 'What level of support do you offer the client?',
+    type: 'radio',
+    options: [
+      { label: 'Email Only (Unlimited)', value: 'emailOnly' },
+      { label: 'Email & Phone - Team & CSM', value: 'emailPhoneTeamCsm' },
+      { label: 'Email & Phone - CSM & Owner/Partner', value: 'emailPhoneCsmOwner' },
+    ],
+  },
+
+  // ===================
+  // SECTION: END OF FINANCIAL YEAR
+  // ===================
+  {
+    id: 'q21',
+    sectionTitle: 'End of Financial Year',
+    prompt: 'Does the client require an EOFY process & workpapers?',
     type: 'radio',
     options: [
       { label: 'Yes - Micro & Small', value: 'microSmall' },
@@ -232,10 +323,14 @@ export const bookkeepingQuestionData = [
       { label: 'No', value: 'no' },
     ],
   },
-  // Q16 in CSV -> q15 in code: Cleanup/Rescue Work
+
+  // ===================
+  // SECTION: RESCUE / CLEANUP
+  // ===================
   {
-    id: 'q15',
-    prompt: '15. Does the client require rescue / cleanup work?',
+    id: 'q22',
+    sectionTitle: 'Rescue / Cleanup',
+    prompt: 'Does the client require rescue / cleanup work?',
     type: 'radio',
     options: [
       { label: 'Yes', value: 'yes' },
@@ -243,47 +338,44 @@ export const bookkeepingQuestionData = [
     ],
     children: [
       {
-        id: 'q15a',
-        prompt: '15.a Enter number of months of cleanup required',
+        id: 'q22a',
+        prompt: 'How many months of cleanup work is required?',
         type: 'number',
-        showWhen: (responses) => responses.q15 === 'yes',
+        showWhen: (responses) => responses.q22 === 'yes',
       },
     ],
   },
-  // Q17: Additional Once-Off Services
+
+  // ===================
+  // SECTION: ADDITIONAL SERVICES
+  // ===================
   {
-    id: 'q17',
-    prompt: '16. Select any additional once-off services required',
+    id: 'q23',
+    sectionTitle: 'Additional Services',
+    prompt: 'Select any additional once-off services required',
     type: 'checkbox',
     options: [
       { label: 'Accounting Software Setup', value: 'accountingSoftwareSetup' },
-      { label: 'Payables & Receivables Setup', value: 'payablesReceivablesSetup' },
-      { label: 'Payroll Setup - per new employee', value: 'payrollSetup' },
-      { label: 'Online Training - 1 Session (30 min)', value: 'training1Session' },
-      { label: 'Online Training - 3 Sessions (30 min each)', value: 'training3Sessions' },
-    ],
-    children: [
-      {
-        id: 'q17a',
-        prompt: '16.a How many 50-item batches for Payables & Receivables Setup?',
-        type: 'number',
-        placeholder: 'Enter number of batches',
-        showWhen: (responses) => responses.q17?.payablesReceivablesSetup,
-      },
-      {
-        id: 'q17b',
-        prompt: '16.b Extra Payables & Receivables items above 50-batch threshold?',
-        type: 'number',
-        placeholder: 'Enter number of extra items',
-        showWhen: (responses) => responses.q17?.payablesReceivablesSetup,
-      },
-      {
-        id: 'q17c',
-        prompt: '16.c How many new employees for Payroll Setup?',
-        type: 'number',
-        placeholder: 'Enter number of employees',
-        showWhen: (responses) => responses.q17?.payrollSetup,
-      },
+      { label: '1 × Online Training (30 min)', value: 'onlineTraining1Session' },
+      { label: '3 × Online Training (30 min each)', value: 'onlineTraining3Sessions' },
     ],
   },
 ];
+
+// Export section titles for grouping in the UI
+export const bookkeepingSections = [
+  'Client Details',
+  'Setup Services',
+  'Payroll Services',
+  'Bookkeeping - Transactions & Payables',
+  'Compliance Lodgements',
+  'Accounts Receivable',
+  'Reporting',
+  'Compliance Services',
+  'Support',
+  'End of Financial Year',
+  'Rescue / Cleanup',
+  'Additional Services',
+];
+
+export default bookkeepingQuestionData;
