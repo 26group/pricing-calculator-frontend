@@ -429,6 +429,13 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           borderRadius: '12px',
+          flexWrap: 'wrap',
+          '@media (max-width: 600px)': {
+            width: '100%',
+            '& .MuiToggleButton-root': {
+              flex: '1 1 100%',
+            },
+          },
         },
       },
     },
