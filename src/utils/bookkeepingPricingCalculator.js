@@ -1,21 +1,5 @@
 import { serviceValuesBookkeeping } from '../constants/bookkeepingServicesValues';
 
-// Base pricing modifier value for bookkeeping (center of slider: $100/hr)
-const BASE_PRICING_MODIFIER = 100;
-
-/**
- * Calculates the pricing multiplier based on the bookkeeping pricing modifier
- * Default multiplier from CSV is 1.2x
- * @param {number} pricingModifier - The bookkeeping pricing modifier value (default 100)
- * @returns {number} The multiplier to apply to prices
- */
-const getPricingMultiplier = (pricingModifier) => {
-  if (pricingModifier === undefined || pricingModifier === null) {
-    return 1.2; // Default multiplier from CSV
-  }
-  return (pricingModifier / BASE_PRICING_MODIFIER) * 1.2;
-};
-
 /**
  * Helper to get total employee count from payroll responses (q4 salaried + q5 timesheet)
  */
@@ -44,15 +28,13 @@ const getTotalEmployeeCount = (responses) => {
 /**
  * Calculates total monthly pricing based on bookkeeping question responses
  * Based on Bookkeeping Pricing Calculator v11 CSV structure
- * Formula: Base Rate × Units × Frequency / 12 × Multiplier = Monthly Fee
+ * Formula: Base Rate × Units × Frequency / 12 = Monthly Fee
  * 
  * @param {Object} responses - Question responses from BookkeepingQuestions.js
- * @param {number} pricingModifier - Optional bookkeeping pricing modifier from organisation (default 100)
  * @returns {number} Total monthly cost
  */
-export const calculateBookkeepingMonthlyPrice = (responses, pricingModifier = 100) => {
+export const calculateBookkeepingMonthlyPrice = (responses) => {
   let total = 0;
-  const multiplier = getPricingMultiplier(pricingModifier);
   const values = serviceValuesBookkeeping;
 
   // Q1: Revenue segment - used for tier lookups (micro, small, medium, large, enterprise)
@@ -116,7 +98,7 @@ export const calculateBookkeepingMonthlyPrice = (responses, pricingModifier = 10
   // Q6: Super Prep & Lodgement - Rate × Employees × Frequency / 12
   if ((responses.q3 === 'yes' || responses.q3 === 'yesSetup') && responses.q6 && responses.q6 !== 'no') {
     const superLodge = values.payrollServices.superLodgement;
-    const employeeCount = getTotalEmployeeCount(responses);
+    const employeeCount = parseInt(responses.q6a, 10) || 0;
 
     if (responses.q6 === 'quarterly') {
       // $5 × employees × 4 / 12
@@ -130,7 +112,7 @@ export const calculateBookkeepingMonthlyPrice = (responses, pricingModifier = 10
   // Q7: STP Reporting - Rate × Employees × Frequency / 12
   if ((responses.q3 === 'yes' || responses.q3 === 'yesSetup') && responses.q7 && responses.q7 !== 'no') {
     const stp = values.payrollServices.stpReporting;
-    const employeeCount = getTotalEmployeeCount(responses);
+    const employeeCount = parseInt(responses.q7a, 10) || 0;
 
     if (responses.q7 === 'weekly') {
       // $2.50 × employees × 52 / 12
@@ -144,10 +126,12 @@ export const calculateBookkeepingMonthlyPrice = (responses, pricingModifier = 10
     }
   }
 
-  // Q8: Workers Compensation - $150 × 1 / 12 (yearly converted to monthly)
+  // Q8: Workers Compensation - $150 × units × 1 / 12 (yearly converted to monthly)
   if ((responses.q3 === 'yes' || responses.q3 === 'yesSetup') && responses.q8 === 'yes') {
     const workersComp = values.payrollServices.workersComp;
-    total += (workersComp.ratePerLodgement * workersComp.frequency) / 12;
+    // Use the number of lodgements (default to 1 if not specified)
+    const lodgementCount = responses.q8a ? parseInt(responses.q8a, 10) || 1 : 1;
+    total += (workersComp.ratePerLodgement * lodgementCount * workersComp.frequency) / 12;
   }
 
   // ========================================
@@ -172,8 +156,8 @@ export const calculateBookkeepingMonthlyPrice = (responses, pricingModifier = 10
         total += transactions.upTo400.ratePerUnit * transactions.upTo400.maxUnits;
         break;
       case 'over400':
-        // 400+: Base 400 at $1.10 + extra transactions at $1.10
-        total += transactions.over400.ratePerUnit * 400;
+        // 400+: Include cost of 201-400 tier ($1.50 × 400) + extra transactions at $1.10
+        total += transactions.upTo400.ratePerUnit * transactions.upTo400.maxUnits;
         if (responses.q9a) {
           const extraTransactions = parseInt(responses.q9a, 10) || 0;
           total += transactions.over400.ratePerUnit * extraTransactions;
@@ -221,16 +205,20 @@ export const calculateBookkeepingMonthlyPrice = (responses, pricingModifier = 10
   // Q12-13: COMPLIANCE LODGEMENTS (annual, converted to monthly)
   // ========================================
 
-  // Q12: TPAR - $15 × 1 / 12
+  // Q12: TPAR - $15 × units × 1 / 12
   if (responses.q12 === 'yes') {
     const tpar = values.complianceLodgements.tpar;
-    total += (tpar.ratePerReport * tpar.frequency) / 12;
+    // Use the number of TPAR reports (default to 1 if not specified)
+    const tparCount = responses.q12a ? parseInt(responses.q12a, 10) || 1 : 1;
+    total += (tpar.ratePerReport * tparCount * tpar.frequency) / 12;
   }
 
-  // Q13: LSL Construction - $200 × 1 / 12
+  // Q13: LSL Construction - $200 × units × 1 / 12
   if (responses.q13 === 'yes') {
     const lsl = values.complianceLodgements.lslConstruction;
-    total += (lsl.ratePerLodgement * lsl.frequency) / 12;
+    // Use the number of lodgements (default to 1 if not specified)
+    const lslCount = responses.q13a ? parseInt(responses.q13a, 10) || 1 : 1;
+    total += (lsl.ratePerLodgement * lslCount * lsl.frequency) / 12;
   }
 
   // ========================================
@@ -368,37 +356,34 @@ export const calculateBookkeepingMonthlyPrice = (responses, pricingModifier = 10
   }
 
   // ========================================
-  // Q21: EOFY (annual, converted to monthly)
+  // Q21: EOFY (annual rate / 12 to get monthly)
   // ========================================
   if (responses.q21 && responses.q21 !== 'no') {
     const eofy = values.eofyProcess;
 
     if (responses.q21 === 'microSmall') {
-      // $495 / 12 = ~$41.25/month (using provided monthly value)
-      total += eofy.microSmall.monthly;
+      // $495 / 12 = $41.25/month
+      total += eofy.microSmall.annual / 12;
     } else if (responses.q21 === 'mediumLarge') {
-      // $895 / 12 = ~$74.58/month (using provided monthly value)
-      total += eofy.mediumLarge.monthly;
+      // $895 / 12 = $74.58/month
+      total += eofy.mediumLarge.annual / 12;
     }
   }
 
   // Q22: Rescue/Cleanup - once-off, handled separately
   // Q23: Additional Services - once-off, handled separately
 
-  // Apply multiplier and round to 2 decimal places
-  const adjustedTotal = Math.round(total * multiplier * 100) / 100;
-  return adjustedTotal;
+  // Round to 2 decimal places
+  return Math.round(total * 100) / 100;
 };
 
 /**
  * Calculates total once-off fee based on bookkeeping question responses
  * @param {Object} responses - Question responses from BookkeepingQuestions.js
- * @param {number} pricingModifier - Optional bookkeeping pricing modifier from organisation (default 100)
  * @returns {number} Total once-off fee
  */
-export const calculateBookkeepingOnceOffFee = (responses, pricingModifier = 100) => {
+export const calculateBookkeepingOnceOffFee = (responses) => {
   let total = 0;
-  const multiplier = getPricingMultiplier(pricingModifier);
   const values = serviceValuesBookkeeping;
 
   // Q2: Accounting System Setup - $1000 once-off
@@ -416,8 +401,8 @@ export const calculateBookkeepingOnceOffFee = (responses, pricingModifier = 100)
   if (responses.q22 === 'yes' && responses.q22a) {
     const monthsCount = parseInt(responses.q22a, 10) || 0;
     if (monthsCount > 0) {
-      // Calculate monthly total at base rate for cleanup
-      const monthlyTotal = calculateBookkeepingMonthlyPrice(responses, 100);
+      // Calculate monthly total for cleanup
+      const monthlyTotal = calculateBookkeepingMonthlyPrice(responses);
       total += monthlyTotal * monthsCount;
     }
   }
@@ -442,7 +427,6 @@ export const calculateBookkeepingOnceOffFee = (responses, pricingModifier = 100)
     }
   }
 
-  // Apply multiplier and round to 2 decimal places
-  const adjustedTotal = Math.round(total * multiplier * 100) / 100;
-  return adjustedTotal;
+  // Round to 2 decimal places
+  return Math.round(total * 100) / 100;
 };

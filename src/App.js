@@ -165,6 +165,9 @@ function AppContent() {
         const data = await response.json();
         if (data.tokens && data.tokens.access) {
           localStorage.setItem('token', data.tokens.access.token);
+          if (data.tokens.refresh) {
+            localStorage.setItem('refreshToken', data.tokens.refresh.token);
+          }
           setTokenReady(true);
         }
       }

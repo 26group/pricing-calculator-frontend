@@ -1,4 +1,4 @@
-import { handleSessionExpired } from '../utils/sessionManager';
+import { handleSessionExpired, tryRefreshToken } from '../utils/sessionManager';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:4000/v1';
 
@@ -11,9 +11,24 @@ const getAuthHeaders = () => {
   };
 };
 
-// Helper to handle 401 responses
-const handleResponse = async (response, errorMessage) => {
+// Helper to handle 401 responses with token refresh
+const handleResponseWithRefresh = async (response, fetchFn, errorMessage) => {
   if (response.status === 401) {
+    // Try to refresh the token
+    const newToken = await tryRefreshToken();
+    if (newToken) {
+      // Retry the request with the new token
+      const retryResponse = await fetchFn();
+      if (retryResponse.status === 401) {
+        handleSessionExpired();
+        throw new Error('Session expired');
+      }
+      if (!retryResponse.ok) {
+        const errorData = await retryResponse.json().catch(() => ({}));
+        throw new Error(errorData.message || errorMessage);
+      }
+      return retryResponse.json();
+    }
     handleSessionExpired();
     throw new Error('Session expired');
   }
@@ -25,11 +40,26 @@ const handleResponse = async (response, errorMessage) => {
 };
 
 export const getOrganisation = async () => {
-  // Add timestamp to prevent browser caching
-  const response = await fetch(`${API_URL}/organisations/me?_t=${Date.now()}`, {
+  const fetchOrg = () => fetch(`${API_URL}/organisations/me?_t=${Date.now()}`, {
     headers: getAuthHeaders(),
   });
+  
+  const response = await fetchOrg();
+  
   if (response.status === 401) {
+    const newToken = await tryRefreshToken();
+    if (newToken) {
+      const retryResponse = await fetchOrg();
+      if (retryResponse.status === 401) {
+        handleSessionExpired();
+        throw new Error('Session expired');
+      }
+      if (!retryResponse.ok) {
+        if (retryResponse.status === 404) return null;
+        throw new Error('Failed to get organisation');
+      }
+      return retryResponse.json();
+    }
     handleSessionExpired();
     throw new Error('Session expired');
   }
@@ -41,12 +71,14 @@ export const getOrganisation = async () => {
 };
 
 export const createOrganisation = async (name) => {
-  const response = await fetch(`${API_URL}/organisations`, {
+  const fetchCreate = () => fetch(`${API_URL}/organisations`, {
     method: 'POST',
     headers: getAuthHeaders(),
     body: JSON.stringify({ name }),
   });
-  return handleResponse(response, 'Failed to create organisation');
+  
+  const response = await fetchCreate();
+  return handleResponseWithRefresh(response, fetchCreate, 'Failed to create organisation');
 };
 
 export const updateOrganisation = async (id, data) => {

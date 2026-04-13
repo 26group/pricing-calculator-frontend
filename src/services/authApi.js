@@ -8,6 +8,45 @@ const getAuthHeaders = () => {
   };
 };
 
+/**
+ * Refresh the access token using the refresh token
+ * @returns {Promise<string|null>} - The new access token or null if refresh failed
+ */
+export const refreshAccessToken = async () => {
+  const refreshToken = localStorage.getItem('refreshToken');
+  
+  if (!refreshToken) {
+    console.log('No refresh token available');
+    return null;
+  }
+  
+  try {
+    const response = await fetch(`${API_URL}/auth/refresh-tokens`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refreshToken }),
+    });
+    
+    if (response.ok) {
+      const data = await response.json();
+      if (data.access && data.access.token) {
+        localStorage.setItem('token', data.access.token);
+        if (data.refresh && data.refresh.token) {
+          localStorage.setItem('refreshToken', data.refresh.token);
+        }
+        console.log('Token refreshed successfully');
+        return data.access.token;
+      }
+    }
+    
+    console.log('Token refresh failed:', response.status);
+    return null;
+  } catch (error) {
+    console.error('Token refresh error:', error);
+    return null;
+  }
+};
+
 export const logout = async () => {
   try {
     // Get refresh token - for now, we'll try logout without it
@@ -31,4 +70,5 @@ export const logout = async () => {
 
 export default {
   logout,
+  refreshAccessToken,
 };

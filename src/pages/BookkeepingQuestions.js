@@ -159,8 +159,8 @@ export default function BookkeepingQuestions() {
 
     try {
       setSaveStatus('saving');
-      const totalMonthly = calculateBookkeepingMonthlyPrice(currentResponses, bookkeepingPricingModifier);
-      const totalOnceOff = calculateBookkeepingOnceOffFee(currentResponses, bookkeepingPricingModifier);
+      const totalMonthly = calculateBookkeepingMonthlyPrice(currentResponses);
+      const totalOnceOff = calculateBookkeepingOnceOffFee(currentResponses);
       // Extract revenue segment from Q1 (annual revenue question)
       const revenueSegment = currentResponses?.q1 || undefined;
       console.log('💾 Bookkeeping auto-save - Q1:', currentResponses?.q1, 'revenueSegment:', revenueSegment);
@@ -772,15 +772,15 @@ export default function BookkeepingQuestions() {
 
   // Calculate monthly price using bookkeeping pricing calculator
   const totalMonthlyPrice = useMemo(() => {
-    return calculateBookkeepingMonthlyPrice(responses, bookkeepingPricingModifier);
-  }, [responses, bookkeepingPricingModifier]);
+    return calculateBookkeepingMonthlyPrice(responses);
+  }, [responses]);
 
   const serviceCatalogPricing = useSelector((state) => state.responses?.serviceCatalogPricing || 0);
   const combinedTotal = totalMonthlyPrice + serviceCatalogPricing;
 
   const totalOnceOffFee = useMemo(() => {
-    return calculateBookkeepingOnceOffFee(responses, bookkeepingPricingModifier);
-  }, [responses, bookkeepingPricingModifier]);
+    return calculateBookkeepingOnceOffFee(responses);
+  }, [responses]);
 
   const serviceCatalogOnceOffFee = useSelector((state) => state.responses?.serviceCatalogOnceOffFee || 0);
   const combinedOnceOffTotal = totalOnceOffFee + serviceCatalogOnceOffFee;
@@ -791,15 +791,13 @@ export default function BookkeepingQuestions() {
     }
   }, [totalMonthlyPrice, dispatch]);
   
-  // Re-dispatch pricing when bookkeepingPricingModifier changes
+  // Re-dispatch pricing when responses change
   useEffect(() => {
-    console.log('💰 Bookkeeping pricing modifier changed, recalculating prices with modifier:', bookkeepingPricingModifier);
-    const recalculatedMonthly = calculateBookkeepingMonthlyPrice(responses, bookkeepingPricingModifier);
-    const recalculatedOnceOff = calculateBookkeepingOnceOffFee(responses, bookkeepingPricingModifier);
-    console.log('💰 Recalculated bookkeeping prices:', { monthly: recalculatedMonthly, onceOff: recalculatedOnceOff, modifier: bookkeepingPricingModifier });
+    const recalculatedMonthly = calculateBookkeepingMonthlyPrice(responses);
+    const recalculatedOnceOff = calculateBookkeepingOnceOffFee(responses);
     dispatch(setQuestionsPricing(recalculatedMonthly));
     dispatch(setQuestionsOnceOffFee(recalculatedOnceOff));
-  }, [bookkeepingPricingModifier, responses, dispatch]);
+  }, [responses, dispatch]);
 
   useEffect(() => {
     if (typeof totalOnceOffFee === 'number' && !isNaN(totalOnceOffFee)) {

@@ -2,9 +2,37 @@
  * Session Manager - handles token expiration and session management
  */
 
+import { refreshAccessToken } from '../services/authApi';
+
 // Session expired flag key in sessionStorage (not localStorage so it clears on tab close)
 const SESSION_EXPIRED_KEY = 'sessionExpired';
 const SESSION_EXPIRED_MESSAGE_KEY = 'sessionExpiredMessage';
+
+// Track if we're currently refreshing to avoid multiple simultaneous refreshes
+let isRefreshing = false;
+let refreshPromise = null;
+
+/**
+ * Try to refresh the token, avoiding multiple simultaneous requests
+ * @returns {Promise<string|null>} - The new token or null
+ */
+export const tryRefreshToken = async () => {
+  if (isRefreshing) {
+    // Wait for the existing refresh to complete
+    return refreshPromise;
+  }
+  
+  isRefreshing = true;
+  refreshPromise = refreshAccessToken();
+  
+  try {
+    const result = await refreshPromise;
+    return result;
+  } finally {
+    isRefreshing = false;
+    refreshPromise = null;
+  }
+};
 
 /**
  * Mark the session as expired and trigger redirect

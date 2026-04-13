@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { handleSessionExpired } from '../utils/sessionManager';
+import { handleSessionExpired, tryRefreshToken } from '../utils/sessionManager';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:4000/v1';
 
@@ -24,11 +24,26 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// Handle 401 responses - session expired
+// Handle 401 responses - try to refresh token first
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
+  async (error) => {
+    const originalRequest = error.config;
+    
+    // If 401 and we haven't tried refreshing yet
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+      
+      // Try to refresh the token
+      const newToken = await tryRefreshToken();
+      
+      if (newToken) {
+        // Retry the original request with the new token
+        originalRequest.headers.Authorization = `Bearer ${newToken}`;
+        return api(originalRequest);
+      }
+      
+      // Refresh failed, session is expired
       handleSessionExpired();
     }
     return Promise.reject(error);

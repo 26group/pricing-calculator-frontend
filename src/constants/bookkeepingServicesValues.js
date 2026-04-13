@@ -303,12 +303,12 @@ export const serviceValuesBookkeeping = {
   eofyProcess: {
     microSmall: {
       annual: 495.00,
-      monthly: 49.50,
+      monthly: 41.25, // $495 / 12 = $41.25 (base rate before multiplier)
       inclusion: 'EOFY Process & Workpapers - Micro & Small',
     },
     mediumLarge: {
       annual: 895.00,
-      monthly: 89.50,
+      monthly: 74.58, // $895 / 12 = $74.58 (base rate before multiplier)
       inclusion: 'EOFY Process & Workpapers - Medium & Large',
     },
   },

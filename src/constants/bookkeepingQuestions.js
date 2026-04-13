@@ -97,6 +97,14 @@ export const bookkeepingQuestionData = [
       { label: 'Monthly', value: 'monthly' },
       { label: 'No', value: 'no' },
     ],
+    children: [
+      {
+        id: 'q6a',
+        prompt: 'How many employees?',
+        type: 'number',
+        showWhen: (responses) => responses.q6 === 'quarterly' || responses.q6 === 'monthly',
+      },
+    ],
   },
   {
     id: 'q7',
@@ -109,6 +117,14 @@ export const bookkeepingQuestionData = [
       { label: 'Monthly', value: 'monthly' },
       { label: 'No', value: 'no' },
     ],
+    children: [
+      {
+        id: 'q7a',
+        prompt: 'How many employees?',
+        type: 'number',
+        showWhen: (responses) => responses.q7 === 'weekly' || responses.q7 === 'fortnightly' || responses.q7 === 'monthly',
+      },
+    ],
   },
   {
     id: 'q8',
@@ -118,6 +134,14 @@ export const bookkeepingQuestionData = [
     options: [
       { label: 'Yes', value: 'yes' },
       { label: 'No', value: 'no' },
+    ],
+    children: [
+      {
+        id: 'q8a',
+        prompt: 'How many lodgements per year?',
+        type: 'number',
+        showWhen: (responses) => responses.q8 === 'yes',
+      },
     ],
   },
 
@@ -134,6 +158,7 @@ export const bookkeepingQuestionData = [
       { label: '101 - 200 transactions', value: 'upTo200' },
       { label: '201 - 400 transactions', value: 'upTo400' },
       { label: '400+ transactions', value: 'over400' },
+      { label: 'No', value: 'no' },
     ],
     children: [
       {
@@ -185,6 +210,14 @@ export const bookkeepingQuestionData = [
       { label: 'Yes', value: 'yes' },
       { label: 'No', value: 'no' },
     ],
+    children: [
+      {
+        id: 'q12a',
+        prompt: 'How many TPAR reports?',
+        type: 'number',
+        showWhen: (responses) => responses.q12 === 'yes',
+      },
+    ],
   },
   {
     id: 'q13',
@@ -193,6 +226,14 @@ export const bookkeepingQuestionData = [
     options: [
       { label: 'Yes', value: 'yes' },
       { label: 'No', value: 'no' },
+    ],
+    children: [
+      {
+        id: 'q13a',
+        prompt: 'How many LSL lodgements?',
+        type: 'number',
+        showWhen: (responses) => responses.q13 === 'yes',
+      },
     ],
   },
 
