@@ -16,7 +16,7 @@ export const accountingQuestions = {
         serviceKey: 'individualReturns',
         extras: {
           title: 'Additional Items Required',
-          prompt: 'Tick the additional items required and add the number of items',
+          prompt: 'Will they have additional Items? Add the number per item in the fields below:',
           items: [
             {
               id: 'rentalProperty',
@@ -343,7 +343,7 @@ export const accountingQuestions = {
       Q3d: {
         id: 'Q3d',
         title: 'Xero Training',
-        prompt: 'Would they like Xero Training? (follows Xero Setup)',
+        prompt: 'Would they like Xero Training? (follows Xero Setup) Training for basic of Xero (reconiling, payable, reciveibale and Payroll)',
         type: 'boolean',
         serviceKey: 'xeroTraining',
         tierBased: true,
@@ -627,7 +627,7 @@ export const accountingQuestionData = [
       },
       {
         id: 'q2b',
-        prompt: 'Tick the additional items required and add the number of items:',
+        prompt: 'Will they have additional Items? Add the number per item in the fields below:',
         type: 'extrasGroup',
         showWhen: (responses) => responses.q2 && parseInt(responses.q2, 10) > 0 && responses.q2a,
         options: [
@@ -653,7 +653,7 @@ export const accountingQuestionData = [
   // 2b: Business Tax Returns
   {
     id: 'q3',
-    prompt: '2b. How many Business Entities do they want tax returns lodged for? Enter number.',
+    prompt: '2b. How many Business Entities do they want tax returns lodged for? Enter number of returns if multiple entities.',
     subheading: 'Business Tax Returns',
     type: 'number',
     category: 'TAX SERVICES',
@@ -662,7 +662,7 @@ export const accountingQuestionData = [
   // 2c: SMSF
   {
     id: 'q4',
-    prompt: '2c. Do they have a Self Managed Superannuation Fund (SMSF)? Do they want you to complete the audit and tax return?',
+    prompt: '2c. Do they have a Self Managed Superannuation Fund (SMSF) they want you to complete the audit and tax return?',
     subheading: 'SMSF',
     type: 'radio',
     category: 'TAX SERVICES',
@@ -872,7 +872,7 @@ export const accountingQuestionData = [
     children: [
       {
         id: 'q17a',
-        prompt: '4d. Would they like Xero Training? (follows Xero Setup)',
+        prompt: '4d. Would they like Xero Training? (follows Xero Setup) Training for basic of Xero (reconiling, payable, reciveibale and Payroll)',
         subheading: 'Xero Training',
         type: 'radio',
         options: [

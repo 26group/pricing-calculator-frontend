@@ -29,8 +29,10 @@ import {
 import CheckIcon from '@mui/icons-material/Check';
 import CloudDoneIcon from '@mui/icons-material/CloudDone';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { useSelector } from 'react-redux';
 import { calculateGoldMonthlyPricing } from '../utils/calculateGoldPricing';
+import { calculateComplianceOnlyPrice } from '../utils/pricingCalculator';
 import { createPrice, updatePrice } from '../services/priceApi';
 
 const formatCurrency = (amount) =>
@@ -67,7 +69,8 @@ export default function PricingQuote() {
   const [autoSaveStatus, setAutoSaveStatus] = useState('idle'); // 'idle' | 'saving' | 'saved' | 'error'
   const autoSaveTimerRef = useRef(null);
 
-  const bronzeMonthly = questionsPricing + serviceCatalogPricing;
+  // Bronze only includes compliance (tax services) pricing
+  const bronzeMonthly = calculateComplianceOnlyPrice(questionResponses);
   const silverMonthly = questionsPricing + serviceCatalogPricing;
   const goldMonthly = calculateGoldMonthlyPricing();
 
@@ -330,6 +333,13 @@ export default function PricingQuote() {
 
   return (
     <Container sx={{ py: 4, pb: 12 }}>
+      <Button
+        startIcon={<ArrowBackIcon />}
+        onClick={() => navigate(-1)}
+        sx={{ mb: 2 }}
+      >
+        Back
+      </Button>
       <Typography variant="h3" sx={{ mb: 2, textAlign: 'center', fontWeight: 'bold' }}>
         Pricing Quote for {clientName}
       </Typography>
@@ -383,8 +393,8 @@ export default function PricingQuote() {
                   {row.feature}
                 </TableCell>
                 <TableCell align="center">{row.bronze}</TableCell>
-                <TableCell align="center" sx={{ filter: 'blur(4px)' }}>{row.silver}</TableCell>
-                <TableCell align="center" sx={{ filter: 'blur(4px)' }}>{row.gold}</TableCell>
+                <TableCell align="center">{row.silver}</TableCell>
+                <TableCell align="center">{row.gold}</TableCell>
               </TableRow>
             ))}
             <TableRow sx={{ backgroundColor: '#f5f5f5', fontWeight: 'bold' }}>
@@ -392,33 +402,16 @@ export default function PricingQuote() {
               <TableCell align="center" sx={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#CD7F32' }}>
                 {formatCurrency(bronzeMonthly)}
               </TableCell>
-              <TableCell align="center" sx={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#C0C0C0', filter: 'blur(4px)' }}>
+              <TableCell align="center" sx={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#C0C0C0' }}>
                 {formatCurrency(silverMonthly)}
               </TableCell>
-              <TableCell align="center" sx={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#FFD700', filter: 'blur(4px)' }}>
+              <TableCell align="center" sx={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#FFD700' }}>
                 {formatCurrency(goldMonthly)}
               </TableCell>
             </TableRow>
           </TableBody>
         </Table>
         </TableContainer>
-        <Box sx={{
-          position: 'absolute',
-          top: '50%',
-          left: '65%',
-          right: '0',
-          transform: 'translateY(-50%)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          pointerEvents: 'none',
-        }}>
-          <Typography variant="h6" sx={{ fontWeight: 600, color: '#666', textAlign: 'center' }}>
-            Additional pricing tiers
-            <br />
-            available with a Pro plan
-          </Typography>
-        </Box>
       </Box>
 
       {/* Once-off Price Section */}

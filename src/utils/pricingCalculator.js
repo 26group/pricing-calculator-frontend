@@ -16,6 +16,133 @@ const getPricingMultiplier = (pricingModifier) => {
 };
 
 /**
+ * Calculates compliance-only pricing (Tax Services: q2-q8)
+ * This is used for Bronze tier which only includes compliance services
+ * @param {Object} responses - Question responses from Questions.js
+ * @param {number} pricingModifier - Optional pricing modifier from organisation (default 200)
+ * @returns {number} Compliance-only monthly cost
+ */
+export const calculateComplianceOnlyPrice = (responses, pricingModifier = 200) => {
+  let total = 0;
+  const multiplier = getPricingMultiplier(pricingModifier);
+
+  // Helper function to get segment for service lookup
+  const getSegment = (originalSegment) => {
+    if (['micro', 'small', 'medium', 'large'].includes(originalSegment)) {
+      return originalSegment;
+    }
+    if (originalSegment === 'enterprise') {
+      return 'large';
+    }
+    return null;
+  };
+
+  const segment = getSegment(responses.q1);
+
+  // q2: Number of individual returns
+  if (responses.q2 && responses.q2 !== '') {
+    const individualCount = parseInt(responses.q2, 10);
+    if (!isNaN(individualCount) && individualCount > 0) {
+      const individualReturn = serviceValuesAccounting.taxServices.individualReturns.all;
+      if (individualReturn) {
+        total += individualReturn.monthly * individualCount;
+      }
+    }
+  }
+
+  // q2a/q2b: Individual return extras (based on q2a selection)
+  if (responses.q2a && responses.q2b && typeof responses.q2b === 'object') {
+    const summaryType = responses.q2a;
+    const extras = serviceValuesAccounting.taxServices.individualReturnExtras;
+    
+    Object.entries(responses.q2b).forEach(([extraKey, value]) => {
+      if (extraKey === 'none' || extraKey === 'returnNotNecessary' || !value) return;
+      
+      const extraPricing = extras[extraKey];
+      if (extraPricing && extraPricing[summaryType]) {
+        if (typeof value === 'boolean' && value === true) {
+          total += extraPricing[summaryType].monthly;
+        } else {
+          const quantity = parseInt(value, 10);
+          if (!isNaN(quantity) && quantity > 0) {
+            total += extraPricing[summaryType].monthly * quantity;
+          }
+        }
+      }
+    });
+  }
+
+  // q3: Number of business entities
+  if (responses.q3 && responses.q3 !== '' && segment) {
+    const businessCount = parseInt(responses.q3, 10);
+    if (!isNaN(businessCount) && businessCount > 0) {
+      const businessReturn = serviceValuesAccounting.taxServices.businessReturns[segment];
+      if (businessReturn) {
+        total += businessReturn.monthly * businessCount;
+      }
+    }
+  }
+
+  // q4: SMSF
+  if (responses.q4 === 'yes' && segment) {
+    const smsfService = serviceValuesAccounting.taxServices.smsf[segment];
+    if (smsfService) {
+      total += smsfService.monthly;
+    }
+  }
+
+  // q4a: SMSF audit and tax return
+  if (responses.q4a === 'yes' && segment) {
+    const smsfService = serviceValuesAccounting.taxServices.smsf[segment];
+    if (smsfService) {
+      total += smsfService.monthly;
+    }
+  }
+
+  // q5: FBT return
+  if (responses.q5 === 'yes' && segment) {
+    const fbtService = serviceValuesAccounting.taxServices.fbtReturns?.[segment];
+    if (fbtService) {
+      total += fbtService.monthly;
+    }
+  }
+
+  // q6: BAS (quarterly or monthly)
+  if (responses.q6 && responses.q6 !== 'no' && segment) {
+    const basService = serviceValuesAccounting.taxServices.bas[segment];
+    if (basService) {
+      if (responses.q6 === 'quarterly') {
+        total += basService.quarterlyMonthly || basService.monthly;
+      } else if (responses.q6 === 'monthly') {
+        total += basService.monthlyMonthly || basService.monthly;
+      }
+    }
+  }
+
+  // q7: IAS
+  if (responses.q7 === 'yes' && segment) {
+    const iasService = serviceValuesAccounting.taxServices.ias[segment];
+    if (iasService) {
+      total += iasService.monthly;
+    }
+  }
+
+  // q8: TPAR (number of suppliers)
+  if (responses.q8 && segment) {
+    const supplierCount = parseInt(responses.q8, 10);
+    if (!isNaN(supplierCount) && supplierCount > 0) {
+      const tparService = serviceValuesAccounting.taxServices.tpar?.[segment];
+      if (tparService) {
+        total += tparService.monthly * supplierCount;
+      }
+    }
+  }
+
+  // Apply pricing modifier
+  return Math.round(total * multiplier * 100) / 100;
+};
+
+/**
  * Calculates total monthly pricing based on question responses
  * NEW QUESTION MAPPING (Accounting Price List v3):
  * q1: Revenue segment

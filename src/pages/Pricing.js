@@ -27,6 +27,7 @@ import {
 import CheckIcon from '@mui/icons-material/Check';
 import { useSelector } from 'react-redux';
 import { calculateGoldMonthlyPricing } from '../utils/calculateGoldPricing';
+import { calculateComplianceOnlyPrice } from '../utils/pricingCalculator';
 import { createPrice, getPrices } from '../services/priceApi';
 
 const formatCurrency = (amount) =>
@@ -58,7 +59,8 @@ export default function Pricing() {
   const [saveError, setSaveError] = useState('');
   const [saveSuccess, setSaveSuccess] = useState('');
 
-  const bronzeMonthly = questionsPricing;
+  // Bronze only includes compliance (tax services) pricing
+  const bronzeMonthly = calculateComplianceOnlyPrice(questionResponses);
   const silverMonthly = questionsPricing + serviceCatalogPricing;
   const goldMonthly = calculateGoldMonthlyPricing();
 
