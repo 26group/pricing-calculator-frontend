@@ -1023,6 +1023,22 @@ export const accountingQuestionData = [
       { label: 'ASIC Form Lodgements (once-off)', value: 'formLodgements' },
       { label: 'None', value: 'none' },
     ],
+    children: [
+      {
+        id: 'q25a',
+        prompt: 'How many ASIC Form Lodgements?',
+        type: 'number',
+        showWhen: (responses) => {
+          if (Array.isArray(responses.q25)) {
+            return responses.q25.includes('formLodgements');
+          }
+          if (typeof responses.q25 === 'object' && responses.q25 !== null) {
+            return responses.q25.formLodgements;
+          }
+          return false;
+        },
+      },
+    ],
   },
 
   // 8b: ATO Payment Plans (Once-off)

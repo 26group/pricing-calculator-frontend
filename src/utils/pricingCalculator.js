@@ -640,16 +640,19 @@ export const calculateTotalOnceOffFee = (responses, pricingModifier = 200) => {
     }
   }
 
-  // q25: ASIC Form Lodgements (once-off)
+  // q25: ASIC Form Lodgements (once-off) - multiplied by quantity from q25a
   if (responses.q25) {
     const asicService = serviceValuesAccounting.corporateSecretarial?.asicFormsLodgements;
     if (asicService) {
+      // Get the count from q25a (default to 1 if not specified)
+      const lodgementCount = responses.q25a ? parseInt(responses.q25a, 10) || 1 : 1;
+      
       if (Array.isArray(responses.q25) && responses.q25.includes('formLodgements')) {
-        total += asicService.onceOff || 0;
+        total += (asicService.onceOff || 0) * lodgementCount;
       } else if (typeof responses.q25 === 'object' && responses.q25 !== null && responses.q25.formLodgements) {
-        total += asicService.onceOff || 0;
+        total += (asicService.onceOff || 0) * lodgementCount;
       } else if (responses.q25 === 'detailChanges') {
-        total += asicService.onceOff || 0;
+        total += (asicService.onceOff || 0) * lodgementCount;
       }
     }
   }
