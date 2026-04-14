@@ -348,6 +348,14 @@ export const accountingQuestions = {
         serviceKey: 'xeroTraining',
         tierBased: true,
       },
+      Q3e: {
+        id: 'Q3e',
+        title: 'Xero Training',
+        prompt: 'Would they like ongoing Xero Training?',
+        type: 'boolean',
+        serviceKey: 'ongoingXeroTraining',
+        tierBased: true,
+      },
     },
   },
 
@@ -881,6 +889,19 @@ export const accountingQuestionData = [
         ],
         showWhen: (responses) => responses.q17 === 'yes',
       },
+    ],
+  },
+
+  // 4e: Ongoing Xero Training (standalone)
+  {
+    id: 'q17b',
+    prompt: '4e. Would they like ongoing Xero Training?',
+    subheading: 'Xero Training',
+    type: 'radio',
+    category: 'ADVISORY SERVICES',
+    options: [
+      { label: 'Yes', value: 'yes' },
+      { label: 'No', value: 'no' },
     ],
   },
 

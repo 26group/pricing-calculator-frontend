@@ -205,20 +205,20 @@ export const calculateBookkeepingMonthlyPrice = (responses) => {
   // Q12-13: COMPLIANCE LODGEMENTS (annual, converted to monthly)
   // ========================================
 
-  // Q12: TPAR - $15 × units × 1 / 12
+  // Q12: TPAR - $1.50 per report
   if (responses.q12 === 'yes') {
     const tpar = values.complianceLodgements.tpar;
     // Use the number of TPAR reports (default to 1 if not specified)
     const tparCount = responses.q12a ? parseInt(responses.q12a, 10) || 1 : 1;
-    total += (tpar.ratePerReport * tparCount * tpar.frequency) / 12;
+    total += tpar.ratePerReport * tparCount;
   }
 
-  // Q13: LSL Construction - $200 × units × 1 / 12
+  // Q13: LSL Construction - $20 per lodgement
   if (responses.q13 === 'yes') {
     const lsl = values.complianceLodgements.lslConstruction;
     // Use the number of lodgements (default to 1 if not specified)
     const lslCount = responses.q13a ? parseInt(responses.q13a, 10) || 1 : 1;
-    total += (lsl.ratePerLodgement * lslCount * lsl.frequency) / 12;
+    total += lsl.ratePerLodgement * lslCount;
   }
 
   // ========================================
@@ -292,29 +292,29 @@ export const calculateBookkeepingMonthlyPrice = (responses) => {
   // Q17-18: REPORTING
   // ========================================
 
-  // Q17: Financial Reporting - Rate × Frequency / 12
+  // Q17: Financial Reporting - Monthly fee
   if (responses.q17 && responses.q17 !== 'no') {
     const fr = values.financialReporting;
 
     if (responses.q17 === 'monthly') {
-      // $60 × 12 / 12
-      total += (fr.monthly.rate * fr.monthly.frequency) / 12;
+      // $72/month
+      total += fr.monthly.rate;
     } else if (responses.q17 === 'quarterly') {
-      // $90 × 4 / 12
-      total += (fr.quarterly.rate * fr.quarterly.frequency) / 12;
+      // $36/month
+      total += fr.quarterly.rate;
     }
   }
 
-  // Q18: Management Meetings - Rate × Frequency / 12
+  // Q18: Management Meetings - Monthly fee
   if (responses.q18 && responses.q18 !== 'no') {
     const mm = values.managementMeetings;
 
     if (responses.q18 === 'monthly') {
-      // $200 × 12 / 12
-      total += (mm.monthly.rate * mm.monthly.frequency) / 12;
+      // $225 monthly fee
+      total += mm.monthly.rate;
     } else if (responses.q18 === 'quarterly') {
-      // $250 × 4 / 12
-      total += (mm.quarterly.rate * mm.quarterly.frequency) / 12;
+      // $100 monthly fee
+      total += mm.quarterly.rate;
     }
   }
 
@@ -324,19 +324,19 @@ export const calculateBookkeepingMonthlyPrice = (responses) => {
   if (responses.q19 && typeof responses.q19 === 'object') {
     const cs = values.complianceServices;
 
-    // BAS Quarterly: $150 × 4 / 12
+    // BAS Quarterly: $60 monthly fee
     if (responses.q19.basQuarterly) {
-      total += (cs.basQuarterly.rate * cs.basQuarterly.frequency) / 12;
+      total += cs.basQuarterly.rate;
     }
 
-    // BAS Monthly: $100 × 12 / 12
+    // BAS Monthly: $120 monthly fee
     if (responses.q19.basMonthly) {
-      total += (cs.basMonthly.rate * cs.basMonthly.frequency) / 12;
+      total += cs.basMonthly.rate;
     }
 
-    // IAS: $80 × 8 / 12
+    // IAS: $64 monthly fee
     if (responses.q19.ias) {
-      total += (cs.ias.rate * cs.ias.frequency) / 12;
+      total += cs.ias.rate;
     }
   }
 
@@ -356,17 +356,17 @@ export const calculateBookkeepingMonthlyPrice = (responses) => {
   }
 
   // ========================================
-  // Q21: EOFY (annual rate / 12 to get monthly)
+  // Q21: EOFY - Monthly fee
   // ========================================
   if (responses.q21 && responses.q21 !== 'no') {
     const eofy = values.eofyProcess;
 
     if (responses.q21 === 'microSmall') {
-      // $495 / 12 = $41.25/month
-      total += eofy.microSmall.annual / 12;
+      // $49.50 monthly fee
+      total += eofy.microSmall.rate;
     } else if (responses.q21 === 'mediumLarge') {
-      // $895 / 12 = $74.58/month
-      total += eofy.mediumLarge.annual / 12;
+      // $89.50 monthly fee
+      total += eofy.mediumLarge.rate;
     }
   }
 

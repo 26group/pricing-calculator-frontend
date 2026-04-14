@@ -67,7 +67,7 @@ export const bookkeepingQuestionData = [
   },
   {
     id: 'q4',
-    prompt: 'How many SALARIED employees do they have?',
+    prompt: 'Salary ONLY employees',
     type: 'inputGroup',
     showWhen: (responses) => responses.q3 === 'yes' || responses.q3 === 'yesSetup',
     options: [

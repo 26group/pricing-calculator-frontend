@@ -414,6 +414,14 @@ export const calculateTotalMonthlyPrice = (responses, pricingModifier = 200) => 
   // q17: Xero Setup - once-off only, no monthly component
   // (handled in calculateTotalOnceOffFee)
 
+  // q17b: Ongoing Xero Training (monthly fee)
+  if (responses.q17b === 'yes' && segment) {
+    const ongoingXeroTraining = serviceValuesAccounting.advisoryServices?.ongoingXeroTraining?.[segment];
+    if (ongoingXeroTraining) {
+      total += ongoingXeroTraining.monthly || 0;
+    }
+  }
+
   // q18: Financial statements
   if (responses.q18 === 'yes' && segment) {
     const fsService = serviceValuesAccounting.reporting.financialStatementsTax?.[segment];

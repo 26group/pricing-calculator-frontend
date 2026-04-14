@@ -171,7 +171,7 @@ export const serviceValuesAccounting = {
         },
       },
       returnNotNecessary: {
-        onceOff: 50, // Base price $50, multiplied at calculation time
+        onceOff: 60, // Base price $60, multiplied at calculation time
         inclusion: 'Return not necessary (once-off)',
       },
     },
@@ -582,6 +582,26 @@ export const serviceValuesAccounting = {
         inclusion: 'Xero Training — Large',
       },
     },
+
+    // Q3e: Ongoing Xero Training
+    ongoingXeroTraining: {
+      micro: {
+        monthly: 50.00,
+        inclusion: 'Ongoing Xero Training — Micro',
+      },
+      small: {
+        monthly: 75.00,
+        inclusion: 'Ongoing Xero Training — Small',
+      },
+      medium: {
+        monthly: 100.00,
+        inclusion: 'Ongoing Xero Training — Medium',
+      },
+      large: {
+        monthly: 200.00,
+        inclusion: 'Ongoing Xero Training — Large',
+      },
+    },
   },
 
   // ===================
@@ -624,31 +644,27 @@ export const serviceValuesAccounting = {
     // Q4c: Management Financial Statements
     managementFinancialStatements: {
       micro: {
-        perStatement: 500,
-        monthly: 250, // quarterly default
-        quarterlyMonthly: 250,
-        monthlyMonthly: 750,
+        quarterlyMonthly: 166.67,
+        monthlyMonthly: 500.00,
+        monthly: 166.67,
         inclusion: 'Mgt Financial Statements — Micro',
       },
       small: {
-        perStatement: 1000,
-        monthly: 500,
-        quarterlyMonthly: 500,
-        monthlyMonthly: 1500,
+        quarterlyMonthly: 333.33,
+        monthlyMonthly: 1000.00,
+        monthly: 333.33,
         inclusion: 'Mgt Financial Statements — Small',
       },
       medium: {
-        perStatement: 1500,
-        monthly: 2250, // monthly default for medium
-        quarterlyMonthly: 750,
-        monthlyMonthly: 2250,
+        quarterlyMonthly: 500.00,
+        monthlyMonthly: 1500.00,
+        monthly: 500.00,
         inclusion: 'Mgt Financial Statements — Medium',
       },
       large: {
-        perStatement: 2000,
-        monthly: 3000, // monthly default for large
-        quarterlyMonthly: 1000,
-        monthlyMonthly: 3000,
+        quarterlyMonthly: 666.67,
+        monthlyMonthly: 2000.00,
+        monthly: 666.67,
         inclusion: 'Mgt Financial Statements — Large',
       },
     },

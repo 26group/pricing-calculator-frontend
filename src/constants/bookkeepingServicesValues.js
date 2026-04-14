@@ -161,15 +161,13 @@ export const serviceValuesBookkeeping = {
   complianceLodgements: {
     // Q10a: TPAR
     tpar: {
-      ratePerReport: 15.00,
-      frequency: 1,
+      ratePerReport: 1.50,
       inclusion: 'TPAR Annual Report',
     },
 
     // Q10b: LSL Construction Reporting
     lslConstruction: {
-      ratePerLodgement: 200.00,
-      frequency: 1,
+      ratePerLodgement: 20.00,
       inclusion: 'LSL Construction Reporting',
     },
   },
@@ -231,13 +229,11 @@ export const serviceValuesBookkeeping = {
   // ===================
   financialReporting: {
     monthly: {
-      rate: 60.00,
-      frequency: 12,
+      rate: 72.00,
       inclusion: 'Monthly Management Reports',
     },
     quarterly: {
-      rate: 90.00,
-      frequency: 4,
+      rate: 36.00,
       inclusion: 'Quarterly Management Reports',
     },
   },
@@ -247,13 +243,11 @@ export const serviceValuesBookkeeping = {
   // ===================
   managementMeetings: {
     monthly: {
-      rate: 200.00,
-      frequency: 12,
+      rate: 225.00,
       inclusion: 'Monthly Management Meetings',
     },
     quarterly: {
-      rate: 250.00,
-      frequency: 4,
+      rate: 100.00,
       inclusion: 'Quarterly Management Meetings',
     },
   },
@@ -263,18 +257,15 @@ export const serviceValuesBookkeeping = {
   // ===================
   complianceServices: {
     basQuarterly: {
-      rate: 150.00,
-      frequency: 4,
+      rate: 60.00,
       inclusion: 'BAS Quarterly Lodgement',
     },
     basMonthly: {
-      rate: 100.00,
-      frequency: 12,
+      rate: 120.00,
       inclusion: 'BAS Monthly Lodgement',
     },
     ias: {
-      rate: 80.00,
-      frequency: 8,
+      rate: 64.00,
       inclusion: 'IAS Lodgement',
     },
   },
@@ -302,13 +293,11 @@ export const serviceValuesBookkeeping = {
   // ===================
   eofyProcess: {
     microSmall: {
-      annual: 495.00,
-      monthly: 41.25, // $495 / 12 = $41.25 (base rate before multiplier)
+      rate: 49.50,
       inclusion: 'EOFY Process & Workpapers - Micro & Small',
     },
     mediumLarge: {
-      annual: 895.00,
-      monthly: 74.58, // $895 / 12 = $74.58 (base rate before multiplier)
+      rate: 89.50,
       inclusion: 'EOFY Process & Workpapers - Medium & Large',
     },
   },
