@@ -2399,7 +2399,7 @@ export default function Questions() {
                     if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
                     await autoSave(responses);
                   }
-                  navigate('/pricing-quote');
+                  navigate('/accounting-quote');
                 }}
                 sx={{
                   flex: { xs: 1, sm: 'initial' },

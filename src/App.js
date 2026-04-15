@@ -14,6 +14,8 @@ import BookkeepingQuestions from './pages/BookkeepingQuestions';
 import ServiceCatalog from './pages/ServiceCatalog';
 import Pricing from './pages/Pricing';
 import PricingQuote from './pages/PricingQuote';
+import BookkeepingQuote from './pages/BookkeepingQuote';
+import AccountingQuote from './pages/AccountingQuote';
 import ServiceValuesEditor from './pages/ServiceValuesEditor';
 import Onboarding from './pages/Onboarding';
 import PricingModifier from './pages/PricingModifier';
@@ -331,6 +333,8 @@ function AppContent() {
             <Route path="/questions" element={<ProtectedRoute><Questions /></ProtectedRoute>} />
             <Route path="/bookkeeping-questions" element={<ProtectedRoute><BookkeepingQuestions /></ProtectedRoute>} />
             <Route path="/pricing-quote" element={<ProtectedRoute><PricingQuote /></ProtectedRoute>} />
+            <Route path="/bookkeeping-quote" element={<ProtectedRoute><BookkeepingQuote /></ProtectedRoute>} />
+            <Route path="/accounting-quote" element={<ProtectedRoute><AccountingQuote /></ProtectedRoute>} />
             <Route path="/service-values-editor" element={<ProtectedRoute><ServiceValuesEditor /></ProtectedRoute>} />
             <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
             <Route path="/settings/billing" element={<ProtectedRoute><OwnerRoute><BillingSettings /></OwnerRoute></ProtectedRoute>} />
