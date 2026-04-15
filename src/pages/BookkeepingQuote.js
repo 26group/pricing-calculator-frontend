@@ -70,10 +70,14 @@ export default function BookkeepingQuote() {
   const questionResponses = useSelector((state) => state.responses);
   const clientName = useSelector((state) => state.responses.clientName || 'Client');
   const activePriceId = useSelector((state) => state.responses.activePriceId);
+  
+  // Get bookkeeping pricing modifier from organisation
+  const organisation = useSelector((state) => state.auth.organisation);
+  const bookkeepingPricingModifier = organisation?.bookkeepingPricingModifier ?? 100;
 
-  // Calculate pricing from bookkeeping responses
-  const monthlyPricing = calculateBookkeepingMonthlyPrice(bookkeepingResponses);
-  const onceOffPricing = calculateBookkeepingOnceOffFee(bookkeepingResponses);
+  // Calculate pricing from bookkeeping responses with modifier
+  const monthlyPricing = calculateBookkeepingMonthlyPrice(bookkeepingResponses, bookkeepingPricingModifier);
+  const onceOffPricing = calculateBookkeepingOnceOffFee(bookkeepingResponses, bookkeepingPricingModifier);
 
   // Tier pricing (Bronze = base, Silver = +15%, Gold = +30%)
   const bronzeMonthly = monthlyPricing;

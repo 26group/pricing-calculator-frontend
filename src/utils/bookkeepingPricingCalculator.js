@@ -1,5 +1,20 @@
 import { serviceValuesBookkeeping } from '../constants/bookkeepingServicesValues';
 
+// Base bookkeeping pricing modifier value (default hourly rate: $100/hr)
+const BASE_BOOKKEEPING_PRICING_MODIFIER = 100;
+
+/**
+ * Calculates the pricing multiplier based on the bookkeeping pricing modifier
+ * @param {number} pricingModifier - The pricing modifier value (default 100)
+ * @returns {number} The multiplier to apply to prices
+ */
+const getPricingMultiplier = (pricingModifier) => {
+  if (pricingModifier === undefined || pricingModifier === null) {
+    return 1; // No adjustment
+  }
+  return pricingModifier / BASE_BOOKKEEPING_PRICING_MODIFIER;
+};
+
 /**
  * Helper to get total employee count from payroll responses (q4 salaried + q5 timesheet)
  */
@@ -28,14 +43,16 @@ const getTotalEmployeeCount = (responses) => {
 /**
  * Calculates total monthly pricing based on bookkeeping question responses
  * Based on Bookkeeping Pricing Calculator v11 CSV structure
- * Formula: Base Rate × Units × Frequency / 12 = Monthly Fee
+ * Formula: Base Rate × Units × Frequency / 12 × Multiplier = Monthly Fee
  * 
  * @param {Object} responses - Question responses from BookkeepingQuestions.js
+ * @param {number} pricingModifier - Optional pricing modifier from organisation (default 100)
  * @returns {number} Total monthly cost
  */
-export const calculateBookkeepingMonthlyPrice = (responses) => {
+export const calculateBookkeepingMonthlyPrice = (responses, pricingModifier = 100) => {
   let total = 0;
   const values = serviceValuesBookkeeping;
+  const multiplier = getPricingMultiplier(pricingModifier);
 
   // Q1: Revenue segment - used for tier lookups (micro, small, medium, large, enterprise)
   // No direct pricing, determines EOFY tier
@@ -373,18 +390,20 @@ export const calculateBookkeepingMonthlyPrice = (responses) => {
   // Q22: Rescue/Cleanup - once-off, handled separately
   // Q23: Additional Services - once-off, handled separately
 
-  // Round to 2 decimal places
-  return Math.round(total * 100) / 100;
+  // Apply pricing modifier and round to 2 decimal places
+  return Math.round(total * multiplier * 100) / 100;
 };
 
 /**
  * Calculates total once-off fee based on bookkeeping question responses
  * @param {Object} responses - Question responses from BookkeepingQuestions.js
+ * @param {number} pricingModifier - Optional pricing modifier from organisation (default 100)
  * @returns {number} Total once-off fee
  */
-export const calculateBookkeepingOnceOffFee = (responses) => {
+export const calculateBookkeepingOnceOffFee = (responses, pricingModifier = 100) => {
   let total = 0;
   const values = serviceValuesBookkeeping;
+  const multiplier = getPricingMultiplier(pricingModifier);
 
   // Q2: Accounting System Setup - $1000 once-off
   if (responses.q2 === 'no') {
@@ -401,8 +420,8 @@ export const calculateBookkeepingOnceOffFee = (responses) => {
   if (responses.q22 === 'yes' && responses.q22a) {
     const monthsCount = parseInt(responses.q22a, 10) || 0;
     if (monthsCount > 0) {
-      // Calculate monthly total for cleanup
-      const monthlyTotal = calculateBookkeepingMonthlyPrice(responses);
+      // Calculate monthly total for cleanup (already includes modifier)
+      const monthlyTotal = calculateBookkeepingMonthlyPrice(responses, pricingModifier);
       total += monthlyTotal * monthsCount;
     }
   }
@@ -427,6 +446,6 @@ export const calculateBookkeepingOnceOffFee = (responses) => {
     }
   }
 
-  // Round to 2 decimal places
-  return Math.round(total * 100) / 100;
+  // Apply pricing modifier and round to 2 decimal places
+  return Math.round(total * multiplier * 100) / 100;
 };
