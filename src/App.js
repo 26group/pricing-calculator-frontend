@@ -279,6 +279,9 @@ function AppContent() {
       {isLoggedIn && (
       <AppBar position="fixed" sx={{ boxShadow: 'none', backdropFilter: 'blur(20px)', backgroundColor: 'rgba(255, 255, 255, 0.9)', borderBottom: '1px solid #e0e0e0' }}>
         <Toolbar>
+          <Link to="/clients" style={{ display: 'flex', alignItems: 'center', marginRight: '24px' }}>
+            <img src="/logo-icon.svg" alt="Accountable" style={{ height: '32px', width: '32px' }} />
+          </Link>
           <Button color="inherit" component={Link} to="/clients" sx={{ fontWeight: 600 }}>Client Quotes</Button>
           <Box sx={{ flexGrow: 1 }} />
           <Button variant="contained" size="small" onClick={handleNewPriceClick} sx={{ mr: 2 }}>Create Pricing</Button>
