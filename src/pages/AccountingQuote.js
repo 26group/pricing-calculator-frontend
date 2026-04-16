@@ -32,7 +32,7 @@ import CloudDoneIcon from '@mui/icons-material/CloudDone';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { useSelector } from 'react-redux';
-import { calculateGoldMonthlyPricing } from '../utils/calculateGoldPricing';
+import { calculateGoldMonthlyPricing, calculateSilverMonthlyPricing } from '../utils/calculateGoldPricing';
 import { calculateComplianceOnlyPrice, getAccountingOnceOffBreakdown } from '../utils/pricingCalculator';
 import { createPrice, updatePrice } from '../services/priceApi';
 
@@ -75,7 +75,7 @@ export default function AccountingQuote() {
 
   // Bronze only includes compliance (tax services) pricing
   const bronzeMonthly = calculateComplianceOnlyPrice(questionResponses, pricingModifier);
-  const silverMonthly = questionsPricing + serviceCatalogPricing;
+  const silverMonthly = calculateSilverMonthlyPricing(questionResponses, pricingModifier);
   const goldMonthly = calculateGoldMonthlyPricing(questionResponses, pricingModifier);
 
   // Auto-save pricing values to existing price record
