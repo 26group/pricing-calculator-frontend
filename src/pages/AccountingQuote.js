@@ -424,10 +424,10 @@ export default function AccountingQuote() {
                 <TableCell align="center" sx={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#CD7F32', py: 1 }}>
                   {formatCurrency(bronzeMonthly)}
                 </TableCell>
-                <TableCell align="center" sx={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#C0C0C0', py: 1 }}>
+                <TableCell align="center" sx={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#757575', py: 1 }}>
                   {formatCurrency(silverMonthly)}
                 </TableCell>
-                <TableCell align="center" sx={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#FFD700', py: 1 }}>
+                <TableCell align="center" sx={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#DAA520', py: 1 }}>
                   {formatCurrency(goldMonthly)}
                 </TableCell>
               </TableRow>
