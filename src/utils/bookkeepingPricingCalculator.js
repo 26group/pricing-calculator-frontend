@@ -449,3 +449,80 @@ export const calculateBookkeepingOnceOffFee = (responses, pricingModifier = 100)
   // Apply pricing modifier and round to 2 decimal places
   return Math.round(total * multiplier * 100) / 100;
 };
+
+/**
+ * Returns a breakdown of once-off fee items with labels and amounts
+ * @param {Object} responses - Question responses from BookkeepingQuestions.js
+ * @param {number} pricingModifier - Optional pricing modifier from organisation (default 100)
+ * @returns {Array} Array of objects with { label, amount } for each once-off item
+ */
+export const getBookkeepingOnceOffBreakdown = (responses, pricingModifier = 100) => {
+  const items = [];
+  const values = serviceValuesBookkeeping;
+  const multiplier = getPricingMultiplier(pricingModifier);
+
+  // Q2: Accounting System Setup - $1000 once-off
+  if (responses.q2 === 'no') {
+    const amount = Math.round(values.setupServices.accountingSoftwareSetup.onceOff * multiplier * 100) / 100;
+    items.push({
+      label: 'Accounting Software Setup',
+      amount,
+    });
+  }
+
+  // Q3: Payroll System Setup - $50 × # employees once-off
+  if (responses.q3 === 'yesSetup' && responses.q3a) {
+    const employeeCount = parseInt(responses.q3a, 10) || 0;
+    if (employeeCount > 0) {
+      const amount = Math.round(values.payrollServices.payrollSetup.perEmployee * employeeCount * multiplier * 100) / 100;
+      items.push({
+        label: `Payroll System Setup (${employeeCount} employees)`,
+        amount,
+      });
+    }
+  }
+
+  // Q22: Rescue/Cleanup Work - Monthly package × # months
+  if (responses.q22 === 'yes' && responses.q22a) {
+    const monthsCount = parseInt(responses.q22a, 10) || 0;
+    if (monthsCount > 0) {
+      const monthlyTotal = calculateBookkeepingMonthlyPrice(responses, pricingModifier);
+      const amount = Math.round(monthlyTotal * monthsCount * 100) / 100;
+      items.push({
+        label: `Rescue/Cleanup Work (${monthsCount} months)`,
+        amount,
+      });
+    }
+  }
+
+  // Q23: Additional Once-Off Services
+  if (responses.q23 && typeof responses.q23 === 'object') {
+    const additional = values.additionalServices;
+
+    if (responses.q23.accountingSoftwareSetup) {
+      const amount = Math.round(additional.accountingSoftwareSetup.onceOff * multiplier * 100) / 100;
+      items.push({
+        label: 'Accounting Software Setup (Additional)',
+        amount,
+      });
+    }
+
+    if (responses.q23.onlineTraining1Session) {
+      const amount = Math.round(additional.onlineTraining1Session.onceOff * multiplier * 100) / 100;
+      items.push({
+        label: '1 × Online Training Session',
+        amount,
+      });
+    }
+
+    if (responses.q23.onlineTraining3Sessions) {
+      const amount = Math.round(additional.onlineTraining3Sessions.onceOff * multiplier * 100) / 100;
+      items.push({
+        label: '3 × Online Training Sessions',
+        amount,
+      });
+    }
+  }
+
+  return items;
+};

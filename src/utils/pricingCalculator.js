@@ -16,11 +16,12 @@ const getPricingMultiplier = (pricingModifier) => {
 };
 
 /**
- * Calculates compliance-only pricing (Tax Services: q2-q8)
- * This is used for Bronze tier which only includes compliance services
+ * Calculates Bronze package pricing
+ * Bronze includes: Tax Services (no SMSF/FBT), Payroll (no Payroll Tax), 
+ * Xero Training, Financial Statements for Tax, Team/Email Support, Corporate Secretarial
  * @param {Object} responses - Question responses from Questions.js
  * @param {number} pricingModifier - Optional pricing modifier from organisation (default 200)
- * @returns {number} Compliance-only monthly cost
+ * @returns {number} Bronze tier monthly cost
  */
 export const calculateComplianceOnlyPrice = (responses, pricingModifier = 200) => {
   let total = 0;
@@ -39,7 +40,9 @@ export const calculateComplianceOnlyPrice = (responses, pricingModifier = 200) =
 
   const segment = getSegment(responses.q1);
 
-  // q2: Number of individual returns
+  // ==================== TAX SERVICES (Bronze: YES for Individual, Business, BAS, IAS, TPAR) ====================
+  
+  // q2: Number of individual returns - YES in Bronze
   if (responses.q2 && responses.q2 !== '') {
     const individualCount = parseInt(responses.q2, 10);
     if (!isNaN(individualCount) && individualCount > 0) {
@@ -72,7 +75,7 @@ export const calculateComplianceOnlyPrice = (responses, pricingModifier = 200) =
     });
   }
 
-  // q3: Number of business entities
+  // q3: Number of business entities - YES in Bronze
   if (responses.q3 && responses.q3 !== '' && segment) {
     const businessCount = parseInt(responses.q3, 10);
     if (!isNaN(businessCount) && businessCount > 0) {
@@ -83,31 +86,10 @@ export const calculateComplianceOnlyPrice = (responses, pricingModifier = 200) =
     }
   }
 
-  // q4: SMSF
-  if (responses.q4 === 'yes' && segment) {
-    const smsfService = serviceValuesAccounting.taxServices.smsf[segment];
-    if (smsfService) {
-      total += smsfService.monthly;
-    }
-  }
+  // q4: SMSF - NO in Bronze (excluded)
+  // q5: FBT return - NO in Bronze (excluded)
 
-  // q4a: SMSF audit and tax return
-  if (responses.q4a === 'yes' && segment) {
-    const smsfService = serviceValuesAccounting.taxServices.smsf[segment];
-    if (smsfService) {
-      total += smsfService.monthly;
-    }
-  }
-
-  // q5: FBT return
-  if (responses.q5 === 'yes' && segment) {
-    const fbtService = serviceValuesAccounting.taxServices.fbtReturns?.[segment];
-    if (fbtService) {
-      total += fbtService.monthly;
-    }
-  }
-
-  // q6: BAS (quarterly or monthly)
+  // q6: BAS (quarterly or monthly) - YES in Bronze
   if (responses.q6 && responses.q6 !== 'no' && segment) {
     const basService = serviceValuesAccounting.taxServices.bas[segment];
     if (basService) {
@@ -119,7 +101,7 @@ export const calculateComplianceOnlyPrice = (responses, pricingModifier = 200) =
     }
   }
 
-  // q7: IAS
+  // q7: IAS - YES in Bronze
   if (responses.q7 === 'yes' && segment) {
     const iasService = serviceValuesAccounting.taxServices.ias[segment];
     if (iasService) {
@@ -127,13 +109,164 @@ export const calculateComplianceOnlyPrice = (responses, pricingModifier = 200) =
     }
   }
 
-  // q8: TPAR (number of suppliers)
+  // q8: TPAR (number of suppliers) - YES in Bronze
   if (responses.q8 && segment) {
     const supplierCount = parseInt(responses.q8, 10);
     if (!isNaN(supplierCount) && supplierCount > 0) {
       const tparService = serviceValuesAccounting.taxServices.tpar?.[segment];
       if (tparService) {
         total += tparService.monthly * supplierCount;
+      }
+    }
+  }
+
+  // ==================== PAYROLL SERVICES (Bronze: YES for Workers Comp, Processing, Super, STP, LSL; NO for Payroll Tax) ====================
+
+  // q9: Workers compensation - YES in Bronze
+  if (responses.q9 === 'yes' && segment) {
+    const workersCompService = serviceValuesAccounting.payrollServices.workersCompensation?.[segment];
+    if (workersCompService) {
+      total += workersCompService.monthly;
+    }
+  }
+
+  // q10a: Salary employees - YES in Bronze
+  if (responses.q10a && typeof responses.q10a === 'object' && segment) {
+    const { salaryWeekly = 0, salaryFortnightly = 0, salaryMonthly = 0 } = responses.q10a;
+    const weeklyCount = parseInt(salaryWeekly, 10) || 0;
+    const fortnightlyCount = parseInt(salaryFortnightly, 10) || 0;
+    const monthlyCount = parseInt(salaryMonthly, 10) || 0;
+
+    const totalSalaried = weeklyCount + fortnightlyCount + monthlyCount;
+    if (totalSalaried > 0) {
+      const payrollProcessing = serviceValuesAccounting.payrollServices.payrollProcessing?.salary;
+      if (payrollProcessing) {
+        const weeklyMonthly = weeklyCount * (payrollProcessing.perEmployee || payrollProcessing.monthly) * (52/12);
+        const fortnightlyMonthly = fortnightlyCount * (payrollProcessing.perEmployee || payrollProcessing.monthly) * (26/12);
+        const monthlyMonthly = monthlyCount * (payrollProcessing.perEmployee || payrollProcessing.monthly);
+        total += weeklyMonthly + fortnightlyMonthly + monthlyMonthly;
+      }
+    }
+  }
+
+  // q10b: Timesheet employees - YES in Bronze
+  if (responses.q10b && typeof responses.q10b === 'object' && segment) {
+    const { timesheetWeekly = 0, timesheetFortnightly = 0, timesheetMonthly = 0 } = responses.q10b;
+    const weeklyCount = parseInt(timesheetWeekly, 10) || 0;
+    const fortnightlyCount = parseInt(timesheetFortnightly, 10) || 0;
+    const monthlyCount = parseInt(timesheetMonthly, 10) || 0;
+
+    const totalTimesheet = weeklyCount + fortnightlyCount + monthlyCount;
+    if (totalTimesheet > 0) {
+      const payrollProcessing = serviceValuesAccounting.payrollServices.payrollProcessing?.timesheets;
+      if (payrollProcessing) {
+        const weeklyMonthly = weeklyCount * (payrollProcessing.perEmployee || payrollProcessing.monthly) * (52/12);
+        const fortnightlyMonthly = fortnightlyCount * (payrollProcessing.perEmployee || payrollProcessing.monthly) * (26/12);
+        const monthlyMonthly = monthlyCount * (payrollProcessing.perEmployee || payrollProcessing.monthly);
+        total += weeklyMonthly + fortnightlyMonthly + monthlyMonthly;
+      }
+    }
+  }
+
+  // q11: Payroll tax returns - NO in Bronze (excluded)
+
+  // q12: Superannuation lodgement - YES in Bronze
+  if (responses.q12 && responses.q12 !== 'no' && segment) {
+    const superService = serviceValuesAccounting.payrollServices.superPrepAndLodgement?.[segment];
+    if (superService) {
+      if (responses.q12 === 'quarterly') {
+        total += superService.quarterlyMonthly || superService.monthly;
+      } else if (responses.q12 === 'monthly') {
+        total += superService.monthlyMonthly || superService.monthly;
+      }
+    }
+  }
+
+  // q13: Single Touch Payroll - YES in Bronze
+  if (responses.q13 && responses.q13 !== 'no' && segment) {
+    const stpService = serviceValuesAccounting.payrollServices.stpReporting?.[segment];
+    if (stpService) {
+      if (responses.q13 === 'weekly') {
+        total += stpService.weeklyMonthly || stpService.monthly;
+      } else if (responses.q13 === 'fortnightly') {
+        total += stpService.fortnightlyMonthly || stpService.monthly;
+      } else if (responses.q13 === 'monthly') {
+        total += stpService.monthlyMonthly || stpService.monthly;
+      }
+    }
+  }
+
+  // q14: Long service leave (LSL Construction Reporting) - YES in Bronze
+  if (responses.q14 === 'yes' && segment) {
+    const lslService = serviceValuesAccounting.payrollServices.lslReporting?.[segment];
+    if (lslService) {
+      total += lslService.monthly;
+    }
+  }
+
+  // ==================== ADVISORY SERVICES (Bronze: YES for Xero Training; NO for Tax Planning) ====================
+
+  // q15: Tax planning - NO in Bronze (excluded)
+
+  // q17b: Ongoing Xero Training - YES in Bronze
+  if (responses.q17b === 'yes' && segment) {
+    const ongoingXeroTraining = serviceValuesAccounting.advisoryServices?.ongoingXeroTraining?.[segment];
+    if (ongoingXeroTraining) {
+      total += ongoingXeroTraining.monthly || 0;
+    }
+  }
+
+  // ==================== REPORTING (Bronze: YES for FS Tax; NO for Management FS) ====================
+
+  // q18: Financial statements for tax - YES in Bronze
+  if (responses.q18 === 'yes' && segment) {
+    const fsService = serviceValuesAccounting.reporting.financialStatementsTax?.[segment];
+    if (fsService) {
+      total += fsService.monthly;
+    }
+  }
+
+  // q19: Statutory financial statements - excluded from Bronze
+  // q20: Management financial statements - NO in Bronze (excluded)
+
+  // ==================== MEETINGS (Bronze: ALL NO) ====================
+  // q21, q22, q23: All meetings excluded from Bronze
+
+  // ==================== SUPPORT SERVICES (Bronze: YES for Team/Email only) ====================
+
+  // q24: Support - Bronze only includes Team/Email support
+  if (responses.q24 && responses.q24 !== '' && responses.q24 !== 'no' && segment) {
+    // Bronze always uses Team/Email support rate regardless of what user selected
+    const teamSupport = serviceValuesAccounting.support.emailOnlyTeam?.[segment];
+    if (teamSupport) {
+      total += teamSupport.monthly;
+    }
+  }
+
+  // ==================== CORPORATE SECRETARIAL (Bronze: YES) ====================
+
+  // q25: ASIC company secretarial work - YES in Bronze
+  if (responses.q25) {
+    if (Array.isArray(responses.q25)) {
+      if (responses.q25.includes('annualReturns')) {
+        const asicService = serviceValuesAccounting.corporateSecretarial.asicAnnualReturn;
+        if (asicService) {
+          total += asicService.monthly;
+        }
+      }
+    } else if (typeof responses.q25 === 'object' && responses.q25 !== null) {
+      if (responses.q25.annualReturns) {
+        const asicService = serviceValuesAccounting.corporateSecretarial.asicAnnualReturn;
+        if (asicService) {
+          total += asicService.monthly;
+        }
+      }
+    } else if (responses.q25 !== '' && responses.q25 !== 'no') {
+      if (responses.q25 === 'annualReturns' || responses.q25 === 'yes') {
+        const asicService = serviceValuesAccounting.corporateSecretarial.asicAnnualReturn;
+        if (asicService) {
+          total += asicService.monthly;
+        }
       }
     }
   }
@@ -789,4 +922,284 @@ export const calculateTotalOnceOffFee = (responses, pricingModifier = 200) => {
   }
 
   return Math.round(total * multiplier * 100) / 100; // Round to 2 decimal places with pricing modifier applied
+};
+
+/**
+ * Returns a breakdown of once-off fee items with labels and amounts for accounting
+ * @param {Object} responses - Question responses
+ * @param {number} pricingModifier - Optional pricing modifier from organisation (default 200)
+ * @returns {Array} Array of objects with { label, amount } for each once-off item
+ */
+export const getAccountingOnceOffBreakdown = (responses, pricingModifier = 200) => {
+  const items = [];
+  const multiplier = getPricingMultiplier(pricingModifier);
+
+  const getSegment = (originalSegment) => {
+    if (['micro', 'small', 'medium', 'large'].includes(originalSegment)) {
+      return originalSegment;
+    }
+    if (originalSegment === 'enterprise') {
+      return 'large';
+    }
+    return null;
+  };
+
+  const segment = getSegment(responses.q1);
+
+  // q16: Tax structuring (once-off)
+  if (responses.q16 === 'yes' && segment && serviceValuesAccounting?.advisoryServices?.taxStructuringAdvice) {
+    const taxStructuring = serviceValuesAccounting.advisoryServices.taxStructuringAdvice[segment];
+    if (taxStructuring) {
+      const amount = Math.round((taxStructuring.onceOff || taxStructuring.yearly) * multiplier * 100) / 100;
+      items.push({
+        label: 'Tax Structuring Advice',
+        amount,
+      });
+    }
+  }
+
+  // q17: Xero Setup (once-off)
+  if (responses.q17 === 'yes' && segment && serviceValuesAccounting?.advisoryServices?.xeroSetup) {
+    const xeroSetup = serviceValuesAccounting.advisoryServices.xeroSetup[segment];
+    if (xeroSetup) {
+      const amount = Math.round((xeroSetup.onceOff || xeroSetup.yearly) * multiplier * 100) / 100;
+      items.push({
+        label: 'Xero Setup',
+        amount,
+      });
+    }
+  }
+
+  // q17a: Xero Training (once-off)
+  if (responses.q17a === 'yes' && segment && serviceValuesAccounting?.advisoryServices?.xeroTraining) {
+    const xeroTraining = serviceValuesAccounting.advisoryServices.xeroTraining[segment];
+    if (xeroTraining) {
+      const amount = Math.round((xeroTraining.onceOff || xeroTraining.yearly) * multiplier * 100) / 100;
+      items.push({
+        label: 'Xero Training',
+        amount,
+      });
+    }
+  }
+
+  // q26: ATO payment plans (once-off setup fee)
+  if (responses.q26 && responses.q26 !== '' && responses.q26 !== 'no') {
+    let atoPlan = null;
+    let planLabel = '';
+    if (responses.q26 === 'basic') {
+      atoPlan = serviceValuesAccounting.atoPaymentPlans?.basic;
+      planLabel = 'ATO Payment Plan (Basic)';
+    } else if (responses.q26 === 'hardship') {
+      atoPlan = serviceValuesAccounting.atoPaymentPlans?.hardship;
+      planLabel = 'ATO Payment Plan (Hardship)';
+    }
+    if (atoPlan && atoPlan.onceOff) {
+      const amount = Math.round(atoPlan.onceOff * multiplier * 100) / 100;
+      items.push({
+        label: planLabel,
+        amount,
+      });
+    }
+  }
+
+  // q2b: Return not necessary (once-off fee from individual return extras)
+  if (responses.q2b && typeof responses.q2b === 'object' && responses.q2b.returnNotNecessary) {
+    const count = parseInt(responses.q2b.returnNotNecessary, 10);
+    const returnNotNecessary = serviceValuesAccounting.taxServices?.individualReturnExtras?.returnNotNecessary;
+    if (!isNaN(count) && count > 0 && returnNotNecessary?.onceOff) {
+      const amount = Math.round(returnNotNecessary.onceOff * count * multiplier * 100) / 100;
+      items.push({
+        label: `Return Not Necessary (${count} returns)`,
+        amount,
+      });
+    }
+  }
+
+  // q25: ASIC Form Lodgements (once-off)
+  if (responses.q25) {
+    const asicService = serviceValuesAccounting.corporateSecretarial?.asicFormsLodgements;
+    if (asicService) {
+      const lodgementCount = responses.q25a ? parseInt(responses.q25a, 10) || 1 : 1;
+      let hasFormLodgements = false;
+      
+      if (Array.isArray(responses.q25) && responses.q25.includes('formLodgements')) {
+        hasFormLodgements = true;
+      } else if (typeof responses.q25 === 'object' && responses.q25 !== null && responses.q25.formLodgements) {
+        hasFormLodgements = true;
+      } else if (responses.q25 === 'detailChanges') {
+        hasFormLodgements = true;
+      }
+
+      if (hasFormLodgements) {
+        const amount = Math.round((asicService.onceOff || 0) * lodgementCount * multiplier * 100) / 100;
+        items.push({
+          label: `ASIC Form Lodgements (${lodgementCount})`,
+          amount,
+        });
+      }
+    }
+  }
+
+  // q27: Prior year lodgements (multiple return types)
+  if (responses.q27 && typeof responses.q27 === 'object' && segment) {
+    const PRIOR_YEAR_MULTIPLIER = 1.5;
+
+    if (responses.q27.businessReturns) {
+      const count = parseInt(responses.q27.businessReturns, 10);
+      const service = serviceValuesAccounting.taxServices?.businessReturns?.[segment];
+      if (!isNaN(count) && count > 0 && service?.yearly) {
+        const amount = Math.round(service.yearly * count * PRIOR_YEAR_MULTIPLIER * multiplier * 100) / 100;
+        items.push({
+          label: `Prior Year Business Returns (${count})`,
+          amount,
+        });
+      }
+    }
+
+    if (responses.q27.individuals) {
+      const count = parseInt(responses.q27.individuals, 10);
+      const service = serviceValuesAccounting.taxServices?.individualReturns?.all;
+      if (!isNaN(count) && count > 0 && service?.yearly) {
+        const amount = Math.round(service.yearly * count * PRIOR_YEAR_MULTIPLIER * multiplier * 100) / 100;
+        items.push({
+          label: `Prior Year Individual Returns (${count})`,
+          amount,
+        });
+      }
+    }
+
+    if (responses.q27.bas) {
+      const count = parseInt(responses.q27.bas, 10);
+      const service = serviceValuesAccounting.taxServices?.bas?.[segment];
+      if (!isNaN(count) && count > 0 && service?.perReturn) {
+        const amount = Math.round((service.perReturn * 4) * count * PRIOR_YEAR_MULTIPLIER * multiplier * 100) / 100;
+        items.push({
+          label: `Prior Year BAS Returns (${count})`,
+          amount,
+        });
+      }
+    }
+
+    if (responses.q27.smsf) {
+      const count = parseInt(responses.q27.smsf, 10);
+      const service = serviceValuesAccounting.taxServices?.smsf?.[segment];
+      if (!isNaN(count) && count > 0 && service?.yearly) {
+        const amount = Math.round(service.yearly * count * PRIOR_YEAR_MULTIPLIER * multiplier * 100) / 100;
+        items.push({
+          label: `Prior Year SMSF Returns (${count})`,
+          amount,
+        });
+      }
+    }
+
+    if (responses.q27.ias) {
+      const count = parseInt(responses.q27.ias, 10);
+      const service = serviceValuesAccounting.taxServices?.ias?.[segment];
+      if (!isNaN(count) && count > 0 && service?.perReturn) {
+        const amount = Math.round((service.perReturn * 8) * count * PRIOR_YEAR_MULTIPLIER * multiplier * 100) / 100;
+        items.push({
+          label: `Prior Year IAS Returns (${count})`,
+          amount,
+        });
+      }
+    }
+
+    if (responses.q27.fbt) {
+      const count = parseInt(responses.q27.fbt, 10);
+      const service = serviceValuesAccounting.taxServices?.fbtReturns?.[segment];
+      if (!isNaN(count) && count > 0 && service?.yearly) {
+        const amount = Math.round(service.yearly * count * PRIOR_YEAR_MULTIPLIER * multiplier * 100) / 100;
+        items.push({
+          label: `Prior Year FBT Returns (${count})`,
+          amount,
+        });
+      }
+    }
+
+    if (responses.q27.tpar) {
+      const count = parseInt(responses.q27.tpar, 10);
+      const service = serviceValuesAccounting.taxServices?.tpar?.[segment];
+      if (!isNaN(count) && count > 0 && service?.yearly) {
+        const amount = Math.round(service.yearly * count * PRIOR_YEAR_MULTIPLIER * multiplier * 100) / 100;
+        items.push({
+          label: `Prior Year TPAR Returns (${count})`,
+          amount,
+        });
+      }
+    }
+
+    if (responses.q27.workersComp) {
+      const count = parseInt(responses.q27.workersComp, 10);
+      const service = serviceValuesAccounting.payrollServices?.workersCompensation?.[segment];
+      if (!isNaN(count) && count > 0 && service?.yearly) {
+        const amount = Math.round(service.yearly * count * PRIOR_YEAR_MULTIPLIER * multiplier * 100) / 100;
+        items.push({
+          label: `Prior Year Workers Comp (${count})`,
+          amount,
+        });
+      }
+    }
+
+    if (responses.q27.superLodgement) {
+      const count = parseInt(responses.q27.superLodgement, 10);
+      const service = serviceValuesAccounting.payrollServices?.superPrepAndLodgement?.[segment];
+      if (!isNaN(count) && count > 0 && service?.perLodgement) {
+        const amount = Math.round((service.perLodgement * 4) * count * PRIOR_YEAR_MULTIPLIER * multiplier * 100) / 100;
+        items.push({
+          label: `Prior Year Super Lodgements (${count})`,
+          amount,
+        });
+      }
+    }
+
+    if (responses.q27.stpEoy) {
+      const count = parseInt(responses.q27.stpEoy, 10);
+      const service = serviceValuesAccounting.payrollServices?.stpReporting?.[segment];
+      if (!isNaN(count) && count > 0 && service?.perReport) {
+        const amount = Math.round(service.perReport * count * PRIOR_YEAR_MULTIPLIER * multiplier * 100) / 100;
+        items.push({
+          label: `Prior Year STP EOY Reporting (${count})`,
+          amount,
+        });
+      }
+    }
+
+    if (responses.q27.lslForms) {
+      const count = parseInt(responses.q27.lslForms, 10);
+      const service = serviceValuesAccounting.payrollServices?.lslReporting?.[segment];
+      if (!isNaN(count) && count > 0 && service?.yearly) {
+        const amount = Math.round(service.yearly * count * PRIOR_YEAR_MULTIPLIER * multiplier * 100) / 100;
+        items.push({
+          label: `Prior Year LSL Forms (${count})`,
+          amount,
+        });
+      }
+    }
+
+    if (responses.q27.payrollTax && ['medium', 'large'].includes(segment)) {
+      const count = parseInt(responses.q27.payrollTax, 10);
+      const service = serviceValuesAccounting.payrollServices?.payrollTaxReturns?.[segment];
+      if (!isNaN(count) && count > 0 && service?.yearly) {
+        const amount = Math.round(service.yearly * count * PRIOR_YEAR_MULTIPLIER * multiplier * 100) / 100;
+        items.push({
+          label: `Prior Year Payroll Tax Returns (${count})`,
+          amount,
+        });
+      }
+    }
+
+    if (responses.q27.asic) {
+      const count = parseInt(responses.q27.asic, 10);
+      const service = serviceValuesAccounting.corporateSecretarial?.asicAnnualReturn;
+      if (!isNaN(count) && count > 0 && service?.yearly) {
+        const amount = Math.round(service.yearly * count * PRIOR_YEAR_MULTIPLIER * multiplier * 100) / 100;
+        items.push({
+          label: `Prior Year ASIC Returns (${count})`,
+          amount,
+        });
+      }
+    }
+  }
+
+  return items;
 };

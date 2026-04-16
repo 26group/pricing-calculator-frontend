@@ -33,7 +33,7 @@ import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { useSelector } from 'react-redux';
 import { calculateGoldMonthlyPricing } from '../utils/calculateGoldPricing';
-import { calculateComplianceOnlyPrice } from '../utils/pricingCalculator';
+import { calculateComplianceOnlyPrice, getAccountingOnceOffBreakdown } from '../utils/pricingCalculator';
 import { createPrice, updatePrice } from '../services/priceApi';
 
 const formatCurrency = (amount) =>
@@ -41,9 +41,9 @@ const formatCurrency = (amount) =>
     ? 'N/A'
     : `$${amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
-const CheckMark = () => <CheckCircleIcon sx={{ color: '#4caf50', fontSize: 28 }} />;
+const CheckMark = () => <CheckCircleIcon sx={{ color: '#4caf50', fontSize: 20 }} />;
 
-const NotIncluded = () => <CancelIcon sx={{ color: '#e0e0e0', fontSize: 28 }} />;
+const NotIncluded = () => <CancelIcon sx={{ color: '#e0e0e0', fontSize: 20 }} />;
 
 export default function AccountingQuote() {
   const navigate = useNavigate();
@@ -55,6 +55,13 @@ export default function AccountingQuote() {
   const serviceCatalogOnceOffFee = useSelector((state) => state.responses?.serviceCatalogOnceOffFee || 0);
   const clientName = useSelector((state) => state.responses?.clientName || '');
   const activePriceId = useSelector((state) => state.responses?.activePriceId);
+  
+  // Get organisation and pricing modifier
+  const organisation = useSelector((state) => state.auth?.organisation);
+  const pricingModifier = organisation?.pricingModifier ?? 200;
+  
+  // Get the breakdown of once-off items
+  const onceOffBreakdown = getAccountingOnceOffBreakdown(questionResponses, pricingModifier);
 
   const [openSaveDialog, setOpenSaveDialog] = useState(false);
   const [clientNameInput, setClientNameInput] = useState(clientName);
@@ -67,9 +74,9 @@ export default function AccountingQuote() {
   const autoSaveTimerRef = useRef(null);
 
   // Bronze only includes compliance (tax services) pricing
-  const bronzeMonthly = calculateComplianceOnlyPrice(questionResponses);
+  const bronzeMonthly = calculateComplianceOnlyPrice(questionResponses, pricingModifier);
   const silverMonthly = questionsPricing + serviceCatalogPricing;
-  const goldMonthly = calculateGoldMonthlyPricing();
+  const goldMonthly = calculateGoldMonthlyPricing(questionResponses, pricingModifier);
 
   // Auto-save pricing values to existing price record
   const autoSavePricing = useCallback(async () => {
@@ -285,60 +292,37 @@ export default function AccountingQuote() {
   };
 
   const pricingRows = [
-    {
-      feature: 'Tax Services\nIndividual & business returns, BAS, IAS, SMSF, FBT, TPAR',
-      bronze: hasTaxServices ? <CheckMark /> : <NotIncluded />,
-      silver: hasTaxServices ? <CheckMark /> : <NotIncluded />,
-      gold: <CheckMark />,
-    },
-    {
-      feature: 'Payroll Services\nWorkers Comp, payroll processing, super, STP',
-      bronze: hasPayrollServices ? <CheckMark /> : <NotIncluded />,
-      silver: hasPayrollServices ? <CheckMark /> : <NotIncluded />,
-      gold: <CheckMark />,
-    },
-    {
-      feature: 'Advisory Services\nTax planning, structuring advice, Xero setup & training',
-      bronze: hasAdvisoryServices ? <CheckMark /> : <NotIncluded />,
-      silver: <CheckMark />,
-      gold: <CheckMark />,
-    },
-    {
-      feature: 'Financial Reporting\nFinancial statements and management reports',
-      bronze: hasReporting ? <Typography variant="body2">{getReportingFrequency() || 'Annually'}</Typography> : <NotIncluded />,
-      silver: hasReporting ? <Typography variant="body2">{getReportingFrequency() || 'Quarterly'}</Typography> : <Typography variant="body2">Quarterly</Typography>,
-      gold: <Typography variant="body2">Monthly</Typography>,
-    },
-    {
-      feature: 'Meetings\nReview numbers, annual tax, business strategy',
-      bronze: hasMeetings ? <Typography variant="body2">{getMeetingsFrequency() || 'Annually'}</Typography> : <NotIncluded />,
-      silver: hasMeetings ? <Typography variant="body2">{getMeetingsFrequency() || 'Quarterly'}</Typography> : <Typography variant="body2">Quarterly</Typography>,
-      gold: <Typography variant="body2">Monthly</Typography>,
-    },
-    {
-      feature: 'Support Services\nAccess to our team for your questions',
-      bronze: getSupportText() || <NotIncluded />,
-      silver: getSupportText() || (
-        <Typography variant="body2">
-          Email & Phone
-          <br />
-          Team & CSM
-        </Typography>
-      ),
-      gold: (
-        <Typography variant="body2">
-          Principal & CSM
-          <br />
-          Same day response
-        </Typography>
-      ),
-    },
-    {
-      feature: 'Corporate Secretarial\nASIC returns, form lodgements, ATO payment plans',
-      bronze: hasCorporateSecretarial ? <CheckMark /> : <NotIncluded />,
-      silver: hasCorporateSecretarial ? <CheckMark /> : <NotIncluded />,
-      gold: <CheckMark />,
-    },
+    { feature: 'Tax Services', isCategory: true },
+    { feature: 'Individual Tax Returns', bronze: <CheckMark />, silver: hasTaxServices ? <CheckMark /> : <NotIncluded />, gold: hasTaxServices ? <CheckMark /> : <NotIncluded /> },
+    { feature: 'Business Tax Returns', bronze: <CheckMark />, silver: hasTaxServices ? <CheckMark /> : <NotIncluded />, gold: hasTaxServices ? <CheckMark /> : <NotIncluded /> },
+    { feature: 'SMSF', bronze: <NotIncluded />, silver: questionResponses.q4 === 'yes' ? <CheckMark /> : <NotIncluded />, gold: questionResponses.q4 === 'yes' ? <CheckMark /> : <NotIncluded /> },
+    { feature: 'FBT Returns', bronze: <NotIncluded />, silver: questionResponses.q5 === 'yes' ? <CheckMark /> : <NotIncluded />, gold: questionResponses.q5 === 'yes' ? <CheckMark /> : <NotIncluded /> },
+    { feature: 'BAS', bronze: <CheckMark />, silver: questionResponses.q6 && questionResponses.q6 !== 'no' ? <CheckMark /> : <NotIncluded />, gold: questionResponses.q6 && questionResponses.q6 !== 'no' ? <CheckMark /> : <NotIncluded /> },
+    { feature: 'IAS', bronze: <CheckMark />, silver: questionResponses.q7 === 'yes' ? <CheckMark /> : <NotIncluded />, gold: questionResponses.q7 === 'yes' ? <CheckMark /> : <NotIncluded /> },
+    { feature: 'TPAR', bronze: <CheckMark />, silver: questionResponses.q8 && parseInt(questionResponses.q8, 10) > 0 ? <CheckMark /> : <NotIncluded />, gold: questionResponses.q8 && parseInt(questionResponses.q8, 10) > 0 ? <CheckMark /> : <NotIncluded /> },
+    { feature: 'Payroll Services', isCategory: true },
+    { feature: 'Workers Compensation', bronze: <CheckMark />, silver: questionResponses.q9 === 'yes' ? <CheckMark /> : <NotIncluded />, gold: questionResponses.q9 === 'yes' ? <CheckMark /> : <NotIncluded /> },
+    { feature: 'Payroll Processing', bronze: <CheckMark />, silver: questionResponses.q10a || questionResponses.q10b ? <CheckMark /> : <NotIncluded />, gold: questionResponses.q10a || questionResponses.q10b ? <CheckMark /> : <NotIncluded /> },
+    { feature: 'Payroll Tax Returns', bronze: <NotIncluded />, silver: questionResponses.q11 === 'yes' ? <CheckMark /> : <NotIncluded />, gold: questionResponses.q11 === 'yes' ? <CheckMark /> : <NotIncluded /> },
+    { feature: 'Super Prep & Lodgement', bronze: <CheckMark />, silver: questionResponses.q12 && questionResponses.q12 !== 'no' ? <CheckMark /> : <NotIncluded />, gold: questionResponses.q12 && questionResponses.q12 !== 'no' ? <CheckMark /> : <NotIncluded /> },
+    { feature: 'STP Reporting', bronze: <CheckMark />, silver: questionResponses.q13 && questionResponses.q13 !== 'no' ? <CheckMark /> : <NotIncluded />, gold: questionResponses.q13 && questionResponses.q13 !== 'no' ? <CheckMark /> : <NotIncluded /> },
+    { feature: 'LSL Construction Reporting', bronze: <CheckMark />, silver: questionResponses.q14 === 'yes' ? <CheckMark /> : <NotIncluded />, gold: questionResponses.q14 === 'yes' ? <CheckMark /> : <NotIncluded /> },
+    { feature: 'Advisory Services', isCategory: true },
+    { feature: 'Tax Planning / Review', bronze: <NotIncluded />, silver: questionResponses.q15 === 'yes' ? <CheckMark /> : <NotIncluded />, gold: questionResponses.q15 === 'yes' ? <CheckMark /> : <NotIncluded /> },
+    { feature: 'Xero Training', bronze: <CheckMark />, silver: questionResponses.q17a === 'yes' || questionResponses.q17b === 'yes' ? <CheckMark /> : <NotIncluded />, gold: questionResponses.q17a === 'yes' || questionResponses.q17b === 'yes' ? <CheckMark /> : <NotIncluded /> },
+    { feature: 'Financial Reporting', isCategory: true },
+    { feature: 'Financial Statements for Tax Returns', bronze: <CheckMark />, silver: questionResponses.q18 === 'yes' ? <CheckMark /> : <NotIncluded />, gold: questionResponses.q18 === 'yes' ? <CheckMark /> : <NotIncluded /> },
+    { feature: 'Management Financial Statements', bronze: <NotIncluded />, silver: questionResponses.q20 && questionResponses.q20 !== 'no' ? <Typography variant="body2">Quarterly</Typography> : <NotIncluded />, gold: questionResponses.q20 && questionResponses.q20 !== 'no' ? <Typography variant="body2">Monthly</Typography> : <NotIncluded /> },
+    { feature: 'Meetings', isCategory: true },
+    { feature: 'Review The Numbers Meetings', bronze: <NotIncluded />, silver: questionResponses.q21 && questionResponses.q21 !== 'no' ? <Typography variant="body2">Quarterly</Typography> : <NotIncluded />, gold: questionResponses.q21 && questionResponses.q21 !== 'no' ? <Typography variant="body2">Monthly</Typography> : <NotIncluded /> },
+    { feature: 'Annual Tax Meetings', bronze: <NotIncluded />, silver: questionResponses.q22 === 'yes' ? <CheckMark /> : <NotIncluded />, gold: questionResponses.q22 === 'yes' ? <CheckMark /> : <NotIncluded /> },
+    { feature: 'Business Meetings', bronze: <NotIncluded />, silver: questionResponses.q23 && questionResponses.q23 !== 'no' ? <Typography variant="body2">Quarterly</Typography> : <NotIncluded />, gold: questionResponses.q23 && questionResponses.q23 !== 'no' ? <Typography variant="body2">Monthly</Typography> : <NotIncluded /> },
+    { feature: 'Support Services', isCategory: true },
+    { feature: 'Team / Email Support', bronze: <CheckMark />, silver: questionResponses.q24 === 'yes' ? <CheckMark /> : <NotIncluded />, gold: questionResponses.q24 === 'yes' ? <CheckMark /> : <NotIncluded /> },
+    { feature: 'Client Service Manager', bronze: <NotIncluded />, silver: <CheckMark />, gold: questionResponses.q24a === 'yes' ? <CheckMark /> : <NotIncluded /> },
+    { feature: 'Principal / Owner', bronze: <NotIncluded />, silver: questionResponses.q24b === 'yes' ? <CheckMark /> : <NotIncluded />, gold: <CheckMark /> },
+    { feature: 'Corporate Secretarial & ATO Plans', isCategory: true },
+    { feature: 'Corporate Secretarial', bronze: <CheckMark />, silver: questionResponses.q25 === 'yes' ? <CheckMark /> : <NotIncluded />, gold: questionResponses.q25 === 'yes' ? <CheckMark /> : <NotIncluded /> },
   ];
 
   return (
@@ -398,24 +382,52 @@ export default function AccountingQuote() {
             </TableHead>
             <TableBody>
               {pricingRows.map((row, index) => (
-                <TableRow key={index} sx={{ '&:nth-of-type(odd)': { backgroundColor: '#fafafa' } }}>
-                  <TableCell sx={{ fontWeight: 500, whiteSpace: 'pre-wrap', fontSize: '0.95rem' }}>
-                    {row.feature}
-                  </TableCell>
-                  <TableCell align="center">{row.bronze}</TableCell>
-                  <TableCell align="center">{row.silver}</TableCell>
-                  <TableCell align="center">{row.gold}</TableCell>
-                </TableRow>
+                row.isCategory ? (
+                  <TableRow 
+                    key={index} 
+                    sx={{ backgroundColor: '#e8eef4' }}
+                  >
+                    <TableCell 
+                      colSpan={4}
+                      sx={{ 
+                        fontWeight: 600, 
+                        fontSize: '0.85rem',
+                        py: 0.5,
+                      }}
+                    >
+                      {row.feature}
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  <TableRow 
+                    key={index} 
+                    sx={{ '&:hover': { backgroundColor: '#fafafa' } }}
+                  >
+                    <TableCell 
+                      sx={{ 
+                        fontSize: '0.8rem',
+                        pl: 3,
+                        py: 0.25,
+                        color: 'text.secondary',
+                      }}
+                    >
+                      {row.feature}
+                    </TableCell>
+                    <TableCell align="center" sx={{ py: 0.25 }}>{row.bronze}</TableCell>
+                    <TableCell align="center" sx={{ py: 0.25 }}>{row.silver}</TableCell>
+                    <TableCell align="center" sx={{ py: 0.25 }}>{row.gold}</TableCell>
+                  </TableRow>
+                )
               ))}
               <TableRow sx={{ backgroundColor: '#f5f5f5', fontWeight: 'bold' }}>
-                <TableCell sx={{ fontWeight: 'bold', fontSize: '1.1rem' }}>Monthly Price</TableCell>
-                <TableCell align="center" sx={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#CD7F32' }}>
+                <TableCell sx={{ fontWeight: 'bold', fontSize: '1rem', py: 1 }}>Monthly Price</TableCell>
+                <TableCell align="center" sx={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#CD7F32', py: 1 }}>
                   {formatCurrency(bronzeMonthly)}
                 </TableCell>
-                <TableCell align="center" sx={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#C0C0C0' }}>
+                <TableCell align="center" sx={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#C0C0C0', py: 1 }}>
                   {formatCurrency(silverMonthly)}
                 </TableCell>
-                <TableCell align="center" sx={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#FFD700' }}>
+                <TableCell align="center" sx={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#FFD700', py: 1 }}>
                   {formatCurrency(goldMonthly)}
                 </TableCell>
               </TableRow>
@@ -434,9 +446,27 @@ export default function AccountingQuote() {
             {formatCurrency(questionsOnceOffFee + serviceCatalogOnceOffFee)}
           </Typography>
         </Stack>
-        <Typography variant="body2" sx={{ mt: 1, color: 'text.secondary' }}>
-          Setup fees, prior year lodgements, and advisory services
-        </Typography>
+        {onceOffBreakdown.length > 0 ? (
+          <Box sx={{ mt: 2 }}>
+            {onceOffBreakdown.map((item, index) => (
+              <Box
+                key={index}
+                sx={{
+                  py: 0.75,
+                  borderBottom: index < onceOffBreakdown.length - 1 ? '1px solid #e0e0e0' : 'none',
+                }}
+              >
+                <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                  {item.label}
+                </Typography>
+              </Box>
+            ))}
+          </Box>
+        ) : (
+          <Typography variant="body2" sx={{ mt: 1, color: 'text.secondary' }}>
+            No one-off fees for this quote
+          </Typography>
+        )}
       </Paper>
 
       {/* Save Price Dialog */}

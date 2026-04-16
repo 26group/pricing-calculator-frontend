@@ -32,7 +32,7 @@ import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { useSelector } from 'react-redux';
 import { calculateGoldMonthlyPricing } from '../utils/calculateGoldPricing';
-import { calculateComplianceOnlyPrice } from '../utils/pricingCalculator';
+import { calculateComplianceOnlyPrice, getAccountingOnceOffBreakdown } from '../utils/pricingCalculator';
 import { createPrice, updatePrice } from '../services/priceApi';
 
 const formatCurrency = (amount) =>
@@ -58,6 +58,13 @@ export default function PricingQuote() {
   const serviceCatalogOnceOffFee = useSelector((state) => state.responses?.serviceCatalogOnceOffFee || 0);
   const clientName = useSelector((state) => state.responses?.clientName || '');
   const activePriceId = useSelector((state) => state.responses?.activePriceId);
+  
+  // Get organisation and pricing modifier
+  const organisation = useSelector((state) => state.auth?.organisation);
+  const pricingModifier = organisation?.pricingModifier ?? 200;
+  
+  // Get the breakdown of once-off items
+  const onceOffBreakdown = getAccountingOnceOffBreakdown(questionResponses, pricingModifier);
 
   const [openSaveDialog, setOpenSaveDialog] = useState(false);
   const [clientNameInput, setClientNameInput] = useState(clientName);
@@ -424,9 +431,27 @@ export default function PricingQuote() {
             {formatCurrency(questionsOnceOffFee + serviceCatalogOnceOffFee)}
           </Typography>
         </Stack>
-        <Typography variant="body2" sx={{ mt: 1, color: 'text.secondary' }}>
-          Additional setup and advisory fees based on your requirements
-        </Typography>
+        {onceOffBreakdown.length > 0 ? (
+          <Box sx={{ mt: 2 }}>
+            {onceOffBreakdown.map((item, index) => (
+              <Box
+                key={index}
+                sx={{
+                  py: 0.75,
+                  borderBottom: index < onceOffBreakdown.length - 1 ? '1px solid #e0e0e0' : 'none',
+                }}
+              >
+                <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                  {item.label}
+                </Typography>
+              </Box>
+            ))}
+          </Box>
+        ) : (
+          <Typography variant="body2" sx={{ mt: 1, color: 'text.secondary' }}>
+            No one-off fees for this quote
+          </Typography>
+        )}
       </Paper>
 
       {/* Save Price Dialog */}
