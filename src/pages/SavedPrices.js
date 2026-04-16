@@ -251,13 +251,15 @@ export default function SavedPrices() {
   const formatDate = (dateStr) => {
     if (!dateStr) return '—';
     const date = new Date(dateStr);
-    return date.toLocaleDateString('en-AU', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear().toString().slice(-2);
+    let hours = date.getHours();
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    const ampm = hours >= 12 ? 'pm' : 'am';
+    hours = hours % 12;
+    hours = hours ? hours : 12; // 0 should be 12
+    return `${day}/${month}/${year} ${hours}:${minutes}${ampm}`;
   };
 
   const formatCurrency = (value) => {
@@ -299,7 +301,7 @@ export default function SavedPrices() {
       ? revenueSegmentValue 
       : (price.revenueSegment || 'unknown');
     const revenueSegment = getRevenueSegmentLabel(actualRevenueSegment).toLowerCase();
-    const date = getSearchableDate(price.updatedAt).toLowerCase();
+    const date = getSearchableDate(price.createdAt).toLowerCase();
     
     return (
       clientName.includes(query) ||
@@ -384,7 +386,7 @@ export default function SavedPrices() {
                 <TableCell>Monthly</TableCell>
                 <TableCell>Once Off</TableCell>
                 <TableCell>Revenue Segment</TableCell>
-                <TableCell>Last Updated</TableCell>
+                <TableCell>Created</TableCell>
                 <TableCell align="right">Actions</TableCell>
               </TableRow>
             </TableHead>
@@ -403,8 +405,8 @@ export default function SavedPrices() {
                   }}
                   onClick={() => handleLoadPrice(price.id)}
                 >
-                  <TableCell sx={{ py: 0.5, fontSize: '0.875rem' }}>
-                    <Typography variant="body2" sx={{ color: 'text.primary', fontWeight: 600 }}>
+                  <TableCell sx={{ py: 0.5 }}>
+                    <Typography variant="body1" sx={{ color: 'text.primary', fontWeight: 600, fontSize: '1rem' }}>
                       {price.clientName || 'Untitled'}
                     </Typography>
                   </TableCell>
@@ -419,8 +421,12 @@ export default function SavedPrices() {
                     <Chip
                       label={getServiceTypeLabel(price)}
                       size="small"
-                      color={price.serviceType === 'bookkeeping' ? 'secondary' : 'primary'}
-                      sx={{ fontWeight: 600, height: 24 }}
+                      sx={{ 
+                        fontWeight: 600, 
+                        height: 24,
+                        backgroundColor: getServiceTypeLabel(price) === 'Bookkeeping' ? '#0891b2' : '#6d28d9',
+                        color: '#ffffff',
+                      }}
                     />
                   </TableCell>
                   <TableCell sx={{ py: 0.5, fontSize: '0.875rem' }}>
@@ -448,7 +454,7 @@ export default function SavedPrices() {
                   </TableCell>
                   <TableCell sx={{ py: 0.5, fontSize: '0.875rem' }}>
                     <Typography variant="body2" sx={{ color: 'text.primary', fontWeight: 500 }}>
-                      {formatDate(price.updatedAt)}
+                      {formatDate(price.createdAt)}
                     </Typography>
                   </TableCell>
                   <TableCell align="right" sx={{ py: 0.5 }}>
