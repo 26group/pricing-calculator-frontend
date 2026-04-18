@@ -78,7 +78,7 @@ export const bookkeepingQuestionData = [
   },
   {
     id: 'q5',
-    prompt: 'How many TIMESHEET employees do they have?',
+    prompt: 'Timesheet ONLY employees.',
     type: 'inputGroup',
     showWhen: (responses) => responses.q3 === 'yes' || responses.q3 === 'yesSetup',
     options: [
@@ -275,7 +275,6 @@ export const bookkeepingQuestionData = [
     id: 'q16',
     prompt: 'Does the client require Debtor Management?',
     type: 'radio',
-    showWhen: (responses) => responses.q14 && responses.q14 !== 'no',
     options: [
       { label: '< 20 debtors/month', value: 'upTo20' },
       { label: '21-50 debtors/month', value: 'upTo50' },
