@@ -21,7 +21,8 @@ import { useNavigate, Navigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { setResponses as setResponsesAction, setQuestionsPricing, setQuestionsOnceOffFee } from '../features/questions/responsesSlice';
 import { setOrganisation } from '../features/auth/authSlice';
-import { calculateTotalMonthlyPrice, calculateTotalOnceOffFee } from '../utils/pricingCalculator';
+import { calculateTotalOnceOffFee } from '../utils/pricingCalculator';
+import { calculateSilverMonthlyPricing } from '../utils/calculateGoldPricing';
 
 // Default pricing modifier (base hourly rate)
 const DEFAULT_PRICING_MODIFIER = 200;
@@ -802,7 +803,7 @@ export default function Questions() {
 
     try {
       setSaveStatus('saving');
-      const totalMonthly = calculateTotalMonthlyPrice(currentResponses, pricingModifier);
+      const totalMonthly = calculateSilverMonthlyPricing(currentResponses, pricingModifier);
       const totalOnceOff = calculateTotalOnceOffFee(currentResponses, pricingModifier);
       // Extract revenue segment from Q1
       const revenueSegment = currentResponses?.q1 || undefined;
@@ -2212,7 +2213,7 @@ export default function Questions() {
   };
 
   const totalMonthlyPrice = useMemo(() => {
-    const price = calculateTotalMonthlyPrice(responses, pricingModifier);
+    const price = calculateSilverMonthlyPricing(responses, pricingModifier);
     console.log('📊 totalMonthlyPrice calculated:', price, 'with pricingModifier:', pricingModifier, 'responses.q1:', responses.q1);
     return price;
   }, [responses, pricingModifier]);
@@ -2233,7 +2234,7 @@ export default function Questions() {
   // Re-dispatch pricing when pricingModifier changes
   useEffect(() => {
     console.log('💰 Pricing modifier changed, recalculating prices with modifier:', pricingModifier);
-    const recalculatedMonthly = calculateTotalMonthlyPrice(responses, pricingModifier);
+    const recalculatedMonthly = calculateSilverMonthlyPricing(responses, pricingModifier);
     const recalculatedOnceOff = calculateTotalOnceOffFee(responses, pricingModifier);
     console.log('💰 Recalculated prices:', { monthly: recalculatedMonthly, onceOff: recalculatedOnceOff, modifier: pricingModifier });
     dispatch(setQuestionsPricing(recalculatedMonthly));
