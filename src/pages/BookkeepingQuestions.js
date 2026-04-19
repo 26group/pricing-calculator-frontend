@@ -23,7 +23,7 @@ import { setResponses as setResponsesAction, setQuestionsPricing, setQuestionsOn
 import { setOrganisation } from '../features/auth/authSlice';
 import { updatePrice } from '../services/priceApi';
 import { bookkeepingQuestionData } from '../constants/bookkeepingQuestions';
-import { calculateBookkeepingMonthlyPrice, calculateBookkeepingOnceOffFee } from '../utils/bookkeepingPricingCalculator';
+import { calculateBookkeepingSilverPrice, calculateBookkeepingOnceOffFee } from '../utils/bookkeepingPricingCalculator';
 
 // Default bookkeeping pricing modifier (base hourly rate: $100/hr)
 const DEFAULT_BOOKKEEPING_PRICING_MODIFIER = 100;
@@ -159,7 +159,7 @@ export default function BookkeepingQuestions() {
 
     try {
       setSaveStatus('saving');
-      const totalMonthly = calculateBookkeepingMonthlyPrice(currentResponses, bookkeepingPricingModifier);
+      const totalMonthly = calculateBookkeepingSilverPrice(currentResponses, bookkeepingPricingModifier);
       const totalOnceOff = calculateBookkeepingOnceOffFee(currentResponses, bookkeepingPricingModifier);
       // Extract revenue segment from Q1 (annual revenue question)
       const revenueSegment = currentResponses?.q1 || undefined;
@@ -772,7 +772,7 @@ export default function BookkeepingQuestions() {
 
   // Calculate monthly price using bookkeeping pricing calculator
   const totalMonthlyPrice = useMemo(() => {
-    return calculateBookkeepingMonthlyPrice(responses, bookkeepingPricingModifier);
+    return calculateBookkeepingSilverPrice(responses, bookkeepingPricingModifier);
   }, [responses, bookkeepingPricingModifier]);
 
   const serviceCatalogPricing = useSelector((state) => state.responses?.serviceCatalogPricing || 0);
@@ -793,7 +793,7 @@ export default function BookkeepingQuestions() {
   
   // Re-dispatch pricing when responses or modifier change
   useEffect(() => {
-    const recalculatedMonthly = calculateBookkeepingMonthlyPrice(responses, bookkeepingPricingModifier);
+    const recalculatedMonthly = calculateBookkeepingSilverPrice(responses, bookkeepingPricingModifier);
     const recalculatedOnceOff = calculateBookkeepingOnceOffFee(responses, bookkeepingPricingModifier);
     dispatch(setQuestionsPricing(recalculatedMonthly));
     dispatch(setQuestionsOnceOffFee(recalculatedOnceOff));
