@@ -526,3 +526,770 @@ export const getBookkeepingOnceOffBreakdown = (responses, pricingModifier = 100)
 
   return items;
 };
+
+/**
+ * Calculates Bronze package pricing for bookkeeping
+ * Bronze is hard-coded to include essential services only:
+ * - Transactions (if selected)
+ * - Team/Email Support only
+ * - BAS/IAS (if selected)
+ * Does NOT include: CSM/Owner Support, Management Meetings, Financial Reporting (Monthly), Debtor Management
+ * @param {Object} responses - Question responses from BookkeepingQuestions.js
+ * @param {number} pricingModifier - Optional pricing modifier from organisation (default 100)
+ * @returns {number} Bronze tier monthly cost
+ */
+export const calculateBookkeepingBronzePrice = (responses, pricingModifier = 100) => {
+  let total = 0;
+  const values = serviceValuesBookkeeping;
+  const multiplier = getPricingMultiplier(pricingModifier);
+
+  // PAYROLL SERVICES (if selected)
+  // Q4: Salaried Employees
+  if ((responses.q3 === 'yes' || responses.q3 === 'yesSetup') && responses.q4 && typeof responses.q4 === 'object') {
+    const { weekly = '', fortnightly = '', monthly = '' } = responses.q4;
+    const salaried = values.payrollServices.salaried;
+
+    const weeklyCount = parseInt(weekly, 10) || 0;
+    if (weeklyCount > 0) {
+      total += (salaried.weekly.ratePerEmployee * weeklyCount * salaried.weekly.frequency) / 12;
+    }
+
+    const fortnightlyCount = parseInt(fortnightly, 10) || 0;
+    if (fortnightlyCount > 0) {
+      total += (salaried.fortnightly.ratePerEmployee * fortnightlyCount * salaried.fortnightly.frequency) / 12;
+    }
+
+    const monthlyCount = parseInt(monthly, 10) || 0;
+    if (monthlyCount > 0) {
+      total += (salaried.monthly.ratePerEmployee * monthlyCount * salaried.monthly.frequency) / 12;
+    }
+  }
+
+  // Q5: Timesheet Employees
+  if ((responses.q3 === 'yes' || responses.q3 === 'yesSetup') && responses.q5 && typeof responses.q5 === 'object') {
+    const { weekly = '', fortnightly = '', monthly = '' } = responses.q5;
+    const timesheet = values.payrollServices.timesheet;
+
+    const weeklyCount = parseInt(weekly, 10) || 0;
+    if (weeklyCount > 0) {
+      total += (timesheet.weekly.ratePerEmployee * weeklyCount * timesheet.weekly.frequency) / 12;
+    }
+
+    const fortnightlyCount = parseInt(fortnightly, 10) || 0;
+    if (fortnightlyCount > 0) {
+      total += (timesheet.fortnightly.ratePerEmployee * fortnightlyCount * timesheet.fortnightly.frequency) / 12;
+    }
+
+    const monthlyCount = parseInt(monthly, 10) || 0;
+    if (monthlyCount > 0) {
+      total += (timesheet.monthly.ratePerEmployee * monthlyCount * timesheet.monthly.frequency) / 12;
+    }
+  }
+
+  // Q6: Super Prep & Lodgement
+  if ((responses.q3 === 'yes' || responses.q3 === 'yesSetup') && responses.q6 && responses.q6 !== 'no') {
+    const superLodge = values.payrollServices.superLodgement;
+    const employeeCount = parseInt(responses.q6a, 10) || 0;
+
+    if (responses.q6 === 'quarterly') {
+      total += (superLodge.quarterly.ratePerEmployee * employeeCount * superLodge.quarterly.frequency) / 12;
+    } else if (responses.q6 === 'monthly') {
+      total += (superLodge.monthly.ratePerEmployee * employeeCount * superLodge.monthly.frequency) / 12;
+    }
+  }
+
+  // Q7: STP Reporting
+  if ((responses.q3 === 'yes' || responses.q3 === 'yesSetup') && responses.q7 && responses.q7 !== 'no') {
+    const stp = values.payrollServices.stpReporting;
+    const employeeCount = parseInt(responses.q7a, 10) || 0;
+
+    if (responses.q7 === 'weekly') {
+      total += (stp.weekly.ratePerEmployee * employeeCount * stp.weekly.frequency) / 12;
+    } else if (responses.q7 === 'fortnightly') {
+      total += (stp.fortnightly.ratePerEmployee * employeeCount * stp.fortnightly.frequency) / 12;
+    } else if (responses.q7 === 'monthly') {
+      total += (stp.monthly.ratePerEmployee * employeeCount * stp.monthly.frequency) / 12;
+    }
+  }
+
+  // Q8: Workers Compensation
+  if ((responses.q3 === 'yes' || responses.q3 === 'yesSetup') && responses.q8 === 'yes') {
+    const workersComp = values.payrollServices.workersComp;
+    const lodgementCount = responses.q8a ? parseInt(responses.q8a, 10) || 1 : 1;
+    total += (workersComp.ratePerLodgement * lodgementCount * workersComp.frequency) / 12;
+  }
+
+  // BOOKKEEPING - TRANSACTIONS (if selected)
+  // Q9: Single Line Bank & Credit Card Transactions
+  if (responses.q9 && responses.q9 !== 'no') {
+    const transactions = values.bookkeepingServices.singleLineTransactions;
+    
+    switch (responses.q9) {
+      case 'upTo100':
+        total += transactions.upTo100.ratePerUnit * transactions.upTo100.maxUnits;
+        break;
+      case 'upTo200':
+        total += transactions.upTo200.ratePerUnit * transactions.upTo200.maxUnits;
+        break;
+      case 'upTo400':
+        total += transactions.upTo400.ratePerUnit * transactions.upTo400.maxUnits;
+        break;
+      case 'over400':
+        total += transactions.upTo400.ratePerUnit * transactions.upTo400.maxUnits;
+        if (responses.q9a) {
+          const extraTransactions = parseInt(responses.q9a, 10) || 0;
+          total += transactions.over400.ratePerUnit * extraTransactions;
+        }
+        break;
+    }
+  }
+
+  // Q10: Multi-Line Transactions
+  if (responses.q10 && typeof responses.q10 === 'object') {
+    const { invoices = '', avgLines = '' } = responses.q10;
+    const invoiceCount = parseInt(invoices, 10) || 0;
+    const avgLineCount = parseInt(avgLines, 10) || 0;
+    
+    if (invoiceCount > 0 && avgLineCount > 0) {
+      total += values.bookkeepingServices.multiLineTransactions.ratePerLine * invoiceCount * avgLineCount;
+    }
+  }
+
+  // Q11: Accounts Payable
+  if (responses.q11 && responses.q11 !== 'no') {
+    const ap = values.bookkeepingServices.accountsPayable;
+
+    switch (responses.q11) {
+      case 'upTo20':
+        total += ap.upTo20.ratePerSupplier * ap.upTo20.maxSuppliers;
+        break;
+      case 'upTo50':
+        total += ap.upTo50.ratePerSupplier * ap.upTo50.maxSuppliers;
+        break;
+      case 'extra':
+        total += ap.upTo50.ratePerSupplier * ap.upTo50.maxSuppliers;
+        if (responses.q11a) {
+          const extraSuppliers = parseInt(responses.q11a, 10) || 0;
+          total += ap.extra.ratePerSupplier * extraSuppliers;
+        }
+        break;
+    }
+  }
+
+  // Q12: TPAR
+  if (responses.q12 === 'yes') {
+    const tpar = values.complianceLodgements.tpar;
+    const tparCount = responses.q12a ? parseInt(responses.q12a, 10) || 1 : 1;
+    total += tpar.ratePerReport * tparCount;
+  }
+
+  // Q13: LSL Construction
+  if (responses.q13 === 'yes') {
+    const lsl = values.complianceLodgements.lslConstruction;
+    const lslCount = responses.q13a ? parseInt(responses.q13a, 10) || 1 : 1;
+    total += lsl.ratePerLodgement * lslCount;
+  }
+
+  // Q14: Accounts Receivable - Single Line AR Invoices
+  if (responses.q14 && responses.q14 !== 'no') {
+    const ar = values.accountsReceivable.singleLineInvoices;
+
+    switch (responses.q14) {
+      case 'upTo20':
+        total += ar.upTo20.ratePerInvoice * ar.upTo20.maxInvoices;
+        break;
+      case 'upTo50':
+        total += ar.upTo50.ratePerInvoice * ar.upTo50.maxInvoices;
+        break;
+      case 'upTo75':
+        total += ar.upTo75.ratePerInvoice * ar.upTo75.maxInvoices;
+        break;
+      case 'over75':
+        total += ar.over75.ratePerInvoice * 75;
+        if (responses.q14a) {
+          const extraInvoices = parseInt(responses.q14a, 10) || 0;
+          total += ar.over75.ratePerInvoice * extraInvoices;
+        }
+        break;
+    }
+  }
+
+  // Q15: Multi-Line AR Invoices
+  if (responses.q14 && responses.q14 !== 'no' && responses.q15 && typeof responses.q15 === 'object') {
+    const { invoices = '', avgLines = '' } = responses.q15;
+    const invoiceCount = parseInt(invoices, 10) || 0;
+    const avgLineCount = parseInt(avgLines, 10) || 0;
+    
+    if (invoiceCount > 0 && avgLineCount > 0) {
+      total += values.accountsReceivable.multiLineInvoices.ratePerLine * invoiceCount * avgLineCount;
+    }
+  }
+
+  // Bronze does NOT include Debtor Management (q16)
+
+  // Bronze does NOT include Financial Reporting (q17)
+
+  // Bronze does NOT include Management Meetings (q18)
+
+  // Q19: BAS/IAS Compliance (if selected)
+  if (responses.q19 && typeof responses.q19 === 'object') {
+    const cs = values.complianceServices;
+
+    if (responses.q19.basQuarterly) {
+      total += cs.basQuarterly.rate;
+    }
+
+    if (responses.q19.basMonthly) {
+      total += cs.basMonthly.rate;
+    }
+
+    if (responses.q19.ias) {
+      total += cs.ias.rate;
+    }
+  }
+
+  // Bronze always includes Team/Email support (hard-coded)
+  total += values.support.emailOnly.monthly;
+
+  // Q21: EOFY (if selected)
+  if (responses.q21 && responses.q21 !== 'no') {
+    const eofy = values.eofyProcess;
+
+    if (responses.q21 === 'microSmall') {
+      total += eofy.microSmall.rate;
+    } else if (responses.q21 === 'mediumLarge') {
+      total += eofy.mediumLarge.rate;
+    }
+  }
+
+  return Math.round(total * multiplier * 100) / 100;
+};
+
+/**
+ * Calculates Silver package pricing for bookkeeping
+ * Silver is based on user selections but with:
+ * 1. Client Service Manager always included (hard-coded for Silver)
+ * 2. Financial Reporting uses Quarterly frequency (if selected)
+ * 3. Management Meetings uses Quarterly frequency (if selected)
+ * @param {Object} responses - Question responses from BookkeepingQuestions.js
+ * @param {number} pricingModifier - Optional pricing modifier from organisation (default 100)
+ * @returns {number} Silver tier monthly cost
+ */
+export const calculateBookkeepingSilverPrice = (responses, pricingModifier = 100) => {
+  let total = 0;
+  const values = serviceValuesBookkeeping;
+  const multiplier = getPricingMultiplier(pricingModifier);
+
+  // All services based on user selection (same as base calculation)
+
+  // PAYROLL SERVICES
+  if ((responses.q3 === 'yes' || responses.q3 === 'yesSetup') && responses.q4 && typeof responses.q4 === 'object') {
+    const { weekly = '', fortnightly = '', monthly = '' } = responses.q4;
+    const salaried = values.payrollServices.salaried;
+
+    const weeklyCount = parseInt(weekly, 10) || 0;
+    if (weeklyCount > 0) {
+      total += (salaried.weekly.ratePerEmployee * weeklyCount * salaried.weekly.frequency) / 12;
+    }
+
+    const fortnightlyCount = parseInt(fortnightly, 10) || 0;
+    if (fortnightlyCount > 0) {
+      total += (salaried.fortnightly.ratePerEmployee * fortnightlyCount * salaried.fortnightly.frequency) / 12;
+    }
+
+    const monthlyCount = parseInt(monthly, 10) || 0;
+    if (monthlyCount > 0) {
+      total += (salaried.monthly.ratePerEmployee * monthlyCount * salaried.monthly.frequency) / 12;
+    }
+  }
+
+  if ((responses.q3 === 'yes' || responses.q3 === 'yesSetup') && responses.q5 && typeof responses.q5 === 'object') {
+    const { weekly = '', fortnightly = '', monthly = '' } = responses.q5;
+    const timesheet = values.payrollServices.timesheet;
+
+    const weeklyCount = parseInt(weekly, 10) || 0;
+    if (weeklyCount > 0) {
+      total += (timesheet.weekly.ratePerEmployee * weeklyCount * timesheet.weekly.frequency) / 12;
+    }
+
+    const fortnightlyCount = parseInt(fortnightly, 10) || 0;
+    if (fortnightlyCount > 0) {
+      total += (timesheet.fortnightly.ratePerEmployee * fortnightlyCount * timesheet.fortnightly.frequency) / 12;
+    }
+
+    const monthlyCount = parseInt(monthly, 10) || 0;
+    if (monthlyCount > 0) {
+      total += (timesheet.monthly.ratePerEmployee * monthlyCount * timesheet.monthly.frequency) / 12;
+    }
+  }
+
+  if ((responses.q3 === 'yes' || responses.q3 === 'yesSetup') && responses.q6 && responses.q6 !== 'no') {
+    const superLodge = values.payrollServices.superLodgement;
+    const employeeCount = parseInt(responses.q6a, 10) || 0;
+
+    if (responses.q6 === 'quarterly') {
+      total += (superLodge.quarterly.ratePerEmployee * employeeCount * superLodge.quarterly.frequency) / 12;
+    } else if (responses.q6 === 'monthly') {
+      total += (superLodge.monthly.ratePerEmployee * employeeCount * superLodge.monthly.frequency) / 12;
+    }
+  }
+
+  if ((responses.q3 === 'yes' || responses.q3 === 'yesSetup') && responses.q7 && responses.q7 !== 'no') {
+    const stp = values.payrollServices.stpReporting;
+    const employeeCount = parseInt(responses.q7a, 10) || 0;
+
+    if (responses.q7 === 'weekly') {
+      total += (stp.weekly.ratePerEmployee * employeeCount * stp.weekly.frequency) / 12;
+    } else if (responses.q7 === 'fortnightly') {
+      total += (stp.fortnightly.ratePerEmployee * employeeCount * stp.fortnightly.frequency) / 12;
+    } else if (responses.q7 === 'monthly') {
+      total += (stp.monthly.ratePerEmployee * employeeCount * stp.monthly.frequency) / 12;
+    }
+  }
+
+  if ((responses.q3 === 'yes' || responses.q3 === 'yesSetup') && responses.q8 === 'yes') {
+    const workersComp = values.payrollServices.workersComp;
+    const lodgementCount = responses.q8a ? parseInt(responses.q8a, 10) || 1 : 1;
+    total += (workersComp.ratePerLodgement * lodgementCount * workersComp.frequency) / 12;
+  }
+
+  // BOOKKEEPING - TRANSACTIONS
+  if (responses.q9 && responses.q9 !== 'no') {
+    const transactions = values.bookkeepingServices.singleLineTransactions;
+    
+    switch (responses.q9) {
+      case 'upTo100':
+        total += transactions.upTo100.ratePerUnit * transactions.upTo100.maxUnits;
+        break;
+      case 'upTo200':
+        total += transactions.upTo200.ratePerUnit * transactions.upTo200.maxUnits;
+        break;
+      case 'upTo400':
+        total += transactions.upTo400.ratePerUnit * transactions.upTo400.maxUnits;
+        break;
+      case 'over400':
+        total += transactions.upTo400.ratePerUnit * transactions.upTo400.maxUnits;
+        if (responses.q9a) {
+          const extraTransactions = parseInt(responses.q9a, 10) || 0;
+          total += transactions.over400.ratePerUnit * extraTransactions;
+        }
+        break;
+    }
+  }
+
+  if (responses.q10 && typeof responses.q10 === 'object') {
+    const { invoices = '', avgLines = '' } = responses.q10;
+    const invoiceCount = parseInt(invoices, 10) || 0;
+    const avgLineCount = parseInt(avgLines, 10) || 0;
+    
+    if (invoiceCount > 0 && avgLineCount > 0) {
+      total += values.bookkeepingServices.multiLineTransactions.ratePerLine * invoiceCount * avgLineCount;
+    }
+  }
+
+  if (responses.q11 && responses.q11 !== 'no') {
+    const ap = values.bookkeepingServices.accountsPayable;
+
+    switch (responses.q11) {
+      case 'upTo20':
+        total += ap.upTo20.ratePerSupplier * ap.upTo20.maxSuppliers;
+        break;
+      case 'upTo50':
+        total += ap.upTo50.ratePerSupplier * ap.upTo50.maxSuppliers;
+        break;
+      case 'extra':
+        total += ap.upTo50.ratePerSupplier * ap.upTo50.maxSuppliers;
+        if (responses.q11a) {
+          const extraSuppliers = parseInt(responses.q11a, 10) || 0;
+          total += ap.extra.ratePerSupplier * extraSuppliers;
+        }
+        break;
+    }
+  }
+
+  // COMPLIANCE LODGEMENTS
+  if (responses.q12 === 'yes') {
+    const tpar = values.complianceLodgements.tpar;
+    const tparCount = responses.q12a ? parseInt(responses.q12a, 10) || 1 : 1;
+    total += tpar.ratePerReport * tparCount;
+  }
+
+  if (responses.q13 === 'yes') {
+    const lsl = values.complianceLodgements.lslConstruction;
+    const lslCount = responses.q13a ? parseInt(responses.q13a, 10) || 1 : 1;
+    total += lsl.ratePerLodgement * lslCount;
+  }
+
+  // ACCOUNTS RECEIVABLE
+  if (responses.q14 && responses.q14 !== 'no') {
+    const ar = values.accountsReceivable.singleLineInvoices;
+
+    switch (responses.q14) {
+      case 'upTo20':
+        total += ar.upTo20.ratePerInvoice * ar.upTo20.maxInvoices;
+        break;
+      case 'upTo50':
+        total += ar.upTo50.ratePerInvoice * ar.upTo50.maxInvoices;
+        break;
+      case 'upTo75':
+        total += ar.upTo75.ratePerInvoice * ar.upTo75.maxInvoices;
+        break;
+      case 'over75':
+        total += ar.over75.ratePerInvoice * 75;
+        if (responses.q14a) {
+          const extraInvoices = parseInt(responses.q14a, 10) || 0;
+          total += ar.over75.ratePerInvoice * extraInvoices;
+        }
+        break;
+    }
+  }
+
+  if (responses.q14 && responses.q14 !== 'no' && responses.q15 && typeof responses.q15 === 'object') {
+    const { invoices = '', avgLines = '' } = responses.q15;
+    const invoiceCount = parseInt(invoices, 10) || 0;
+    const avgLineCount = parseInt(avgLines, 10) || 0;
+    
+    if (invoiceCount > 0 && avgLineCount > 0) {
+      total += values.accountsReceivable.multiLineInvoices.ratePerLine * invoiceCount * avgLineCount;
+    }
+  }
+
+  // Q16: Debtor Management (if selected)
+  if (responses.q16 && responses.q16 !== 'no') {
+    const dm = values.accountsReceivable.debtorManagement;
+
+    switch (responses.q16) {
+      case 'upTo20':
+        total += dm.upTo20.ratePerDebtor * dm.upTo20.maxDebtors;
+        break;
+      case 'upTo50':
+        total += dm.upTo50.ratePerDebtor * dm.upTo50.maxDebtors;
+        break;
+      case 'extra':
+        total += dm.upTo50.ratePerDebtor * dm.upTo50.maxDebtors;
+        if (responses.q16a) {
+          const extraDebtors = parseInt(responses.q16a, 10) || 0;
+          total += dm.extra.ratePerDebtor * extraDebtors;
+        }
+        break;
+    }
+  }
+
+  // Q17: Financial Reporting - SILVER uses Quarterly (if selected)
+  if (responses.q17 && responses.q17 !== 'no') {
+    const fr = values.financialReporting;
+    // Silver always uses quarterly rate when this service is selected
+    total += fr.quarterly.rate;
+  }
+
+  // Q18: Management Meetings - SILVER uses Quarterly (if selected)
+  if (responses.q18 && responses.q18 !== 'no') {
+    const mm = values.managementMeetings;
+    // Silver always uses quarterly rate when this service is selected
+    total += mm.quarterly.rate;
+  }
+
+  // Q19: Compliance Services
+  if (responses.q19 && typeof responses.q19 === 'object') {
+    const cs = values.complianceServices;
+
+    if (responses.q19.basQuarterly) {
+      total += cs.basQuarterly.rate;
+    }
+
+    if (responses.q19.basMonthly) {
+      total += cs.basMonthly.rate;
+    }
+
+    if (responses.q19.ias) {
+      total += cs.ias.rate;
+    }
+  }
+
+  // Q20: Support - Silver ALWAYS includes CSM (hard-coded)
+  // Team/Email support based on selection
+  if (responses.q20 === 'emailOnly') {
+    total += values.support.emailOnly.monthly;
+  }
+  // Always add CSM for Silver
+  total += values.support.emailPhoneTeamCsm.monthly;
+
+  // Q21: EOFY
+  if (responses.q21 && responses.q21 !== 'no') {
+    const eofy = values.eofyProcess;
+
+    if (responses.q21 === 'microSmall') {
+      total += eofy.microSmall.rate;
+    } else if (responses.q21 === 'mediumLarge') {
+      total += eofy.mediumLarge.rate;
+    }
+  }
+
+  return Math.round(total * multiplier * 100) / 100;
+};
+
+/**
+ * Calculates Gold package pricing for bookkeeping
+ * Gold is based on user selections but with:
+ * 1. Principal/Owner support always included (hard-coded for Gold)
+ * 2. Client Service Manager always included (hard-coded for Gold)
+ * 3. Financial Reporting uses Monthly frequency (if selected)
+ * 4. Management Meetings uses Monthly frequency (if selected)
+ * @param {Object} responses - Question responses from BookkeepingQuestions.js
+ * @param {number} pricingModifier - Optional pricing modifier from organisation (default 100)
+ * @returns {number} Gold tier monthly cost
+ */
+export const calculateBookkeepingGoldPrice = (responses, pricingModifier = 100) => {
+  let total = 0;
+  const values = serviceValuesBookkeeping;
+  const multiplier = getPricingMultiplier(pricingModifier);
+
+  // All services based on user selection
+
+  // PAYROLL SERVICES
+  if ((responses.q3 === 'yes' || responses.q3 === 'yesSetup') && responses.q4 && typeof responses.q4 === 'object') {
+    const { weekly = '', fortnightly = '', monthly = '' } = responses.q4;
+    const salaried = values.payrollServices.salaried;
+
+    const weeklyCount = parseInt(weekly, 10) || 0;
+    if (weeklyCount > 0) {
+      total += (salaried.weekly.ratePerEmployee * weeklyCount * salaried.weekly.frequency) / 12;
+    }
+
+    const fortnightlyCount = parseInt(fortnightly, 10) || 0;
+    if (fortnightlyCount > 0) {
+      total += (salaried.fortnightly.ratePerEmployee * fortnightlyCount * salaried.fortnightly.frequency) / 12;
+    }
+
+    const monthlyCount = parseInt(monthly, 10) || 0;
+    if (monthlyCount > 0) {
+      total += (salaried.monthly.ratePerEmployee * monthlyCount * salaried.monthly.frequency) / 12;
+    }
+  }
+
+  if ((responses.q3 === 'yes' || responses.q3 === 'yesSetup') && responses.q5 && typeof responses.q5 === 'object') {
+    const { weekly = '', fortnightly = '', monthly = '' } = responses.q5;
+    const timesheet = values.payrollServices.timesheet;
+
+    const weeklyCount = parseInt(weekly, 10) || 0;
+    if (weeklyCount > 0) {
+      total += (timesheet.weekly.ratePerEmployee * weeklyCount * timesheet.weekly.frequency) / 12;
+    }
+
+    const fortnightlyCount = parseInt(fortnightly, 10) || 0;
+    if (fortnightlyCount > 0) {
+      total += (timesheet.fortnightly.ratePerEmployee * fortnightlyCount * timesheet.fortnightly.frequency) / 12;
+    }
+
+    const monthlyCount = parseInt(monthly, 10) || 0;
+    if (monthlyCount > 0) {
+      total += (timesheet.monthly.ratePerEmployee * monthlyCount * timesheet.monthly.frequency) / 12;
+    }
+  }
+
+  if ((responses.q3 === 'yes' || responses.q3 === 'yesSetup') && responses.q6 && responses.q6 !== 'no') {
+    const superLodge = values.payrollServices.superLodgement;
+    const employeeCount = parseInt(responses.q6a, 10) || 0;
+
+    if (responses.q6 === 'quarterly') {
+      total += (superLodge.quarterly.ratePerEmployee * employeeCount * superLodge.quarterly.frequency) / 12;
+    } else if (responses.q6 === 'monthly') {
+      total += (superLodge.monthly.ratePerEmployee * employeeCount * superLodge.monthly.frequency) / 12;
+    }
+  }
+
+  if ((responses.q3 === 'yes' || responses.q3 === 'yesSetup') && responses.q7 && responses.q7 !== 'no') {
+    const stp = values.payrollServices.stpReporting;
+    const employeeCount = parseInt(responses.q7a, 10) || 0;
+
+    if (responses.q7 === 'weekly') {
+      total += (stp.weekly.ratePerEmployee * employeeCount * stp.weekly.frequency) / 12;
+    } else if (responses.q7 === 'fortnightly') {
+      total += (stp.fortnightly.ratePerEmployee * employeeCount * stp.fortnightly.frequency) / 12;
+    } else if (responses.q7 === 'monthly') {
+      total += (stp.monthly.ratePerEmployee * employeeCount * stp.monthly.frequency) / 12;
+    }
+  }
+
+  if ((responses.q3 === 'yes' || responses.q3 === 'yesSetup') && responses.q8 === 'yes') {
+    const workersComp = values.payrollServices.workersComp;
+    const lodgementCount = responses.q8a ? parseInt(responses.q8a, 10) || 1 : 1;
+    total += (workersComp.ratePerLodgement * lodgementCount * workersComp.frequency) / 12;
+  }
+
+  // BOOKKEEPING - TRANSACTIONS
+  if (responses.q9 && responses.q9 !== 'no') {
+    const transactions = values.bookkeepingServices.singleLineTransactions;
+    
+    switch (responses.q9) {
+      case 'upTo100':
+        total += transactions.upTo100.ratePerUnit * transactions.upTo100.maxUnits;
+        break;
+      case 'upTo200':
+        total += transactions.upTo200.ratePerUnit * transactions.upTo200.maxUnits;
+        break;
+      case 'upTo400':
+        total += transactions.upTo400.ratePerUnit * transactions.upTo400.maxUnits;
+        break;
+      case 'over400':
+        total += transactions.upTo400.ratePerUnit * transactions.upTo400.maxUnits;
+        if (responses.q9a) {
+          const extraTransactions = parseInt(responses.q9a, 10) || 0;
+          total += transactions.over400.ratePerUnit * extraTransactions;
+        }
+        break;
+    }
+  }
+
+  if (responses.q10 && typeof responses.q10 === 'object') {
+    const { invoices = '', avgLines = '' } = responses.q10;
+    const invoiceCount = parseInt(invoices, 10) || 0;
+    const avgLineCount = parseInt(avgLines, 10) || 0;
+    
+    if (invoiceCount > 0 && avgLineCount > 0) {
+      total += values.bookkeepingServices.multiLineTransactions.ratePerLine * invoiceCount * avgLineCount;
+    }
+  }
+
+  if (responses.q11 && responses.q11 !== 'no') {
+    const ap = values.bookkeepingServices.accountsPayable;
+
+    switch (responses.q11) {
+      case 'upTo20':
+        total += ap.upTo20.ratePerSupplier * ap.upTo20.maxSuppliers;
+        break;
+      case 'upTo50':
+        total += ap.upTo50.ratePerSupplier * ap.upTo50.maxSuppliers;
+        break;
+      case 'extra':
+        total += ap.upTo50.ratePerSupplier * ap.upTo50.maxSuppliers;
+        if (responses.q11a) {
+          const extraSuppliers = parseInt(responses.q11a, 10) || 0;
+          total += ap.extra.ratePerSupplier * extraSuppliers;
+        }
+        break;
+    }
+  }
+
+  // COMPLIANCE LODGEMENTS
+  if (responses.q12 === 'yes') {
+    const tpar = values.complianceLodgements.tpar;
+    const tparCount = responses.q12a ? parseInt(responses.q12a, 10) || 1 : 1;
+    total += tpar.ratePerReport * tparCount;
+  }
+
+  if (responses.q13 === 'yes') {
+    const lsl = values.complianceLodgements.lslConstruction;
+    const lslCount = responses.q13a ? parseInt(responses.q13a, 10) || 1 : 1;
+    total += lsl.ratePerLodgement * lslCount;
+  }
+
+  // ACCOUNTS RECEIVABLE
+  if (responses.q14 && responses.q14 !== 'no') {
+    const ar = values.accountsReceivable.singleLineInvoices;
+
+    switch (responses.q14) {
+      case 'upTo20':
+        total += ar.upTo20.ratePerInvoice * ar.upTo20.maxInvoices;
+        break;
+      case 'upTo50':
+        total += ar.upTo50.ratePerInvoice * ar.upTo50.maxInvoices;
+        break;
+      case 'upTo75':
+        total += ar.upTo75.ratePerInvoice * ar.upTo75.maxInvoices;
+        break;
+      case 'over75':
+        total += ar.over75.ratePerInvoice * 75;
+        if (responses.q14a) {
+          const extraInvoices = parseInt(responses.q14a, 10) || 0;
+          total += ar.over75.ratePerInvoice * extraInvoices;
+        }
+        break;
+    }
+  }
+
+  if (responses.q14 && responses.q14 !== 'no' && responses.q15 && typeof responses.q15 === 'object') {
+    const { invoices = '', avgLines = '' } = responses.q15;
+    const invoiceCount = parseInt(invoices, 10) || 0;
+    const avgLineCount = parseInt(avgLines, 10) || 0;
+    
+    if (invoiceCount > 0 && avgLineCount > 0) {
+      total += values.accountsReceivable.multiLineInvoices.ratePerLine * invoiceCount * avgLineCount;
+    }
+  }
+
+  // Q16: Debtor Management (if selected)
+  if (responses.q16 && responses.q16 !== 'no') {
+    const dm = values.accountsReceivable.debtorManagement;
+
+    switch (responses.q16) {
+      case 'upTo20':
+        total += dm.upTo20.ratePerDebtor * dm.upTo20.maxDebtors;
+        break;
+      case 'upTo50':
+        total += dm.upTo50.ratePerDebtor * dm.upTo50.maxDebtors;
+        break;
+      case 'extra':
+        total += dm.upTo50.ratePerDebtor * dm.upTo50.maxDebtors;
+        if (responses.q16a) {
+          const extraDebtors = parseInt(responses.q16a, 10) || 0;
+          total += dm.extra.ratePerDebtor * extraDebtors;
+        }
+        break;
+    }
+  }
+
+  // Q17: Financial Reporting - GOLD uses Monthly (if selected)
+  if (responses.q17 && responses.q17 !== 'no') {
+    const fr = values.financialReporting;
+    // Gold always uses monthly rate when this service is selected
+    total += fr.monthly.rate;
+  }
+
+  // Q18: Management Meetings - GOLD uses Monthly (if selected)
+  if (responses.q18 && responses.q18 !== 'no') {
+    const mm = values.managementMeetings;
+    // Gold always uses monthly rate when this service is selected
+    total += mm.monthly.rate;
+  }
+
+  // Q19: Compliance Services
+  if (responses.q19 && typeof responses.q19 === 'object') {
+    const cs = values.complianceServices;
+
+    if (responses.q19.basQuarterly) {
+      total += cs.basQuarterly.rate;
+    }
+
+    if (responses.q19.basMonthly) {
+      total += cs.basMonthly.rate;
+    }
+
+    if (responses.q19.ias) {
+      total += cs.ias.rate;
+    }
+  }
+
+  // Q20: Support - Gold ALWAYS includes CSM AND Principal/Owner (hard-coded)
+  // Team/Email support based on selection
+  if (responses.q20 === 'emailOnly') {
+    total += values.support.emailOnly.monthly;
+  }
+  // Always add CSM for Gold
+  total += values.support.emailPhoneTeamCsm.monthly;
+  // Always add Principal/Owner for Gold
+  total += values.support.emailPhoneCsmOwner.monthly;
+
+  // Q21: EOFY
+  if (responses.q21 && responses.q21 !== 'no') {
+    const eofy = values.eofyProcess;
+
+    if (responses.q21 === 'microSmall') {
+      total += eofy.microSmall.rate;
+    } else if (responses.q21 === 'mediumLarge') {
+      total += eofy.mediumLarge.rate;
+    }
+  }
+
+  return Math.round(total * multiplier * 100) / 100;
+};

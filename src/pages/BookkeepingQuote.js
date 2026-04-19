@@ -33,11 +33,11 @@ import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { createPrice, updatePrice } from '../services/priceApi';
-import { calculateBookkeepingMonthlyPrice, calculateBookkeepingOnceOffFee, getBookkeepingOnceOffBreakdown } from '../utils/bookkeepingPricingCalculator';
+import { calculateBookkeepingBronzePrice, calculateBookkeepingSilverPrice, calculateBookkeepingGoldPrice, calculateBookkeepingOnceOffFee, getBookkeepingOnceOffBreakdown } from '../utils/bookkeepingPricingCalculator';
 
 // Helper components
-const CheckMark = () => <CheckCircleIcon sx={{ color: '#4caf50', fontSize: 28 }} />;
-const NotIncluded = () => <CancelIcon sx={{ color: '#e0e0e0', fontSize: 28 }} />;
+const CheckMark = () => <CheckCircleIcon sx={{ color: '#4caf50', fontSize: 20 }} />;
+const NotIncluded = () => <CancelIcon sx={{ color: '#e0e0e0', fontSize: 20 }} />;
 
 const formatCurrency = (value) => {
   if (typeof value !== 'number' || isNaN(value)) return '$0.00';
@@ -75,15 +75,12 @@ export default function BookkeepingQuote() {
   const organisation = useSelector((state) => state.auth.organisation);
   const bookkeepingPricingModifier = organisation?.bookkeepingPricingModifier ?? 100;
 
-  // Calculate pricing from bookkeeping responses with modifier
-  const monthlyPricing = calculateBookkeepingMonthlyPrice(bookkeepingResponses, bookkeepingPricingModifier);
+  // Calculate pricing from bookkeeping responses with modifier using tier-specific calculators
+  const bronzeMonthly = calculateBookkeepingBronzePrice(bookkeepingResponses, bookkeepingPricingModifier);
+  const silverMonthly = calculateBookkeepingSilverPrice(bookkeepingResponses, bookkeepingPricingModifier);
+  const goldMonthly = calculateBookkeepingGoldPrice(bookkeepingResponses, bookkeepingPricingModifier);
   const onceOffPricing = calculateBookkeepingOnceOffFee(bookkeepingResponses, bookkeepingPricingModifier);
   const onceOffBreakdown = getBookkeepingOnceOffBreakdown(bookkeepingResponses, bookkeepingPricingModifier);
-
-  // Tier pricing (Bronze = base, Silver = +15%, Gold = +30%)
-  const bronzeMonthly = monthlyPricing;
-  const silverMonthly = Math.round(monthlyPricing * 1.15 * 100) / 100;
-  const goldMonthly = Math.round(monthlyPricing * 1.30 * 100) / 100;
 
   // Dialog state
   const [openSaveDialog, setOpenSaveDialog] = useState(false);
@@ -106,7 +103,7 @@ export default function BookkeepingQuote() {
         priceType: 'bookkeeping',
         questionResponses: bookkeepingResponses,
         revenueSegment: revenueSegmentValue,
-        questionsPricing: monthlyPricing,
+        questionsPricing: silverMonthly,
         questionsOnceOffFee: onceOffPricing,
         bronzeMonthly,
         silverMonthly,
@@ -122,7 +119,7 @@ export default function BookkeepingQuote() {
       setAutoSaveStatus('error');
       setTimeout(() => setAutoSaveStatus('idle'), 3000);
     }
-  }, [activePriceId, bookkeepingResponses, monthlyPricing, onceOffPricing, bronzeMonthly, silverMonthly, goldMonthly]);
+  }, [activePriceId, bookkeepingResponses, onceOffPricing, bronzeMonthly, silverMonthly, goldMonthly]);
 
   useEffect(() => {
     if (!activePriceId) return;
@@ -149,48 +146,6 @@ export default function BookkeepingQuote() {
   const hasCompliance = bookkeepingResponses.q19 && 
     (bookkeepingResponses.q19.basQuarterly || bookkeepingResponses.q19.basMonthly || bookkeepingResponses.q19.ias);
   const hasEOFY = bookkeepingResponses.q21 && bookkeepingResponses.q21 !== 'no';
-
-  // Get support level text
-  const getSupportText = (selection) => {
-    switch (selection) {
-      case 'emailOnly':
-        return (
-          <Typography variant="body2">
-            Email Only
-            <br />
-            Unlimited
-          </Typography>
-        );
-      case 'emailPhoneTeamCsm':
-        return (
-          <Typography variant="body2">
-            Email & Phone
-            <br />
-            Team & CSM
-          </Typography>
-        );
-      case 'emailPhoneCsmOwner':
-        return (
-          <Typography variant="body2">
-            Email & Phone
-            <br />
-            CSM & Owner
-          </Typography>
-        );
-      default:
-        return null;
-    }
-  };
-
-  const supportText = getSupportText(bookkeepingResponses.q20);
-
-  // Get reporting frequency
-  const reportingFrequency = bookkeepingResponses.q17 === 'monthly' ? 'Monthly' : 
-                             bookkeepingResponses.q17 === 'quarterly' ? 'Quarterly' : null;
-  
-  // Get meetings frequency
-  const meetingsFrequency = bookkeepingResponses.q18 === 'monthly' ? 'Monthly' :
-                            bookkeepingResponses.q18 === 'quarterly' ? 'Quarterly' : null;
 
   const handleOpenSaveDialog = () => {
     setSaveError('');
@@ -224,7 +179,7 @@ export default function BookkeepingQuote() {
         revenueSegment: revenueSegmentValue,
         notes,
         questionResponses: bookkeepingResponses,
-        questionsPricing: monthlyPricing,
+        questionsPricing: silverMonthly,
         questionsOnceOffFee: onceOffPricing,
         bronzeMonthly,
         silverMonthly,
@@ -257,66 +212,46 @@ export default function BookkeepingQuote() {
   };
 
   const pricingRows = [
-    {
-      feature: 'Payroll Services\nProcessing payroll and employee payments',
-      bronze: hasPayroll ? <CheckMark /> : <NotIncluded />,
-      silver: hasPayroll ? <CheckMark /> : <NotIncluded />,
-      gold: <CheckMark />,
-    },
-    {
-      feature: 'Bookkeeping\nTransaction processing and reconciliation',
-      bronze: hasTransactions ? <CheckMark /> : <NotIncluded />,
-      silver: hasTransactions ? <CheckMark /> : <NotIncluded />,
-      gold: <CheckMark />,
-    },
-    {
-      feature: 'Accounts Payable\nManaging supplier bills and payments',
-      bronze: hasAccountsPayable ? <CheckMark /> : <NotIncluded />,
-      silver: hasAccountsPayable ? <CheckMark /> : <NotIncluded />,
-      gold: <CheckMark />,
-    },
-    {
-      feature: 'Accounts Receivable\nInvoicing and payment collection',
-      bronze: hasAccountsReceivable ? <CheckMark /> : <NotIncluded />,
-      silver: hasAccountsReceivable ? <CheckMark /> : <NotIncluded />,
-      gold: <CheckMark />,
-    },
-    {
-      feature: 'Debtor Management\nChasing overdue invoices',
-      bronze: hasDebtorManagement ? <CheckMark /> : <NotIncluded />,
-      silver: hasDebtorManagement ? <CheckMark /> : <NotIncluded />,
-      gold: <CheckMark />,
-    },
-    {
-      feature: 'Financial Reports\nManagement reporting to track performance',
-      bronze: hasReporting ? <Typography variant="body2">{reportingFrequency}</Typography> : <NotIncluded />,
-      silver: hasReporting ? <Typography variant="body2">{reportingFrequency}</Typography> : <Typography variant="body2">Quarterly</Typography>,
-      gold: hasReporting ? <Typography variant="body2">{reportingFrequency}</Typography> : <Typography variant="body2">Monthly</Typography>,
-    },
-    {
-      feature: 'Management Meetings\nReview and discuss the numbers',
-      bronze: hasMeetings ? <Typography variant="body2">{meetingsFrequency}</Typography> : <NotIncluded />,
-      silver: hasMeetings ? <Typography variant="body2">{meetingsFrequency}</Typography> : <Typography variant="body2">Quarterly</Typography>,
-      gold: hasMeetings ? <Typography variant="body2">{meetingsFrequency}</Typography> : <Typography variant="body2">Monthly</Typography>,
-    },
-    {
-      feature: 'BAS/IAS Lodgements\nCompliance lodgements on time',
-      bronze: hasCompliance ? <CheckMark /> : <NotIncluded />,
-      silver: hasCompliance ? <CheckMark /> : <NotIncluded />,
-      gold: <CheckMark />,
-    },
-    {
-      feature: 'EOFY Workpapers\nYear-end preparation for your accountant',
-      bronze: hasEOFY ? <CheckMark /> : <NotIncluded />,
-      silver: hasEOFY ? <CheckMark /> : <NotIncluded />,
-      gold: <CheckMark />,
-    },
-    {
-      feature: 'Access and Support\nAsk us any time, we are here to help',
-      bronze: supportText || <NotIncluded />,
-      silver: supportText || <NotIncluded />,
-      gold: supportText || <NotIncluded />,
-    },
+    // PAYROLL SERVICES CATEGORY
+    { feature: 'Payroll Services', isCategory: true },
+    { feature: 'Salaried Employees', bronze: hasPayroll ? <CheckMark /> : <NotIncluded />, silver: hasPayroll ? <CheckMark /> : <NotIncluded />, gold: hasPayroll ? <CheckMark /> : <NotIncluded /> },
+    { feature: 'Timesheet Employees', bronze: hasPayroll ? <CheckMark /> : <NotIncluded />, silver: hasPayroll ? <CheckMark /> : <NotIncluded />, gold: hasPayroll ? <CheckMark /> : <NotIncluded /> },
+    { feature: 'Super Prep & Lodgement', bronze: (bookkeepingResponses.q6 && bookkeepingResponses.q6 !== 'no') ? <CheckMark /> : <NotIncluded />, silver: (bookkeepingResponses.q6 && bookkeepingResponses.q6 !== 'no') ? <CheckMark /> : <NotIncluded />, gold: (bookkeepingResponses.q6 && bookkeepingResponses.q6 !== 'no') ? <CheckMark /> : <NotIncluded /> },
+    { feature: 'STP Reporting', bronze: (bookkeepingResponses.q7 && bookkeepingResponses.q7 !== 'no') ? <CheckMark /> : <NotIncluded />, silver: (bookkeepingResponses.q7 && bookkeepingResponses.q7 !== 'no') ? <CheckMark /> : <NotIncluded />, gold: (bookkeepingResponses.q7 && bookkeepingResponses.q7 !== 'no') ? <CheckMark /> : <NotIncluded /> },
+    { feature: 'Workers Compensation', bronze: bookkeepingResponses.q8 === 'yes' ? <CheckMark /> : <NotIncluded />, silver: bookkeepingResponses.q8 === 'yes' ? <CheckMark /> : <NotIncluded />, gold: bookkeepingResponses.q8 === 'yes' ? <CheckMark /> : <NotIncluded /> },
+    
+    // BOOKKEEPING SERVICES CATEGORY
+    { feature: 'Bookkeeping Services', isCategory: true },
+    { feature: 'Bank & CC Transactions', bronze: hasTransactions ? <CheckMark /> : <NotIncluded />, silver: hasTransactions ? <CheckMark /> : <NotIncluded />, gold: hasTransactions ? <CheckMark /> : <NotIncluded /> },
+    { feature: 'Multi-Line Transactions', bronze: (bookkeepingResponses.q10 && bookkeepingResponses.q10.invoices) ? <CheckMark /> : <NotIncluded />, silver: (bookkeepingResponses.q10 && bookkeepingResponses.q10.invoices) ? <CheckMark /> : <NotIncluded />, gold: (bookkeepingResponses.q10 && bookkeepingResponses.q10.invoices) ? <CheckMark /> : <NotIncluded /> },
+    { feature: 'Accounts Payable', bronze: hasAccountsPayable ? <CheckMark /> : <NotIncluded />, silver: hasAccountsPayable ? <CheckMark /> : <NotIncluded />, gold: hasAccountsPayable ? <CheckMark /> : <NotIncluded /> },
+    
+    // ACCOUNTS RECEIVABLE CATEGORY
+    { feature: 'Accounts Receivable', isCategory: true },
+    { feature: 'Single Line Invoices', bronze: hasAccountsReceivable ? <CheckMark /> : <NotIncluded />, silver: hasAccountsReceivable ? <CheckMark /> : <NotIncluded />, gold: hasAccountsReceivable ? <CheckMark /> : <NotIncluded /> },
+    { feature: 'Multi-Line AR Invoices', bronze: (bookkeepingResponses.q15 && bookkeepingResponses.q15.invoices) ? <CheckMark /> : <NotIncluded />, silver: (bookkeepingResponses.q15 && bookkeepingResponses.q15.invoices) ? <CheckMark /> : <NotIncluded />, gold: (bookkeepingResponses.q15 && bookkeepingResponses.q15.invoices) ? <CheckMark /> : <NotIncluded /> },
+    { feature: 'Debtor Management', bronze: <NotIncluded />, silver: hasDebtorManagement ? <CheckMark /> : <NotIncluded />, gold: hasDebtorManagement ? <CheckMark /> : <NotIncluded /> },
+    
+    // COMPLIANCE LODGEMENTS CATEGORY
+    { feature: 'Compliance Lodgements', isCategory: true },
+    { feature: 'TPAR', bronze: bookkeepingResponses.q12 === 'yes' ? <CheckMark /> : <NotIncluded />, silver: bookkeepingResponses.q12 === 'yes' ? <CheckMark /> : <NotIncluded />, gold: bookkeepingResponses.q12 === 'yes' ? <CheckMark /> : <NotIncluded /> },
+    { feature: 'LSL Construction', bronze: bookkeepingResponses.q13 === 'yes' ? <CheckMark /> : <NotIncluded />, silver: bookkeepingResponses.q13 === 'yes' ? <CheckMark /> : <NotIncluded />, gold: bookkeepingResponses.q13 === 'yes' ? <CheckMark /> : <NotIncluded /> },
+    { feature: 'BAS/IAS Lodgements', bronze: hasCompliance ? <CheckMark /> : <NotIncluded />, silver: hasCompliance ? <CheckMark /> : <NotIncluded />, gold: hasCompliance ? <CheckMark /> : <NotIncluded /> },
+    
+    // REPORTING CATEGORY
+    { feature: 'Reporting', isCategory: true },
+    { feature: 'Financial Reports', bronze: <NotIncluded />, silver: hasReporting ? <Typography variant="body2">Quarterly</Typography> : <NotIncluded />, gold: hasReporting ? <Typography variant="body2">Monthly</Typography> : <NotIncluded /> },
+    { feature: 'Management Meetings', bronze: <NotIncluded />, silver: hasMeetings ? <Typography variant="body2">Quarterly</Typography> : <NotIncluded />, gold: hasMeetings ? <Typography variant="body2">Monthly</Typography> : <NotIncluded /> },
+    
+    // EOFY CATEGORY
+    { feature: 'Year End', isCategory: true },
+    { feature: 'EOFY Workpapers', bronze: hasEOFY ? <CheckMark /> : <NotIncluded />, silver: hasEOFY ? <CheckMark /> : <NotIncluded />, gold: hasEOFY ? <CheckMark /> : <NotIncluded /> },
+    
+    // SUPPORT SERVICES CATEGORY (hard-coded per tier)
+    { feature: 'Support Services', isCategory: true },
+    { feature: 'Team / Email Support', bronze: <CheckMark />, silver: <NotIncluded />, gold: <NotIncluded /> },
+    { feature: 'Client Service Manager', bronze: <NotIncluded />, silver: <CheckMark />, gold: <NotIncluded /> },
+    { feature: 'Principal / Owner', bronze: <NotIncluded />, silver: <NotIncluded />, gold: <CheckMark /> },
   ];
 
   return (
@@ -352,48 +287,76 @@ export default function BookkeepingQuote() {
             <TableHead>
               <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
                 <TableCell sx={{ fontWeight: 'bold', fontSize: '1rem', minWidth: '280px' }}>
-                  Packages
+                  Service Category
                 </TableCell>
                 <TableCell align="center" sx={{ fontWeight: 'bold', fontSize: '1rem' }}>
                   Bronze
                   <Typography variant="caption" display="block" sx={{ fontWeight: 'normal', mt: 0.5 }}>
-                    Essential services
+                    Compliance essentials
                   </Typography>
                 </TableCell>
                 <TableCell align="center" sx={{ fontWeight: 'bold', fontSize: '1rem' }}>
                   Silver
                   <Typography variant="caption" display="block" sx={{ fontWeight: 'normal', mt: 0.5 }}>
-                    Enhanced support
+                    Stay informed & compliant
                   </Typography>
                 </TableCell>
                 <TableCell align="center" sx={{ fontWeight: 'bold', fontSize: '1rem' }}>
                   Gold
                   <Typography variant="caption" display="block" sx={{ fontWeight: 'normal', mt: 0.5 }}>
-                    Full service package
+                    Full service & advisory
                   </Typography>
                 </TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {pricingRows.map((row, index) => (
-                <TableRow key={index} sx={{ '&:nth-of-type(odd)': { backgroundColor: '#fafafa' } }}>
-                  <TableCell sx={{ fontWeight: 500, whiteSpace: 'pre-wrap', fontSize: '0.95rem' }}>
-                    {row.feature}
-                  </TableCell>
-                  <TableCell align="center">{row.bronze}</TableCell>
-                  <TableCell align="center">{row.silver}</TableCell>
-                  <TableCell align="center">{row.gold}</TableCell>
-                </TableRow>
+                row.isCategory ? (
+                  <TableRow 
+                    key={index} 
+                    sx={{ backgroundColor: '#e8eef4' }}
+                  >
+                    <TableCell 
+                      colSpan={4}
+                      sx={{ 
+                        fontWeight: 600, 
+                        fontSize: '0.85rem',
+                        py: 0.5,
+                      }}
+                    >
+                      {row.feature}
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  <TableRow 
+                    key={index} 
+                    sx={{ '&:hover': { backgroundColor: '#fafafa' } }}
+                  >
+                    <TableCell 
+                      sx={{ 
+                        fontSize: '0.8rem',
+                        pl: 3,
+                        py: 0.25,
+                        color: 'text.secondary',
+                      }}
+                    >
+                      {row.feature}
+                    </TableCell>
+                    <TableCell align="center" sx={{ py: 0.25 }}>{row.bronze}</TableCell>
+                    <TableCell align="center" sx={{ py: 0.25 }}>{row.silver}</TableCell>
+                    <TableCell align="center" sx={{ py: 0.25 }}>{row.gold}</TableCell>
+                  </TableRow>
+                )
               ))}
               <TableRow sx={{ backgroundColor: '#f5f5f5', fontWeight: 'bold' }}>
-                <TableCell sx={{ fontWeight: 'bold', fontSize: '1.1rem' }}>Price (Monthly)</TableCell>
-                <TableCell align="center" sx={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#CD7F32' }}>
+                <TableCell sx={{ fontWeight: 'bold', fontSize: '1rem', py: 1 }}>Monthly Price</TableCell>
+                <TableCell align="center" sx={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#CD7F32', py: 1 }}>
                   {formatCurrency(bronzeMonthly)}
                 </TableCell>
-                <TableCell align="center" sx={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#C0C0C0' }}>
+                <TableCell align="center" sx={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#757575', py: 1 }}>
                   {formatCurrency(silverMonthly)}
                 </TableCell>
-                <TableCell align="center" sx={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#FFD700' }}>
+                <TableCell align="center" sx={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#DAA520', py: 1 }}>
                   {formatCurrency(goldMonthly)}
                 </TableCell>
               </TableRow>

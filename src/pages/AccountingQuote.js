@@ -454,10 +454,16 @@ export default function AccountingQuote() {
                 sx={{
                   py: 0.75,
                   borderBottom: index < onceOffBreakdown.length - 1 ? '1px solid #e0e0e0' : 'none',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
                 }}
               >
                 <Typography variant="body2" sx={{ color: 'text.secondary' }}>
                   {item.label}
+                </Typography>
+                <Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 500 }}>
+                  {formatCurrency(item.amount)}
                 </Typography>
               </Box>
             ))}
