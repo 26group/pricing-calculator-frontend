@@ -229,8 +229,15 @@ export const calculateComplianceOnlyPrice = (responses, pricingModifier = 200) =
   // q19: Statutory financial statements - excluded from Bronze
   // q20: Management financial statements - NO in Bronze (excluded)
 
-  // ==================== MEETINGS (Bronze: ALL NO) ====================
-  // q21, q22, q23: All meetings excluded from Bronze
+  // ==================== MEETINGS (Bronze: Annual Tax Meetings YES, others NO) ====================
+  // q21, q23: Excluded from Bronze
+  // q22: Annual tax meetings - YES in Bronze (if selected)
+  if (responses.q22 === 'yes' && segment) {
+    const annualService = serviceValuesAccounting.meetings.annualTaxMeetings?.[segment];
+    if (annualService) {
+      total += annualService.monthly;
+    }
+  }
 
   // ==================== SUPPORT SERVICES (Bronze: YES for Team/Email only) ====================
 
