@@ -137,6 +137,18 @@ export default function BookkeepingQuote() {
 
   // Check which services are included
   const hasPayroll = bookkeepingResponses.q3 === 'yes' || bookkeepingResponses.q3 === 'yesSetup';
+  // Check if salaried employees exist (q4 has weekly, fortnightly, or monthly > 0)
+  const hasSalariedEmployees = hasPayroll && bookkeepingResponses.q4 && (
+    parseInt(bookkeepingResponses.q4.weekly, 10) > 0 ||
+    parseInt(bookkeepingResponses.q4.fortnightly, 10) > 0 ||
+    parseInt(bookkeepingResponses.q4.monthly, 10) > 0
+  );
+  // Check if timesheet employees exist (q5 has weekly, fortnightly, or monthly > 0)
+  const hasTimesheetEmployees = hasPayroll && bookkeepingResponses.q5 && (
+    parseInt(bookkeepingResponses.q5.weekly, 10) > 0 ||
+    parseInt(bookkeepingResponses.q5.fortnightly, 10) > 0 ||
+    parseInt(bookkeepingResponses.q5.monthly, 10) > 0
+  );
   const hasTransactions = bookkeepingResponses.q9 && bookkeepingResponses.q9 !== 'no';
   const hasAccountsPayable = bookkeepingResponses.q11 && bookkeepingResponses.q11 !== 'no';
   const hasAccountsReceivable = bookkeepingResponses.q14 && bookkeepingResponses.q14 !== 'no';
@@ -214,40 +226,55 @@ export default function BookkeepingQuote() {
   const pricingRows = [
     // PAYROLL SERVICES CATEGORY
     { feature: 'Payroll Services', isCategory: true },
-    { feature: 'Salaried Employees', bronze: hasPayroll ? <CheckMark /> : <NotIncluded />, silver: hasPayroll ? <CheckMark /> : <NotIncluded />, gold: hasPayroll ? <CheckMark /> : <NotIncluded /> },
-    { feature: 'Timesheet Employees', bronze: hasPayroll ? <CheckMark /> : <NotIncluded />, silver: hasPayroll ? <CheckMark /> : <NotIncluded />, gold: hasPayroll ? <CheckMark /> : <NotIncluded /> },
-    { feature: 'Super Prep & Lodgement', bronze: (bookkeepingResponses.q6 && bookkeepingResponses.q6 !== 'no') ? <CheckMark /> : <NotIncluded />, silver: (bookkeepingResponses.q6 && bookkeepingResponses.q6 !== 'no') ? <CheckMark /> : <NotIncluded />, gold: (bookkeepingResponses.q6 && bookkeepingResponses.q6 !== 'no') ? <CheckMark /> : <NotIncluded /> },
-    { feature: 'STP Reporting', bronze: (bookkeepingResponses.q7 && bookkeepingResponses.q7 !== 'no') ? <CheckMark /> : <NotIncluded />, silver: (bookkeepingResponses.q7 && bookkeepingResponses.q7 !== 'no') ? <CheckMark /> : <NotIncluded />, gold: (bookkeepingResponses.q7 && bookkeepingResponses.q7 !== 'no') ? <CheckMark /> : <NotIncluded /> },
-    { feature: 'Workers Compensation', bronze: bookkeepingResponses.q8 === 'yes' ? <CheckMark /> : <NotIncluded />, silver: bookkeepingResponses.q8 === 'yes' ? <CheckMark /> : <NotIncluded />, gold: bookkeepingResponses.q8 === 'yes' ? <CheckMark /> : <NotIncluded /> },
+    // Q3/Q4: Salaried/Timesheet Employees - YES in Bronze
+    { feature: 'Salaried Employees', bronze: hasSalariedEmployees ? <CheckMark /> : <NotIncluded />, silver: hasSalariedEmployees ? <CheckMark /> : <NotIncluded />, gold: hasSalariedEmployees ? <CheckMark /> : <NotIncluded /> },
+    { feature: 'Timesheet Employees', bronze: hasTimesheetEmployees ? <CheckMark /> : <NotIncluded />, silver: hasTimesheetEmployees ? <CheckMark /> : <NotIncluded />, gold: hasTimesheetEmployees ? <CheckMark /> : <NotIncluded /> },
+    // Q5: Super Prep & Lodgement - YES in Bronze
+    { feature: 'Super Prep & Lodgement', bronze: (hasPayroll && bookkeepingResponses.q6 && bookkeepingResponses.q6 !== 'no') ? <CheckMark /> : <NotIncluded />, silver: (hasPayroll && bookkeepingResponses.q6 && bookkeepingResponses.q6 !== 'no') ? <CheckMark /> : <NotIncluded />, gold: (hasPayroll && bookkeepingResponses.q6 && bookkeepingResponses.q6 !== 'no') ? <CheckMark /> : <NotIncluded /> },
+    // Q6: STP Reporting - YES in Bronze
+    { feature: 'STP Reporting', bronze: (hasPayroll && bookkeepingResponses.q7 && bookkeepingResponses.q7 !== 'no') ? <CheckMark /> : <NotIncluded />, silver: (hasPayroll && bookkeepingResponses.q7 && bookkeepingResponses.q7 !== 'no') ? <CheckMark /> : <NotIncluded />, gold: (hasPayroll && bookkeepingResponses.q7 && bookkeepingResponses.q7 !== 'no') ? <CheckMark /> : <NotIncluded /> },
+    // Q7: Workers Compensation - NO in Bronze (excluded)
+    { feature: 'Workers Compensation', bronze: <NotIncluded />, silver: (hasPayroll && bookkeepingResponses.q8 === 'yes') ? <CheckMark /> : <NotIncluded />, gold: (hasPayroll && bookkeepingResponses.q8 === 'yes') ? <CheckMark /> : <NotIncluded /> },
     
     // BOOKKEEPING SERVICES CATEGORY
     { feature: 'Bookkeeping Services', isCategory: true },
+    // Q8a: Single Line Transactions - YES in Bronze
     { feature: 'Bank & CC Transactions', bronze: hasTransactions ? <CheckMark /> : <NotIncluded />, silver: hasTransactions ? <CheckMark /> : <NotIncluded />, gold: hasTransactions ? <CheckMark /> : <NotIncluded /> },
-    { feature: 'Multi-Line Transactions', bronze: (bookkeepingResponses.q10 && bookkeepingResponses.q10.invoices) ? <CheckMark /> : <NotIncluded />, silver: (bookkeepingResponses.q10 && bookkeepingResponses.q10.invoices) ? <CheckMark /> : <NotIncluded />, gold: (bookkeepingResponses.q10 && bookkeepingResponses.q10.invoices) ? <CheckMark /> : <NotIncluded /> },
-    { feature: 'Accounts Payable', bronze: hasAccountsPayable ? <CheckMark /> : <NotIncluded />, silver: hasAccountsPayable ? <CheckMark /> : <NotIncluded />, gold: hasAccountsPayable ? <CheckMark /> : <NotIncluded /> },
+    // Q8b: Multi-Line Transactions - NO in Bronze (excluded)
+    { feature: 'Multi-Line Transactions', bronze: <NotIncluded />, silver: (bookkeepingResponses.q10 && bookkeepingResponses.q10.invoices) ? <CheckMark /> : <NotIncluded />, gold: (bookkeepingResponses.q10 && bookkeepingResponses.q10.invoices) ? <CheckMark /> : <NotIncluded /> },
+    // Q8c: Accounts Payable - NO in Bronze (excluded)
+    { feature: 'Accounts Payable', bronze: <NotIncluded />, silver: hasAccountsPayable ? <CheckMark /> : <NotIncluded />, gold: hasAccountsPayable ? <CheckMark /> : <NotIncluded /> },
     
     // ACCOUNTS RECEIVABLE CATEGORY
     { feature: 'Accounts Receivable', isCategory: true },
+    // Q10a: Single Line AR - YES in Bronze
     { feature: 'Single Line Invoices', bronze: hasAccountsReceivable ? <CheckMark /> : <NotIncluded />, silver: hasAccountsReceivable ? <CheckMark /> : <NotIncluded />, gold: hasAccountsReceivable ? <CheckMark /> : <NotIncluded /> },
-    { feature: 'Multi-Line AR Invoices', bronze: (bookkeepingResponses.q15 && bookkeepingResponses.q15.invoices) ? <CheckMark /> : <NotIncluded />, silver: (bookkeepingResponses.q15 && bookkeepingResponses.q15.invoices) ? <CheckMark /> : <NotIncluded />, gold: (bookkeepingResponses.q15 && bookkeepingResponses.q15.invoices) ? <CheckMark /> : <NotIncluded /> },
+    // Q10b: Multi-Line AR - NO in Bronze (excluded)
+    { feature: 'Multi-Line AR Invoices', bronze: <NotIncluded />, silver: (bookkeepingResponses.q15 && bookkeepingResponses.q15.invoices) ? <CheckMark /> : <NotIncluded />, gold: (bookkeepingResponses.q15 && bookkeepingResponses.q15.invoices) ? <CheckMark /> : <NotIncluded /> },
+    // Q10c: Debtor Management - NO in Bronze (excluded)
     { feature: 'Debtor Management', bronze: <NotIncluded />, silver: hasDebtorManagement ? <CheckMark /> : <NotIncluded />, gold: hasDebtorManagement ? <CheckMark /> : <NotIncluded /> },
     
     // COMPLIANCE LODGEMENTS CATEGORY
     { feature: 'Compliance Lodgements', isCategory: true },
-    { feature: 'TPAR', bronze: bookkeepingResponses.q12 === 'yes' ? <CheckMark /> : <NotIncluded />, silver: bookkeepingResponses.q12 === 'yes' ? <CheckMark /> : <NotIncluded />, gold: bookkeepingResponses.q12 === 'yes' ? <CheckMark /> : <NotIncluded /> },
-    { feature: 'LSL Construction', bronze: bookkeepingResponses.q13 === 'yes' ? <CheckMark /> : <NotIncluded />, silver: bookkeepingResponses.q13 === 'yes' ? <CheckMark /> : <NotIncluded />, gold: bookkeepingResponses.q13 === 'yes' ? <CheckMark /> : <NotIncluded /> },
-    { feature: 'BAS/IAS Lodgements', bronze: hasCompliance ? <CheckMark /> : <NotIncluded />, silver: hasCompliance ? <CheckMark /> : <NotIncluded />, gold: hasCompliance ? <CheckMark /> : <NotIncluded /> },
+    // Q9a: TPAR - NO in Bronze (excluded)
+    { feature: 'TPAR', bronze: <NotIncluded />, silver: bookkeepingResponses.q12 === 'yes' ? <CheckMark /> : <NotIncluded />, gold: bookkeepingResponses.q12 === 'yes' ? <CheckMark /> : <NotIncluded /> },
+    // Q9b: LSL Construction - NO in Bronze (excluded)
+    { feature: 'LSL Construction', bronze: <NotIncluded />, silver: bookkeepingResponses.q13 === 'yes' ? <CheckMark /> : <NotIncluded />, gold: bookkeepingResponses.q13 === 'yes' ? <CheckMark /> : <NotIncluded /> },
+    // Q13: BAS Quarterly YES, BAS Monthly NO, IAS NO - only show BAS Quarterly in Bronze
+    { feature: 'BAS Quarterly', bronze: (bookkeepingResponses.q19 && bookkeepingResponses.q19.basQuarterly) ? <CheckMark /> : <NotIncluded />, silver: (bookkeepingResponses.q19 && bookkeepingResponses.q19.basQuarterly) ? <CheckMark /> : <NotIncluded />, gold: (bookkeepingResponses.q19 && bookkeepingResponses.q19.basQuarterly) ? <CheckMark /> : <NotIncluded /> },
+    { feature: 'BAS Monthly', bronze: <NotIncluded />, silver: (bookkeepingResponses.q19 && bookkeepingResponses.q19.basMonthly) ? <CheckMark /> : <NotIncluded />, gold: (bookkeepingResponses.q19 && bookkeepingResponses.q19.basMonthly) ? <CheckMark /> : <NotIncluded /> },
+    { feature: 'IAS', bronze: <NotIncluded />, silver: (bookkeepingResponses.q19 && bookkeepingResponses.q19.ias) ? <CheckMark /> : <NotIncluded />, gold: (bookkeepingResponses.q19 && bookkeepingResponses.q19.ias) ? <CheckMark /> : <NotIncluded /> },
     
-    // REPORTING CATEGORY
+    // REPORTING CATEGORY - Q11/Q12: All NO in Bronze (excluded)
     { feature: 'Reporting', isCategory: true },
     { feature: 'Financial Reports', bronze: <NotIncluded />, silver: hasReporting ? <Typography variant="body2">Quarterly</Typography> : <NotIncluded />, gold: hasReporting ? <Typography variant="body2">Monthly</Typography> : <NotIncluded /> },
     { feature: 'Management Meetings', bronze: <NotIncluded />, silver: hasMeetings ? <Typography variant="body2">Quarterly</Typography> : <NotIncluded />, gold: hasMeetings ? <Typography variant="body2">Monthly</Typography> : <NotIncluded /> },
     
-    // EOFY CATEGORY
+    // EOFY CATEGORY - Q15: Micro/Small YES, Medium/Large NO in Bronze
     { feature: 'Year End', isCategory: true },
-    { feature: 'EOFY Workpapers', bronze: hasEOFY ? <CheckMark /> : <NotIncluded />, silver: hasEOFY ? <CheckMark /> : <NotIncluded />, gold: hasEOFY ? <CheckMark /> : <NotIncluded /> },
+    { feature: 'EOFY Workpapers', bronze: bookkeepingResponses.q21 === 'microSmall' ? <CheckMark /> : <NotIncluded />, silver: hasEOFY ? <CheckMark /> : <NotIncluded />, gold: hasEOFY ? <CheckMark /> : <NotIncluded /> },
     
-    // SUPPORT SERVICES CATEGORY (hard-coded per tier)
+    // SUPPORT SERVICES CATEGORY - Q14: Email only YES in Bronze (hard-coded per tier)
     { feature: 'Support Services', isCategory: true },
     { feature: 'Team / Email Support', bronze: <CheckMark />, silver: <NotIncluded />, gold: <NotIncluded /> },
     { feature: 'Client Service Manager', bronze: <NotIncluded />, silver: <CheckMark />, gold: <NotIncluded /> },

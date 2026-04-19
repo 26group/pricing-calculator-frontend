@@ -543,8 +543,8 @@ export const calculateBookkeepingBronzePrice = (responses, pricingModifier = 100
   const values = serviceValuesBookkeeping;
   const multiplier = getPricingMultiplier(pricingModifier);
 
-  // PAYROLL SERVICES (if selected)
-  // Q4: Salaried Employees
+  // PAYROLL SERVICES (if selected) - YES
+  // Q4: Salaried Employees - YES
   if ((responses.q3 === 'yes' || responses.q3 === 'yesSetup') && responses.q4 && typeof responses.q4 === 'object') {
     const { weekly = '', fortnightly = '', monthly = '' } = responses.q4;
     const salaried = values.payrollServices.salaried;
@@ -565,7 +565,7 @@ export const calculateBookkeepingBronzePrice = (responses, pricingModifier = 100
     }
   }
 
-  // Q5: Timesheet Employees
+  // Q5: Timesheet Employees - YES
   if ((responses.q3 === 'yes' || responses.q3 === 'yesSetup') && responses.q5 && typeof responses.q5 === 'object') {
     const { weekly = '', fortnightly = '', monthly = '' } = responses.q5;
     const timesheet = values.payrollServices.timesheet;
@@ -586,7 +586,7 @@ export const calculateBookkeepingBronzePrice = (responses, pricingModifier = 100
     }
   }
 
-  // Q6: Super Prep & Lodgement
+  // Q6: Super Prep & Lodgement - YES
   if ((responses.q3 === 'yes' || responses.q3 === 'yesSetup') && responses.q6 && responses.q6 !== 'no') {
     const superLodge = values.payrollServices.superLodgement;
     const employeeCount = parseInt(responses.q6a, 10) || 0;
@@ -598,7 +598,7 @@ export const calculateBookkeepingBronzePrice = (responses, pricingModifier = 100
     }
   }
 
-  // Q7: STP Reporting
+  // Q7: STP Reporting - YES
   if ((responses.q3 === 'yes' || responses.q3 === 'yesSetup') && responses.q7 && responses.q7 !== 'no') {
     const stp = values.payrollServices.stpReporting;
     const employeeCount = parseInt(responses.q7a, 10) || 0;
@@ -612,15 +612,10 @@ export const calculateBookkeepingBronzePrice = (responses, pricingModifier = 100
     }
   }
 
-  // Q8: Workers Compensation
-  if ((responses.q3 === 'yes' || responses.q3 === 'yesSetup') && responses.q8 === 'yes') {
-    const workersComp = values.payrollServices.workersComp;
-    const lodgementCount = responses.q8a ? parseInt(responses.q8a, 10) || 1 : 1;
-    total += (workersComp.ratePerLodgement * lodgementCount * workersComp.frequency) / 12;
-  }
+  // Q8: Workers Compensation - NO (excluded from Bronze)
 
-  // BOOKKEEPING - TRANSACTIONS (if selected)
-  // Q9: Single Line Bank & Credit Card Transactions
+  // BOOKKEEPING - TRANSACTIONS
+  // Q9: Single Line Bank & Credit Card Transactions - YES
   if (responses.q9 && responses.q9 !== 'no') {
     const transactions = values.bookkeepingServices.singleLineTransactions;
     
@@ -644,53 +639,15 @@ export const calculateBookkeepingBronzePrice = (responses, pricingModifier = 100
     }
   }
 
-  // Q10: Multi-Line Transactions
-  if (responses.q10 && typeof responses.q10 === 'object') {
-    const { invoices = '', avgLines = '' } = responses.q10;
-    const invoiceCount = parseInt(invoices, 10) || 0;
-    const avgLineCount = parseInt(avgLines, 10) || 0;
-    
-    if (invoiceCount > 0 && avgLineCount > 0) {
-      total += values.bookkeepingServices.multiLineTransactions.ratePerLine * invoiceCount * avgLineCount;
-    }
-  }
+  // Q10: Multi-Line Transactions - NO (excluded from Bronze)
 
-  // Q11: Accounts Payable
-  if (responses.q11 && responses.q11 !== 'no') {
-    const ap = values.bookkeepingServices.accountsPayable;
+  // Q11: Accounts Payable - NO (excluded from Bronze)
 
-    switch (responses.q11) {
-      case 'upTo20':
-        total += ap.upTo20.ratePerSupplier * ap.upTo20.maxSuppliers;
-        break;
-      case 'upTo50':
-        total += ap.upTo50.ratePerSupplier * ap.upTo50.maxSuppliers;
-        break;
-      case 'extra':
-        total += ap.upTo50.ratePerSupplier * ap.upTo50.maxSuppliers;
-        if (responses.q11a) {
-          const extraSuppliers = parseInt(responses.q11a, 10) || 0;
-          total += ap.extra.ratePerSupplier * extraSuppliers;
-        }
-        break;
-    }
-  }
+  // Q12: TPAR - NO (excluded from Bronze)
 
-  // Q12: TPAR
-  if (responses.q12 === 'yes') {
-    const tpar = values.complianceLodgements.tpar;
-    const tparCount = responses.q12a ? parseInt(responses.q12a, 10) || 1 : 1;
-    total += tpar.ratePerReport * tparCount;
-  }
+  // Q13: LSL Construction - NO (excluded from Bronze)
 
-  // Q13: LSL Construction
-  if (responses.q13 === 'yes') {
-    const lsl = values.complianceLodgements.lslConstruction;
-    const lslCount = responses.q13a ? parseInt(responses.q13a, 10) || 1 : 1;
-    total += lsl.ratePerLodgement * lslCount;
-  }
-
-  // Q14: Accounts Receivable - Single Line AR Invoices
+  // Q14: Accounts Receivable - Single Line AR Invoices - YES
   if (responses.q14 && responses.q14 !== 'no') {
     const ar = values.accountsReceivable.singleLineInvoices;
 
@@ -714,53 +671,36 @@ export const calculateBookkeepingBronzePrice = (responses, pricingModifier = 100
     }
   }
 
-  // Q15: Multi-Line AR Invoices
-  if (responses.q14 && responses.q14 !== 'no' && responses.q15 && typeof responses.q15 === 'object') {
-    const { invoices = '', avgLines = '' } = responses.q15;
-    const invoiceCount = parseInt(invoices, 10) || 0;
-    const avgLineCount = parseInt(avgLines, 10) || 0;
-    
-    if (invoiceCount > 0 && avgLineCount > 0) {
-      total += values.accountsReceivable.multiLineInvoices.ratePerLine * invoiceCount * avgLineCount;
-    }
-  }
+  // Q15: Multi-Line AR Invoices - NO (excluded from Bronze)
 
-  // Bronze does NOT include Debtor Management (q16)
+  // Q16: Debtor Management - NO (excluded from Bronze)
 
-  // Bronze does NOT include Financial Reporting (q17)
+  // Q17: Financial Reporting - NO (excluded from Bronze)
 
-  // Bronze does NOT include Management Meetings (q18)
+  // Q18: Management Meetings - NO (excluded from Bronze)
 
-  // Q19: BAS/IAS Compliance (if selected)
+  // Q19: BAS/IAS Compliance - BAS Quarterly only (YES), BAS Monthly (NO), IAS (NO)
   if (responses.q19 && typeof responses.q19 === 'object') {
     const cs = values.complianceServices;
 
+    // Only BAS Quarterly is included in Bronze
     if (responses.q19.basQuarterly) {
       total += cs.basQuarterly.rate;
     }
 
-    if (responses.q19.basMonthly) {
-      total += cs.basMonthly.rate;
-    }
-
-    if (responses.q19.ias) {
-      total += cs.ias.rate;
-    }
+    // BAS Monthly - NO (excluded from Bronze)
+    // IAS - NO (excluded from Bronze)
   }
 
-  // Bronze always includes Team/Email support (hard-coded)
+  // Q20: Support - Email only (YES) - hard-coded for Bronze
   total += values.support.emailOnly.monthly;
 
-  // Q21: EOFY (if selected)
-  if (responses.q21 && responses.q21 !== 'no') {
+  // Q21: EOFY - Micro & Small only (YES), Medium & Large (NO)
+  if (responses.q21 === 'microSmall') {
     const eofy = values.eofyProcess;
-
-    if (responses.q21 === 'microSmall') {
-      total += eofy.microSmall.rate;
-    } else if (responses.q21 === 'mediumLarge') {
-      total += eofy.mediumLarge.rate;
-    }
+    total += eofy.microSmall.rate;
   }
+  // Medium & Large excluded from Bronze
 
   return Math.round(total * multiplier * 100) / 100;
 };

@@ -358,8 +358,8 @@ export const bookkeepingQuestionData = [
     prompt: 'Does the client require an EOFY process & workpapers?',
     type: 'radio',
     options: [
-      { label: 'Yes - Micro & Small', value: 'microSmall' },
-      { label: 'Yes - Medium & Large', value: 'mediumLarge' },
+      { label: 'Yes - Micro & Small', value: 'microSmall', showWhen: (responses) => responses.q1 === 'micro' || responses.q1 === 'small' },
+      { label: 'Yes - Medium & Large', value: 'mediumLarge', showWhen: (responses) => responses.q1 === 'medium' || responses.q1 === 'large' || responses.q1 === 'enterprise' },
       { label: 'No', value: 'no' },
     ],
   },
