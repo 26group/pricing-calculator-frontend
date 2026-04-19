@@ -123,11 +123,10 @@ export default function AccountingQuote() {
 
   // =================== CHECK SERVICE CATEGORIES ===================
 
-  // Q1: Tax Services - Individual returns, Business returns, SMSF, FBT, BAS, IAS, TPAR
+  // Q1: Tax Services - Individual returns, Business returns, FBT, BAS, IAS, TPAR
   const hasTaxServices =
     (questionResponses.q2 && parseInt(questionResponses.q2, 10) > 0) || // Individual returns
     (questionResponses.q3 && parseInt(questionResponses.q3, 10) > 0) || // Business returns
-    (questionResponses.q4 === 'yes') || // SMSF
     (questionResponses.q5 === 'yes') || // FBT
     (questionResponses.q6 && questionResponses.q6 !== 'no') || // BAS
     (questionResponses.q7 === 'yes') || // IAS
@@ -295,7 +294,6 @@ export default function AccountingQuote() {
     { feature: 'Tax Services', isCategory: true },
     { feature: 'Individual Tax Returns', bronze: <CheckMark />, silver: hasTaxServices ? <CheckMark /> : <NotIncluded />, gold: hasTaxServices ? <CheckMark /> : <NotIncluded /> },
     { feature: 'Business Tax Returns', bronze: <CheckMark />, silver: hasTaxServices ? <CheckMark /> : <NotIncluded />, gold: hasTaxServices ? <CheckMark /> : <NotIncluded /> },
-    { feature: 'SMSF', bronze: <NotIncluded />, silver: questionResponses.q4 === 'yes' ? <CheckMark /> : <NotIncluded />, gold: questionResponses.q4 === 'yes' ? <CheckMark /> : <NotIncluded /> },
     { feature: 'FBT Returns', bronze: <NotIncluded />, silver: questionResponses.q5 === 'yes' ? <CheckMark /> : <NotIncluded />, gold: questionResponses.q5 === 'yes' ? <CheckMark /> : <NotIncluded /> },
     { feature: 'BAS', bronze: <CheckMark />, silver: questionResponses.q6 && questionResponses.q6 !== 'no' ? <CheckMark /> : <NotIncluded />, gold: questionResponses.q6 && questionResponses.q6 !== 'no' ? <CheckMark /> : <NotIncluded /> },
     { feature: 'IAS', bronze: <CheckMark />, silver: questionResponses.q7 === 'yes' ? <CheckMark /> : <NotIncluded />, gold: questionResponses.q7 === 'yes' ? <CheckMark /> : <NotIncluded /> },

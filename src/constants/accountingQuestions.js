@@ -41,6 +41,18 @@ export const accountingQuestions = {
               serviceKey: 'individualReturnExtras.managedFunds',
             },
             {
+              id: 'businessScheduleNoGst',
+              label: 'Business Schedule - no GST',
+              type: 'number',
+              serviceKey: 'individualReturnExtras.businessScheduleNoGst',
+            },
+            {
+              id: 'businessScheduleWithGst',
+              label: 'Business Schedule - with GST',
+              type: 'number',
+              serviceKey: 'individualReturnExtras.businessScheduleWithGst',
+            },
+            {
               id: 'dividendsNotReportedToATO',
               label: 'Dividends not reported to ATO',
               type: 'select',
@@ -119,7 +131,7 @@ export const accountingQuestions = {
             },
             {
               id: 'motorVehicleStatutoryRate',
-              label: 'Motor Vehicle — statutory rate',
+              label: 'Motor Vehicle — Cents per kilometre method',
               type: 'select',
               options: [
                 { value: 'none', label: 'None' },
@@ -170,22 +182,13 @@ export const accountingQuestions = {
       },
       Q1c: {
         id: 'Q1c',
-        title: 'SMSF',
-        prompt:
-          'Do they have a Self Managed Superannuation Fund (SMSF)? Do they want you to complete the audit and tax return?',
-        type: 'boolean',
-        serviceKey: 'smsf',
-        tierBased: true,
-      },
-      Q1d: {
-        id: 'Q1d',
         title: 'FBT Returns',
         prompt: 'Do they require an FBT return to be lodged?',
         type: 'boolean',
         serviceKey: 'fbtReturns',
         tierBased: true,
       },
-      Q1e: {
+      Q1d: {
         id: 'Q1e',
         title: 'BAS (per return)',
         prompt: 'Do they want you to lodge BAS?',
@@ -535,7 +538,6 @@ export const accountingQuestions = {
           { id: 'businessReturns', label: 'Business Returns', serviceKey: 'businessReturns' },
           { id: 'individualReturns', label: 'Individuals', serviceKey: 'individualReturns' },
           { id: 'bas', label: 'BAS', serviceKey: 'bas' },
-          { id: 'smsf', label: 'SMSF', serviceKey: 'smsf' },
           { id: 'ias', label: 'IAS', serviceKey: 'ias' },
           { id: 'fbtReturns', label: 'FBT', serviceKey: 'fbtReturns' },
           { id: 'tpar', label: 'TPAR', serviceKey: 'tpar' },
@@ -641,6 +643,8 @@ export const accountingQuestionData = [
         options: [
           { label: 'Rental Property', value: 'rentalProperty', control: 'number' },
           { label: 'Managed Funds', value: 'managedFunds', control: 'number' },
+          { label: 'Business Schedule - no GST', value: 'businessScheduleNoGst', control: 'number' },
+          { label: 'Business Schedule - with GST', value: 'businessScheduleWithGst', control: 'number' },
           { label: 'Dividends not reported to ATO', value: 'dividendsNotReportedToATO', control: 'number' },
           { label: 'Interest not reported to ATO', value: 'interestNotReportedToATO', control: 'number' },
           { label: 'CGT — Shares and equities', value: 'cgtSharesAndEquities', control: 'number' },
@@ -648,7 +652,7 @@ export const accountingQuestionData = [
           { label: 'Balancing adjustment — sale of business asset', value: 'balancingAdjustmentCalculation', control: 'number' },
           { label: 'Deductions — more than 3 standard expenses', value: 'deductionsMoreThan3Standard', control: 'number' },
           { label: 'Motor Vehicle — log book method', value: 'motorVehicleLogBook', control: 'number' },
-          { label: 'Motor Vehicle — statutory rate', value: 'motorVehicleStatutoryRate', control: 'number' },
+          { label: 'Motor Vehicle — Cents per kilometre method', value: 'motorVehicleStatutoryRate', control: 'number' },
           { label: 'Amendment — original return prepared by firm', value: 'amendmentOriginalPreparedByFirm', control: 'number' },
           { label: 'Amendment — original return NOT prepared by firm', value: 'amendmentOriginalNotPreparedByFirm', control: 'number' },
           { label: 'Return not necessary (once-off)', value: 'returnNotNecessary', control: 'number' },
@@ -665,19 +669,6 @@ export const accountingQuestionData = [
     subheading: 'Business Tax Returns',
     type: 'number',
     category: 'TAX SERVICES',
-  },
-
-  // 2c: SMSF
-  {
-    id: 'q4',
-    prompt: '2c. Do they have a Self Managed Superannuation Fund (SMSF) they want you to complete the audit and tax return?',
-    subheading: 'SMSF',
-    type: 'radio',
-    category: 'TAX SERVICES',
-    options: [
-      { label: 'Yes', value: 'yes' },
-      { label: 'No', value: 'no' },
-    ],
   },
 
   // 2d: FBT Returns
@@ -759,7 +750,7 @@ export const accountingQuestionData = [
     children: [
       {
         id: 'q10a',
-        prompt: 'How many SALARIED employees per pay frequency?',
+        prompt: 'Salary ONLY employees',
         type: 'inputGroup',
         showWhen: (responses) => responses.q10 === 'yes',
         options: [
@@ -770,7 +761,7 @@ export const accountingQuestionData = [
       },
       {
         id: 'q10b',
-        prompt: 'How many TIMESHEET employees per pay frequency?',
+        prompt: 'Timesheet ONLY employees',
         type: 'inputGroup',
         showWhen: (responses) => responses.q10 === 'yes',
         options: [
@@ -1070,7 +1061,6 @@ export const accountingQuestionData = [
       { label: 'Business Returns', value: 'businessReturns', control: 'number', priceKey: 'taxServices.businessReturns' },
       { label: 'Individuals', value: 'individuals', control: 'number', priceKey: 'taxServices.individualReturns.all', fixedPrice: true },
       { label: 'BAS', value: 'bas', control: 'number', priceKey: 'taxServices.bas' },
-      { label: 'SMSF', value: 'smsf', control: 'number', priceKey: 'taxServices.smsf' },
       { label: 'IAS', value: 'ias', control: 'number', priceKey: 'taxServices.ias' },
       { label: 'FBT', value: 'fbt', control: 'number', priceKey: 'taxServices.fbtReturns' },
       { label: 'TPAR', value: 'tpar', control: 'number', priceKey: 'taxServices.tpar' },

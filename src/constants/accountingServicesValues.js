@@ -50,6 +50,20 @@ export const serviceValuesAccounting = {
           inclusion: 'Managed Funds — Summary by Firm',
         },
       },
+      businessScheduleNoGst: {
+        all: {
+          yearly: 240,
+          monthly: 20,
+          inclusion: 'Business Schedule - no GST',
+        },
+      },
+      businessScheduleWithGst: {
+        all: {
+          yearly: 360,
+          monthly: 30,
+          inclusion: 'Business Schedule - with GST',
+        },
+      },
       dividendsNotReportedToATO: {
         providedByClient: {
           yearly: 50,

@@ -62,13 +62,15 @@ export const calculateComplianceOnlyPrice = (responses, pricingModifier = 200) =
       if (extraKey === 'none' || extraKey === 'returnNotNecessary' || !value) return;
       
       const extraPricing = extras[extraKey];
-      if (extraPricing && extraPricing[summaryType]) {
+      // Check for summary type first, then fall back to 'all' for flat-rate items
+      const pricingTier = extraPricing?.[summaryType] || extraPricing?.all;
+      if (pricingTier) {
         if (typeof value === 'boolean' && value === true) {
-          total += extraPricing[summaryType].monthly;
+          total += pricingTier.monthly;
         } else {
           const quantity = parseInt(value, 10);
           if (!isNaN(quantity) && quantity > 0) {
-            total += extraPricing[summaryType].monthly * quantity;
+            total += pricingTier.monthly * quantity;
           }
         }
       }
@@ -356,15 +358,17 @@ export const calculateTotalMonthlyPrice = (responses, pricingModifier = 200) => 
       if (extraKey === 'none' || extraKey === 'returnNotNecessary' || !value) return;
       
       const extraPricing = extras[extraKey];
-      if (extraPricing && extraPricing[summaryType]) {
+      // Check for summary type first, then fall back to 'all' for flat-rate items
+      const pricingTier = extraPricing?.[summaryType] || extraPricing?.all;
+      if (pricingTier) {
         // For checkbox (deductionsMoreThan3Standard), value is true/false
         if (typeof value === 'boolean' && value === true) {
-          total += extraPricing[summaryType].monthly;
+          total += pricingTier.monthly;
         } else {
           // For number inputs, multiply by quantity
           const quantity = parseInt(value, 10);
           if (!isNaN(quantity) && quantity > 0) {
-            total += extraPricing[summaryType].monthly * quantity;
+            total += pricingTier.monthly * quantity;
           }
         }
       }
