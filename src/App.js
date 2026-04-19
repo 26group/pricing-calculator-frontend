@@ -282,7 +282,7 @@ function AppContent() {
           <Link to="/clients" style={{ display: 'flex', alignItems: 'center', marginRight: '24px' }}>
             <img src="/logo-icon.svg" alt="Accountable" style={{ height: '32px', width: '32px' }} />
           </Link>
-          <Button color="inherit" component={Link} to="/clients" sx={{ fontWeight: 600 }}>Client Quotes</Button>
+          <Button color="inherit" component={Link} to="/clients" sx={{ fontWeight: 600 }}>Proposals</Button>
           <Box sx={{ flexGrow: 1 }} />
           <Button variant="contained" size="small" onClick={handleNewPriceClick} sx={{ mr: 2 }}>Create Pricing</Button>
           <Button 

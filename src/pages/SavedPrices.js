@@ -29,6 +29,7 @@ import {
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import VisibilityIcon from '@mui/icons-material/Visibility';
 import { getPrices, deletePrice, getPrice, createPrice } from '../services/priceApi';
 import { loadSavedPrice } from '../features/questions/responsesSlice';
 import { getRevenueSegmentLabel } from '../constants/revenueSegments';
@@ -324,7 +325,7 @@ export default function SavedPrices() {
     <Container maxWidth="lg" sx={{ py: 4 }}>
       <Box sx={{ mb: 4 }}>
         <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
-          Client Quotes
+          Proposals
         </Typography>
         <Typography variant="body1" sx={{ color: 'text.secondary' }}>
           Manage your client pricing quotes
@@ -387,6 +388,7 @@ export default function SavedPrices() {
                 <TableCell>Once Off</TableCell>
                 <TableCell>Revenue Segment</TableCell>
                 <TableCell>Created</TableCell>
+                <TableCell align="center">Packages</TableCell>
                 <TableCell align="right">Actions</TableCell>
               </TableRow>
             </TableHead>
@@ -457,6 +459,55 @@ export default function SavedPrices() {
                       {formatDate(price.createdAt)}
                     </Typography>
                   </TableCell>
+                  <TableCell align="center" sx={{ py: 0.5 }}>
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        // Load the price data first, then navigate to packages page
+                        const isBookkeeping = price.serviceType === 'bookkeeping' || price.questionResponses?.q2b;
+                        // Store the responses in localStorage for bookkeeping
+                        if (isBookkeeping) {
+                          localStorage.setItem('bookkeeping_responses', JSON.stringify(price.questionResponses || {}));
+                          // Also dispatch to Redux for client name
+                          dispatch(loadSavedPrice({
+                            priceId: price.id,
+                            clientName: price.clientName,
+                            questionResponses: price.questionResponses,
+                            questionsPricing: price.questionsPricing,
+                            questionsOnceOffFee: price.questionsOnceOffFee,
+                            serviceCatalogPricing: price.serviceCatalogPricing,
+                            serviceCatalogOnceOffFee: price.serviceCatalogOnceOffFee,
+                            serviceSelections: price.serviceSelections,
+                            serviceType: price.serviceType,
+                          }));
+                          navigate('/bookkeeping-quote');
+                        } else {
+                          dispatch(loadSavedPrice({
+                            priceId: price.id,
+                            clientName: price.clientName,
+                            questionResponses: price.questionResponses,
+                            questionsPricing: price.questionsPricing,
+                            questionsOnceOffFee: price.questionsOnceOffFee,
+                            serviceCatalogPricing: price.serviceCatalogPricing,
+                            serviceCatalogOnceOffFee: price.serviceCatalogOnceOffFee,
+                            serviceSelections: price.serviceSelections,
+                            serviceType: price.serviceType,
+                          }));
+                          navigate('/accounting-quote');
+                        }
+                      }}
+                      sx={{
+                        textTransform: 'none',
+                        fontSize: '0.75rem',
+                        py: 0.25,
+                        px: 1,
+                      }}
+                    >
+                      Show
+                    </Button>
+                  </TableCell>
                   <TableCell align="right" sx={{ py: 0.5 }}>
                     <Stack direction="row" spacing={0.25} justifyContent="flex-end">
                       <Tooltip title="Clone">
@@ -501,7 +552,7 @@ export default function SavedPrices() {
           {filteredPrices.length === 0 && searchQuery && (
             <Box sx={{ p: 3, textAlign: 'center', backgroundColor: 'background.default' }}>
               <Typography color="text.secondary">
-                No client quotes match "{searchQuery}"
+                No proposals match "{searchQuery}"
               </Typography>
             </Box>
           )}

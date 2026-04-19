@@ -37,7 +37,7 @@ export default function Home() {
             Starter Features
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            Use the navigation above to access pricing tools, service catalog, and client quotes.
+            Use the navigation above to access pricing tools, service catalog, and proposals.
           </Typography>
         </Box>
       </Stack>

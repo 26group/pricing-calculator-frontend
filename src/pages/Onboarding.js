@@ -263,7 +263,7 @@ export default function Onboarding() {
       description: 'Perfect for bookkeeping professionals',
       features: [
         'Bookkeeping pricing calculator',
-        'Client quotes for bookkeeping services',
+        'Proposals for bookkeeping services',
         'Bookkeeping pricing modifier',
         'Unlimited clients',
         'Team management',

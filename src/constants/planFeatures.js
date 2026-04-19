@@ -18,7 +18,7 @@ export const PLAN_FEATURES = {
     description: 'Essential pricing tools for bookkeepers',
     features: [
       'Bookkeeping pricing calculator',
-      'Client quotes for bookkeeping',
+      'Proposals for bookkeeping',
       'Bookkeeping pricing modifier',
       'Unlimited clients',
     ],
