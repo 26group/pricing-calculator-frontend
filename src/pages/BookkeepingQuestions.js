@@ -944,6 +944,9 @@ export default function BookkeepingQuestions() {
               <Typography variant="body2" sx={{ color: '#666' }}>
                 Gold: <span style={{ fontWeight: 700, color: '#d4af37' }}>${goldMonthlyPrice.toFixed(2)}</span>
               </Typography>
+              <Typography variant="body2" sx={{ color: '#666' }}>
+                Once Off: <span style={{ fontWeight: 700, color: '#002060' }}>${combinedOnceOffTotal.toFixed(2)}</span>
+              </Typography>
             </Stack>
             <Button
                 variant="contained"
