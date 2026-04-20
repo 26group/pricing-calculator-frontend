@@ -21,8 +21,8 @@ import { useNavigate, Navigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { setResponses as setResponsesAction, setQuestionsPricing, setQuestionsOnceOffFee } from '../features/questions/responsesSlice';
 import { setOrganisation } from '../features/auth/authSlice';
-import { calculateTotalOnceOffFee } from '../utils/pricingCalculator';
-import { calculateSilverMonthlyPricing } from '../utils/calculateGoldPricing';
+import { calculateComplianceOnlyPrice, calculateTotalOnceOffFee } from '../utils/pricingCalculator';
+import { calculateSilverMonthlyPricing, calculateGoldMonthlyPricing } from '../utils/calculateGoldPricing';
 
 // Default pricing modifier (base hourly rate)
 const DEFAULT_PRICING_MODIFIER = 200;
@@ -2212,10 +2212,18 @@ export default function Questions() {
     );
   };
 
+  const bronzeMonthlyPrice = useMemo(() => {
+    return calculateComplianceOnlyPrice(responses, pricingModifier);
+  }, [responses, pricingModifier]);
+
   const totalMonthlyPrice = useMemo(() => {
     const price = calculateSilverMonthlyPricing(responses, pricingModifier);
     console.log('📊 totalMonthlyPrice calculated:', price, 'with pricingModifier:', pricingModifier, 'responses.q1:', responses.q1);
     return price;
+  }, [responses, pricingModifier]);
+
+  const goldMonthlyPrice = useMemo(() => {
+    return calculateGoldMonthlyPricing(responses, pricingModifier);
   }, [responses, pricingModifier]);
   const serviceCatalogPricing = useSelector((state) => state.responses?.serviceCatalogPricing || 0);
   const combinedTotal = totalMonthlyPrice + serviceCatalogPricing;
@@ -2380,17 +2388,20 @@ export default function Questions() {
             spacing={3}
             sx={{ alignItems: 'center', justifyContent: 'space-between' }}
           >
-            <Stack direction="row" spacing={2} sx={{ alignItems: 'center' }}>
-              <Typography variant="body1" sx={{ color: '#666', fontSize: '1.1rem' }}>
-                Monthly: <span style={{ fontWeight: 700, color: '#002060' }}>${combinedTotal.toFixed(2)}</span>
-              </Typography>
-              <Typography variant="body1" sx={{ color: '#666', fontSize: '1.1rem' }}>
-                Once Off: <span style={{ fontWeight: 700, color: '#002060' }}>${combinedOnceOffTotal.toFixed(2)}</span>
-              </Typography>
-            </Stack>
-            <Typography variant="body1" sx={{ color: '#666', fontWeight: 500, minWidth: 120, textAlign: 'center', fontSize: '1.1rem' }}>
+            <Typography variant="body1" sx={{ color: '#666', fontWeight: 500, fontSize: '1.1rem' }}>
               {clientName || 'New Quote'}
             </Typography>
+            <Stack direction="row" spacing={3} sx={{ alignItems: 'center' }}>
+              <Typography variant="body2" sx={{ color: '#666' }}>
+                Bronze: <span style={{ fontWeight: 700, color: '#cd7f32' }}>${bronzeMonthlyPrice.toFixed(2)}</span>
+              </Typography>
+              <Typography variant="body2" sx={{ color: '#666' }}>
+                Silver: <span style={{ fontWeight: 700, color: '#757575' }}>${totalMonthlyPrice.toFixed(2)}</span>
+              </Typography>
+              <Typography variant="body2" sx={{ color: '#666' }}>
+                Gold: <span style={{ fontWeight: 700, color: '#d4af37' }}>${goldMonthlyPrice.toFixed(2)}</span>
+              </Typography>
+            </Stack>
             <Button
                 variant="contained"
                 color="primary"
