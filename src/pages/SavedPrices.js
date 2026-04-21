@@ -370,7 +370,7 @@ export default function SavedPrices() {
             <ContentCopyIcon sx={{ fontSize: 32, color: 'primary.main' }} />
           </Box>
           <Typography variant="h6" sx={{ mb: 1, fontWeight: 600 }}>
-            No saved prices yet
+            No proposals yet
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 3, maxWidth: 400, mx: 'auto' }}>
             Create a new pricing to get started. Your question responses and calculated prices will be automatically saved.

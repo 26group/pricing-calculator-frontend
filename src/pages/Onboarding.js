@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Box,
   Container,
@@ -57,6 +57,17 @@ const PLAN_TYPES = {
   ACCOUNTING_PRACTICE: 'accounting_practice',
 };
 
+const formatPlanPrice = (product) => {
+  const unitAmount = product?.price?.unitAmount;
+  const interval = product?.price?.interval;
+
+  if (typeof unitAmount !== 'number') return 'Pricing unavailable';
+
+  const amount = (unitAmount / 100).toFixed(2);
+  const suffix = interval ? `/${interval}` : '';
+  return `$${amount}${suffix}`;
+};
+
 export default function Onboarding() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -83,6 +94,33 @@ export default function Onboarding() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [checkingName, setCheckingName] = useState(false);
+
+  const planProducts = useMemo(() => {
+    const findProductForPlan = (planType) => {
+      return products.find((product) => {
+        const metadataPlanType =
+          product?.metadata?.planType ||
+          product?.metadata?.plan_type ||
+          product?.metadata?.plan;
+
+        if (metadataPlanType === planType) return true;
+
+        const name = (product?.name || '').toLowerCase();
+        if (planType === PLAN_TYPES.BOOKKEEPER) {
+          return name.includes('bookkeeper') || name.includes('bookkeeping');
+        }
+        if (planType === PLAN_TYPES.ACCOUNTING_PRACTICE) {
+          return name.includes('accounting');
+        }
+        return false;
+      });
+    };
+
+    return {
+      [PLAN_TYPES.BOOKKEEPER]: findProductForPlan(PLAN_TYPES.BOOKKEEPER),
+      [PLAN_TYPES.ACCOUNTING_PRACTICE]: findProductForPlan(PLAN_TYPES.ACCOUNTING_PRACTICE),
+    };
+  }, [products]);
 
   // Pre-fill name from Auth0 user (e.g., Google sign-in)
   useEffect(() => {
@@ -114,6 +152,14 @@ export default function Onboarding() {
       dispatch(fetchProducts());
     }
   }, [activeStep, products.length, dispatch]);
+
+  useEffect(() => {
+    if (!selectedPlanType) return;
+    const planProduct = planProducts?.[selectedPlanType];
+    if (planProduct?.price?.id) {
+      setSelectedPriceId(planProduct.price.id);
+    }
+  }, [selectedPlanType, planProducts]);
 
   const checkOrgNameAvailable = async (name) => {
     const token = localStorage.getItem('token');
@@ -252,7 +298,8 @@ export default function Onboarding() {
 
   const handlePlanTypeSelect = (planType) => {
     setSelectedPlanType(planType);
-    setSelectedPriceId(null); // Reset price selection when plan type changes
+    const planProduct = planProducts?.[planType];
+    setSelectedPriceId(planProduct?.price?.id || null);
   };
 
   // Plan type cards for step 3
@@ -261,6 +308,7 @@ export default function Onboarding() {
       type: PLAN_TYPES.BOOKKEEPER,
       name: 'Bookkeeper',
       description: 'Perfect for bookkeeping professionals',
+      product: planProducts?.[PLAN_TYPES.BOOKKEEPER],
       features: [
         'Bookkeeping pricing calculator',
         'Proposals for bookkeeping services',
@@ -273,6 +321,7 @@ export default function Onboarding() {
       type: PLAN_TYPES.ACCOUNTING_PRACTICE,
       name: 'Accounting Practice',
       description: 'Full suite for accounting firms',
+      product: planProducts?.[PLAN_TYPES.ACCOUNTING_PRACTICE],
       features: [
         'Everything in Bookkeeper plan',
         'Accounting pricing calculator',
@@ -283,21 +332,11 @@ export default function Onboarding() {
     },
   ];
 
-  // Get display name - use given_name if available, otherwise don't show email
-  const getDisplayName = () => {
-    if (!user) return '';
-    // Use given_name from Google/social login
-    if (user.given_name) return `, ${user.given_name}`;
-    // Check if name looks like an email (contains @), if so don't show it
-    if (user.name && !user.name.includes('@')) return `, ${user.name}`;
-    return '';
-  };
-
   return (
     <Container maxWidth="md" sx={{ py: 8 }}>
       <Paper elevation={0} sx={{ p: 5, borderRadius: '20px', boxShadow: '14px 17px 40px 4px rgba(112, 144, 176, 0.12)' }}>
         <Typography variant="h4" component="h1" gutterBottom align="center" sx={{ fontWeight: 700 }}>
-          Welcome{getDisplayName()}!
+          Start your free 7 day trial
         </Typography>
         <Typography variant="body1" color="text.secondary" align="center" sx={{ mb: 4 }}>
           Let's set up your organisation to get started.
@@ -398,6 +437,12 @@ export default function Onboarding() {
                       <Stack spacing={2}>
                         <Typography variant="h5" sx={{ fontWeight: 700 }}>
                           {plan.name}
+                        </Typography>
+                        <Typography variant="h6" sx={{ fontWeight: 700, color: 'primary.main' }}>
+                          {formatPlanPrice(plan.product)}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          7-day free trial, then billed automatically
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
                           {plan.description}

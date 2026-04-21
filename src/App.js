@@ -283,8 +283,18 @@ function AppContent() {
             <img src="/logo-icon.svg" alt="Accountable" style={{ height: '32px', width: '32px' }} />
           </Link>
           <Button color="inherit" component={Link} to="/clients" sx={{ fontWeight: 600 }}>Proposals</Button>
+          {isOwner && (
+            <Button
+              color="inherit"
+              component={Link}
+              to="/settings/pricing-modifier"
+              sx={{ fontWeight: 600 }}
+            >
+              Average Hourly Rate
+            </Button>
+          )}
           <Box sx={{ flexGrow: 1 }} />
-          <Button variant="contained" size="small" onClick={handleNewPriceClick} sx={{ mr: 2 }}>Create Pricing</Button>
+          <Button variant="contained" size="small" onClick={handleNewPriceClick} sx={{ mr: 2 }}>Create Proposal</Button>
           <Button 
             color="inherit" 
             onClick={handleSettingsClick}
@@ -305,11 +315,6 @@ function AppContent() {
             onClose={handleSettingsClose}
           >
             {console.log('🔧 Menu rendering, isOwner:', isOwner)}
-            {isOwner && (
-              <MenuItem onClick={() => { handleSettingsClose(); navigate('/settings/pricing-modifier'); }}>
-                Pricing Modifier
-              </MenuItem>
-            )}
             {isOwner && (
               <MenuItem onClick={() => { handleSettingsClose(); navigate('/settings/billing'); }}>
                 Billing & Subscription
