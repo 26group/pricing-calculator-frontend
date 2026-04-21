@@ -160,6 +160,10 @@ export const calculateBookkeepingMonthlyPrice = (responses, pricingModifier = 10
     const transactions = values.bookkeepingServices.singleLineTransactions;
     
     switch (responses.q9) {
+      case 'upTo50':
+        // Up to 50: $3.00 × 50 per month ($150)
+        total += transactions.upTo50.ratePerUnit * transactions.upTo50.maxUnits;
+        break;
       case 'upTo100':
         // Up to 100: $2.25 × 100 per month
         total += transactions.upTo100.ratePerUnit * transactions.upTo100.maxUnits;
@@ -199,6 +203,10 @@ export const calculateBookkeepingMonthlyPrice = (responses, pricingModifier = 10
     const ap = values.bookkeepingServices.accountsPayable;
 
     switch (responses.q11) {
+      case 'upTo10':
+        // Up to 10: $2.50 × 10 suppliers per month ($25)
+        total += ap.upTo10.ratePerSupplier * ap.upTo10.maxSuppliers;
+        break;
       case 'upTo20':
         // Up to 20: $2.00 × 20 suppliers per month
         total += ap.upTo20.ratePerSupplier * ap.upTo20.maxSuppliers;
@@ -247,6 +255,10 @@ export const calculateBookkeepingMonthlyPrice = (responses, pricingModifier = 10
     const ar = values.accountsReceivable.singleLineInvoices;
 
     switch (responses.q14) {
+      case 'upTo10':
+        // Up to 10: $3.50 × 10 per month ($35)
+        total += ar.upTo10.ratePerInvoice * ar.upTo10.maxInvoices;
+        break;
       case 'upTo20':
         // Up to 20: $3.00 × 20 per month
         total += ar.upTo20.ratePerInvoice * ar.upTo20.maxInvoices;
@@ -286,6 +298,9 @@ export const calculateBookkeepingMonthlyPrice = (responses, pricingModifier = 10
     const dm = values.accountsReceivable.debtorManagement;
 
     switch (responses.q16) {
+      case 'upTo10':
+        total += dm.upTo10.ratePerDebtor * dm.upTo10.maxDebtors;
+        break;
       case 'upTo20':
         // Up to 20: $5.00 × 20 per month
         total += dm.upTo20.ratePerDebtor * dm.upTo20.maxDebtors;
@@ -620,6 +635,9 @@ export const calculateBookkeepingBronzePrice = (responses, pricingModifier = 100
     const transactions = values.bookkeepingServices.singleLineTransactions;
     
     switch (responses.q9) {
+      case 'upTo50':
+        total += transactions.upTo50.ratePerUnit * transactions.upTo50.maxUnits;
+        break;
       case 'upTo100':
         total += transactions.upTo100.ratePerUnit * transactions.upTo100.maxUnits;
         break;
@@ -652,6 +670,9 @@ export const calculateBookkeepingBronzePrice = (responses, pricingModifier = 100
     const ar = values.accountsReceivable.singleLineInvoices;
 
     switch (responses.q14) {
+      case 'upTo10':
+        total += ar.upTo10.ratePerInvoice * ar.upTo10.maxInvoices;
+        break;
       case 'upTo20':
         total += ar.upTo20.ratePerInvoice * ar.upTo20.maxInvoices;
         break;
@@ -798,6 +819,9 @@ export const calculateBookkeepingSilverPrice = (responses, pricingModifier = 100
     const transactions = values.bookkeepingServices.singleLineTransactions;
     
     switch (responses.q9) {
+      case 'upTo50':
+        total += transactions.upTo50.ratePerUnit * transactions.upTo50.maxUnits;
+        break;
       case 'upTo100':
         total += transactions.upTo100.ratePerUnit * transactions.upTo100.maxUnits;
         break;
@@ -831,6 +855,9 @@ export const calculateBookkeepingSilverPrice = (responses, pricingModifier = 100
     const ap = values.bookkeepingServices.accountsPayable;
 
     switch (responses.q11) {
+      case 'upTo10':
+        total += ap.upTo10.ratePerSupplier * ap.upTo10.maxSuppliers;
+        break;
       case 'upTo20':
         total += ap.upTo20.ratePerSupplier * ap.upTo20.maxSuppliers;
         break;
@@ -865,6 +892,9 @@ export const calculateBookkeepingSilverPrice = (responses, pricingModifier = 100
     const ar = values.accountsReceivable.singleLineInvoices;
 
     switch (responses.q14) {
+      case 'upTo10':
+        total += ar.upTo10.ratePerInvoice * ar.upTo10.maxInvoices;
+        break;
       case 'upTo20':
         total += ar.upTo20.ratePerInvoice * ar.upTo20.maxInvoices;
         break;
@@ -899,6 +929,9 @@ export const calculateBookkeepingSilverPrice = (responses, pricingModifier = 100
     const dm = values.accountsReceivable.debtorManagement;
 
     switch (responses.q16) {
+      case 'upTo10':
+        total += dm.upTo10.ratePerDebtor * dm.upTo10.maxDebtors;
+        break;
       case 'upTo20':
         total += dm.upTo20.ratePerDebtor * dm.upTo20.maxDebtors;
         break;
@@ -1095,6 +1128,9 @@ export const calculateBookkeepingGoldPrice = (responses, pricingModifier = 100) 
     const ap = values.bookkeepingServices.accountsPayable;
 
     switch (responses.q11) {
+      case 'upTo10':
+        total += ap.upTo10.ratePerSupplier * ap.upTo10.maxSuppliers;
+        break;
       case 'upTo20':
         total += ap.upTo20.ratePerSupplier * ap.upTo20.maxSuppliers;
         break;
@@ -1163,6 +1199,9 @@ export const calculateBookkeepingGoldPrice = (responses, pricingModifier = 100) 
     const dm = values.accountsReceivable.debtorManagement;
 
     switch (responses.q16) {
+      case 'upTo10':
+        total += dm.upTo10.ratePerDebtor * dm.upTo10.maxDebtors;
+        break;
       case 'upTo20':
         total += dm.upTo20.ratePerDebtor * dm.upTo20.maxDebtors;
         break;

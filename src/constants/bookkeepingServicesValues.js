@@ -109,10 +109,15 @@ export const serviceValuesBookkeeping = {
   bookkeepingServices: {
     // Q9a: Single Line Bank & Credit Card Transactions
     singleLineTransactions: {
+      upTo50: {
+        ratePerUnit: 3.00,
+        maxUnits: 50,
+        inclusion: 'Bank & Credit Card Reconciliation - Up to 50 transactions',
+      },
       upTo100: {
         ratePerUnit: 2.25,
         maxUnits: 100,
-        inclusion: 'Bank & Credit Card Reconciliation - Up to 100 transactions',
+        inclusion: 'Bank & Credit Card Reconciliation - 51-100 transactions',
       },
       upTo200: {
         ratePerUnit: 2.00,
@@ -138,10 +143,15 @@ export const serviceValuesBookkeeping = {
 
     // Q9c: Accounts Payable Management
     accountsPayable: {
+      upTo10: {
+        ratePerSupplier: 2.50,
+        maxSuppliers: 10,
+        inclusion: 'Accounts Payable - Up to 10 suppliers/month',
+      },
       upTo20: {
         ratePerSupplier: 2.00,
         maxSuppliers: 20,
-        inclusion: 'Accounts Payable - Up to 20 suppliers/month',
+        inclusion: 'Accounts Payable - 11-20 suppliers/month',
       },
       upTo50: {
         ratePerSupplier: 1.50,
@@ -178,10 +188,15 @@ export const serviceValuesBookkeeping = {
   accountsReceivable: {
     // Q11a: Single Line AR Invoices
     singleLineInvoices: {
+      upTo10: {
+        ratePerInvoice: 3.50,
+        maxInvoices: 10,
+        inclusion: 'Accounts Receivable - Up to 10 invoices/month',
+      },
       upTo20: {
         ratePerInvoice: 3.00,
         maxInvoices: 20,
-        inclusion: 'Accounts Receivable - Up to 20 invoices/month',
+        inclusion: 'Accounts Receivable - 11-20 invoices/month',
       },
       upTo50: {
         ratePerInvoice: 2.75,
@@ -207,10 +222,15 @@ export const serviceValuesBookkeeping = {
 
     // Q11c: Debtor Management
     debtorManagement: {
+      upTo10: {
+        ratePerDebtor: 6.00,
+        maxDebtors: 10,
+        inclusion: 'Debtor Management - Up to 10 debtors/month',
+      },
       upTo20: {
         ratePerDebtor: 5.00,
         maxDebtors: 20,
-        inclusion: 'Debtor Management - Up to 20 debtors/month',
+        inclusion: 'Debtor Management - 11-20 debtors/month',
       },
       upTo50: {
         ratePerDebtor: 4.00,

@@ -206,7 +206,9 @@ export const calculateGoldMonthlyPricing = (responses, pricingModifier = 200) =>
   if (responses.q12 && responses.q12 !== 'no') {
     const superService = serviceValuesAccounting.payrollServices.superPrepAndLodgement?.[segment];
     if (superService) {
-      if (responses.q12 === 'quarterly') {
+      if (responses.q12 === 'weekly') {
+        total += superService.weeklyMonthly || superService.monthly;
+      } else if (responses.q12 === 'quarterly') {
         total += superService.quarterlyMonthly || superService.monthly;
       } else if (responses.q12 === 'monthly') {
         total += superService.monthlyMonthly || superService.monthly;
@@ -554,7 +556,9 @@ export const calculateSilverMonthlyPricing = (responses, pricingModifier = 200) 
   if (responses.q12 && responses.q12 !== 'no') {
     const superService = serviceValuesAccounting.payrollServices.superPrepAndLodgement?.[segment];
     if (superService) {
-      if (responses.q12 === 'quarterly') {
+      if (responses.q12 === 'weekly') {
+        total += superService.weeklyMonthly || superService.monthly;
+      } else if (responses.q12 === 'quarterly') {
         total += superService.quarterlyMonthly || superService.monthly;
       } else if (responses.q12 === 'monthly') {
         total += superService.monthlyMonthly || superService.monthly;

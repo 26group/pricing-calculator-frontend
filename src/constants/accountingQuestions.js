@@ -795,6 +795,7 @@ export const accountingQuestionData = [
     type: 'radio',
     category: 'PAYROLL SERVICES',
     options: [
+      { label: 'Weekly', value: 'weekly' },
       { label: 'Quarterly', value: 'quarterly' },
       { label: 'Monthly', value: 'monthly' },
       { label: 'No', value: 'no' },

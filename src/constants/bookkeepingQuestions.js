@@ -154,7 +154,8 @@ export const bookkeepingQuestionData = [
     prompt: 'How many transactions per month across all bank & credit card accounts?',
     type: 'radio',
     options: [
-      { label: '< 100 transactions', value: 'upTo100' },
+      { label: '< 50 transactions', value: 'upTo50' },
+      { label: '51 - 100 transactions', value: 'upTo100' },
       { label: '101 - 200 transactions', value: 'upTo200' },
       { label: '201 - 400 transactions', value: 'upTo400' },
       { label: '400+ transactions', value: 'over400' },
@@ -180,10 +181,11 @@ export const bookkeepingQuestionData = [
   },
   {
     id: 'q11',
-    prompt: 'Does the client require Accounts Payable management?',
+    prompt: 'Does the client require Accounts Payable (Payables) management?',
     type: 'radio',
     options: [
-      { label: '< 20 suppliers/month', value: 'upTo20' },
+      { label: '< 10 suppliers/month', value: 'upTo10' },
+      { label: '11-20 suppliers/month', value: 'upTo20' },
       { label: '20-50 suppliers/month', value: 'upTo50' },
       { label: '50+ suppliers/month', value: 'extra' },
       { label: 'No', value: 'no' },
@@ -246,7 +248,8 @@ export const bookkeepingQuestionData = [
     prompt: 'Does the client require Accounts Receivable invoicing?',
     type: 'radio',
     options: [
-      { label: '< 20 invoices/month', value: 'upTo20' },
+      { label: '< 10 invoices/month', value: 'upTo10' },
+      { label: '11-20 invoices/month', value: 'upTo20' },
       { label: '21-50 invoices/month', value: 'upTo50' },
       { label: '51-75 invoices/month', value: 'upTo75' },
       { label: '75+ invoices/month', value: 'over75' },
@@ -276,7 +279,8 @@ export const bookkeepingQuestionData = [
     prompt: 'Does the client require Debtor Management?',
     type: 'radio',
     options: [
-      { label: '< 20 debtors/month', value: 'upTo20' },
+      { label: '< 10 debtors/month', value: 'upTo10' },
+      { label: '11-20 debtors/month', value: 'upTo20' },
       { label: '21-50 debtors/month', value: 'upTo50' },
       { label: '50+ debtors/month', value: 'extra' },
       { label: 'No', value: 'no' },
