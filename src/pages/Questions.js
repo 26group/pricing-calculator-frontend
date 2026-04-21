@@ -909,7 +909,8 @@ export default function Questions() {
       }
 
       if (
-        (responses.q12 === 'quarterly' || responses.q12 === 'monthly') &&
+        responses.q12 &&
+        responses.q12 !== 'no' &&
         (segment === 'medium' || segment === 'large')
       ) {
         payload.superPrepCandidate = serviceValues.payrollServices.payrollTaxReturns?.[segment];

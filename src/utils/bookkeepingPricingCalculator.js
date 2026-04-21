@@ -117,7 +117,11 @@ export const calculateBookkeepingMonthlyPrice = (responses, pricingModifier = 10
     const superLodge = values.payrollServices.superLodgement;
     const employeeCount = parseInt(responses.q6a, 10) || 0;
 
-    if (responses.q6 === 'quarterly') {
+    if (responses.q6 === 'weekly') {
+      total += (superLodge.weekly.ratePerEmployee * employeeCount * superLodge.weekly.frequency) / 12;
+    } else if (responses.q6 === 'fortnightly') {
+      total += (superLodge.fortnightly.ratePerEmployee * employeeCount * superLodge.fortnightly.frequency) / 12;
+    } else if (responses.q6 === 'quarterly') {
       // $5 × employees × 4 / 12
       total += (superLodge.quarterly.ratePerEmployee * employeeCount * superLodge.quarterly.frequency) / 12;
     } else if (responses.q6 === 'monthly') {
@@ -606,7 +610,11 @@ export const calculateBookkeepingBronzePrice = (responses, pricingModifier = 100
     const superLodge = values.payrollServices.superLodgement;
     const employeeCount = parseInt(responses.q6a, 10) || 0;
 
-    if (responses.q6 === 'quarterly') {
+    if (responses.q6 === 'weekly') {
+      total += (superLodge.weekly.ratePerEmployee * employeeCount * superLodge.weekly.frequency) / 12;
+    } else if (responses.q6 === 'fortnightly') {
+      total += (superLodge.fortnightly.ratePerEmployee * employeeCount * superLodge.fortnightly.frequency) / 12;
+    } else if (responses.q6 === 'quarterly') {
       total += (superLodge.quarterly.ratePerEmployee * employeeCount * superLodge.quarterly.frequency) / 12;
     } else if (responses.q6 === 'monthly') {
       total += (superLodge.monthly.ratePerEmployee * employeeCount * superLodge.monthly.frequency) / 12;
@@ -788,7 +796,11 @@ export const calculateBookkeepingSilverPrice = (responses, pricingModifier = 100
     const superLodge = values.payrollServices.superLodgement;
     const employeeCount = parseInt(responses.q6a, 10) || 0;
 
-    if (responses.q6 === 'quarterly') {
+    if (responses.q6 === 'weekly') {
+      total += (superLodge.weekly.ratePerEmployee * employeeCount * superLodge.weekly.frequency) / 12;
+    } else if (responses.q6 === 'fortnightly') {
+      total += (superLodge.fortnightly.ratePerEmployee * employeeCount * superLodge.fortnightly.frequency) / 12;
+    } else if (responses.q6 === 'quarterly') {
       total += (superLodge.quarterly.ratePerEmployee * employeeCount * superLodge.quarterly.frequency) / 12;
     } else if (responses.q6 === 'monthly') {
       total += (superLodge.monthly.ratePerEmployee * employeeCount * superLodge.monthly.frequency) / 12;
@@ -1064,7 +1076,11 @@ export const calculateBookkeepingGoldPrice = (responses, pricingModifier = 100) 
     const superLodge = values.payrollServices.superLodgement;
     const employeeCount = parseInt(responses.q6a, 10) || 0;
 
-    if (responses.q6 === 'quarterly') {
+    if (responses.q6 === 'weekly') {
+      total += (superLodge.weekly.ratePerEmployee * employeeCount * superLodge.weekly.frequency) / 12;
+    } else if (responses.q6 === 'fortnightly') {
+      total += (superLodge.fortnightly.ratePerEmployee * employeeCount * superLodge.fortnightly.frequency) / 12;
+    } else if (responses.q6 === 'quarterly') {
       total += (superLodge.quarterly.ratePerEmployee * employeeCount * superLodge.quarterly.frequency) / 12;
     } else if (responses.q6 === 'monthly') {
       total += (superLodge.monthly.ratePerEmployee * employeeCount * superLodge.monthly.frequency) / 12;

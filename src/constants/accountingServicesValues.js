@@ -410,6 +410,7 @@ export const serviceValuesAccounting = {
         perLodgement: 100,
         monthly: 33.33, // quarterly default
         weeklyMonthly: 433.33,
+        fortnightlyMonthly: 216.67,
         quarterlyMonthly: 33.33,
         monthlyMonthly: 100,
         inclusion: 'Super Prep & Lodgement — Micro',
@@ -418,6 +419,7 @@ export const serviceValuesAccounting = {
         perLodgement: 150,
         monthly: 50,
         weeklyMonthly: 650,
+        fortnightlyMonthly: 325,
         quarterlyMonthly: 50,
         monthlyMonthly: 150,
         inclusion: 'Super Prep & Lodgement — Small',
@@ -426,6 +428,7 @@ export const serviceValuesAccounting = {
         perLodgement: 250,
         monthly: 83.33,
         weeklyMonthly: 1083.33,
+        fortnightlyMonthly: 541.67,
         quarterlyMonthly: 83.33,
         monthlyMonthly: 250,
         inclusion: 'Super Prep & Lodgement — Medium',
@@ -434,6 +437,7 @@ export const serviceValuesAccounting = {
         perLodgement: 500,
         monthly: 500, // monthly default for large
         weeklyMonthly: 2166.67,
+        fortnightlyMonthly: 1083.33,
         quarterlyMonthly: 166.67,
         monthlyMonthly: 500,
         inclusion: 'Super Prep & Lodgement — Large',

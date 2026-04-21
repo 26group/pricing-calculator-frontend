@@ -208,6 +208,8 @@ export const calculateGoldMonthlyPricing = (responses, pricingModifier = 200) =>
     if (superService) {
       if (responses.q12 === 'weekly') {
         total += superService.weeklyMonthly || superService.monthly;
+      } else if (responses.q12 === 'fortnightly') {
+        total += superService.fortnightlyMonthly || superService.monthly;
       } else if (responses.q12 === 'quarterly') {
         total += superService.quarterlyMonthly || superService.monthly;
       } else if (responses.q12 === 'monthly') {
@@ -558,6 +560,8 @@ export const calculateSilverMonthlyPricing = (responses, pricingModifier = 200) 
     if (superService) {
       if (responses.q12 === 'weekly') {
         total += superService.weeklyMonthly || superService.monthly;
+      } else if (responses.q12 === 'fortnightly') {
+        total += superService.fortnightlyMonthly || superService.monthly;
       } else if (responses.q12 === 'quarterly') {
         total += superService.quarterlyMonthly || superService.monthly;
       } else if (responses.q12 === 'monthly') {

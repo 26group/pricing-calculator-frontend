@@ -93,8 +93,10 @@ export const bookkeepingQuestionData = [
     type: 'radio',
     showWhen: (responses) => responses.q3 === 'yes' || responses.q3 === 'yesSetup',
     options: [
-      { label: 'Quarterly', value: 'quarterly' },
+      { label: 'Weekly', value: 'weekly' },
+      { label: 'Fortnightly', value: 'fortnightly' },
       { label: 'Monthly', value: 'monthly' },
+      { label: 'Quarterly', value: 'quarterly' },
       { label: 'No', value: 'no' },
     ],
     children: [
@@ -102,7 +104,7 @@ export const bookkeepingQuestionData = [
         id: 'q6a',
         prompt: 'How many employees?',
         type: 'number',
-        showWhen: (responses) => responses.q6 === 'quarterly' || responses.q6 === 'monthly',
+        showWhen: (responses) => responses.q6 && responses.q6 !== 'no',
       },
     ],
   },

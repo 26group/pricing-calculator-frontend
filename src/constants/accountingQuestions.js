@@ -796,8 +796,9 @@ export const accountingQuestionData = [
     category: 'PAYROLL SERVICES',
     options: [
       { label: 'Weekly', value: 'weekly' },
-      { label: 'Quarterly', value: 'quarterly' },
+      { label: 'Fortnightly', value: 'fortnightly' },
       { label: 'Monthly', value: 'monthly' },
+      { label: 'Quarterly', value: 'quarterly' },
       { label: 'No', value: 'no' },
     ],
   },

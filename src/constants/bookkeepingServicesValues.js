@@ -64,6 +64,16 @@ export const serviceValuesBookkeeping = {
 
     // Q6: Super Prep & Lodgement (per employee)
     superLodgement: {
+      weekly: {
+        ratePerEmployee: 7.00,
+        frequency: 52,
+        inclusion: 'Super Prep & Lodgement - Weekly',
+      },
+      fortnightly: {
+        ratePerEmployee: 7.00,
+        frequency: 26,
+        inclusion: 'Super Prep & Lodgement - Fortnightly',
+      },
       quarterly: {
         ratePerEmployee: 5.00,
         frequency: 4,
