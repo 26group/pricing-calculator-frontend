@@ -2,8 +2,14 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { Provider } from 'react-redux';
 import { Auth0Provider } from '@auth0/auth0-react';
+import posthog from 'posthog-js';
 import { store } from './app/store';
 import App from './App';
+
+posthog.init(process.env.REACT_APP_POSTHOG_KEY, {
+  api_host: process.env.REACT_APP_POSTHOG_HOST,
+  person_profiles: 'identified_only',
+});
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 const domain = process.env.REACT_APP_AUTH0_DOMAIN;

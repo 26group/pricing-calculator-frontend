@@ -26,12 +26,18 @@ import {
   Box,
   TextField,
   TablePagination,
+  FormControl,
+  FormLabel,
+  RadioGroup,
+  FormControlLabel,
+  Radio,
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import VisibilityIcon from '@mui/icons-material/Visibility';
+import posthog from 'posthog-js';
 import { getPrices, deletePrice, getPrice, createPrice } from '../services/priceApi';
-import { loadSavedPrice } from '../features/questions/responsesSlice';
+import { loadSavedPrice, setClientName, setActivePriceId, resetPriceState, updateResponse } from '../features/questions/responsesSlice';
 import { getRevenueSegmentLabel } from '../constants/revenueSegments';
 
 const getServiceTypeLabel = (price) => {
@@ -65,9 +71,11 @@ const getServiceTypeLabel = (price) => {
 export default function SavedPrices() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const organisation = useSelector((state) => state.auth.organisation);
   const isOwner = useSelector((state) => state.auth.isOwner);
   const isManager = useSelector((state) => state.auth.isManager);
   const canSeeAllQuotes = isOwner || isManager; // Owners and managers can see all quotes
+  const isBookkeeper = organisation?.planType === 'bookkeeper';
   const [prices, setPrices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -78,6 +86,10 @@ export default function SavedPrices() {
   const [priceToClone, setPriceToClone] = useState(null);
   const [cloneNameInput, setCloneNameInput] = useState('');
   const [isCloning, setIsCloning] = useState(false);
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [clientNameInput, setClientNameInput] = useState('');
+  const [serviceType, setServiceType] = useState('');
+  const [isCreating, setIsCreating] = useState(false);
   
   // Pagination state
   const [page, setPage] = useState(0);
@@ -123,6 +135,7 @@ export default function SavedPrices() {
   }, []);
 
   const handleLoadPrice = async (priceId) => {
+    posthog.capture('proposal_opened', { proposal_id: priceId });
     try {
       const priceData = await getPrice(priceId);
       dispatch(loadSavedPrice({
@@ -174,6 +187,7 @@ export default function SavedPrices() {
     try {
       setDeleting(true);
       await deletePrice(priceToDelete.id);
+      posthog.capture('proposal_deleted', { proposal_id: priceToDelete.id });
       setDeleteDialogOpen(false);
       setPriceToDelete(null);
       // Reset pagination to page 0 after delete
@@ -215,7 +229,12 @@ export default function SavedPrices() {
         serviceSelections: originalPrice.serviceSelections,
         revenueSegment: originalPrice.revenueSegment,
       };
-      await createPrice(clonedPriceData);
+      const cloned = await createPrice(clonedPriceData);
+      posthog.capture('proposal_cloned', {
+        original_proposal_id: priceToClone.id,
+        new_proposal_id: cloned.id,
+        service_type: originalPrice.serviceType,
+      });
       setCloneDialogOpen(false);
       setPriceToClone(null);
       setCloneNameInput('');
@@ -247,6 +266,57 @@ export default function SavedPrices() {
   const handleSearchChange = (event) => {
     setSearchQuery(event.target.value);
     setPage(0); // Reset to first page when searching
+  };
+
+  const handleOpenCreateDialog = () => {
+    if (isBookkeeper) {
+      setServiceType('bookkeeping');
+    }
+    setCreateDialogOpen(true);
+  };
+
+  const handleCloseCreateDialog = () => {
+    setCreateDialogOpen(false);
+    setClientNameInput('');
+    setServiceType('');
+  };
+
+  const handleCreateProposal = async () => {
+    if (!clientNameInput.trim() || !serviceType) return;
+
+    try {
+      setIsCreating(true);
+      dispatch(resetPriceState());
+
+      const priceData = {
+        clientName: clientNameInput.trim(),
+        serviceType,
+        questionResponses: {},
+      };
+
+      const response = await createPrice(priceData);
+
+      dispatch(setClientName(clientNameInput.trim()));
+      dispatch(setActivePriceId(response.id));
+      dispatch(updateResponse({ questionId: 'serviceType', value: serviceType }));
+      posthog.capture('proposal_created', {
+        service_type: serviceType,
+        proposal_id: response.id,
+      });
+
+      handleCloseCreateDialog();
+
+      if (serviceType === 'bookkeeping') {
+        navigate('/bookkeeping-questions');
+      } else {
+        navigate('/questions');
+      }
+    } catch (err) {
+      console.error('Failed to create proposal:', err);
+      setError('Failed to create proposal. Please try again.');
+    } finally {
+      setIsCreating(false);
+    }
   };
 
   const formatDate = (dateStr) => {
@@ -370,11 +440,14 @@ export default function SavedPrices() {
             <ContentCopyIcon sx={{ fontSize: 32, color: 'primary.main' }} />
           </Box>
           <Typography variant="h6" sx={{ mb: 1, fontWeight: 600 }}>
-            No proposals yet
+            Create your first proposal
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 3, maxWidth: 400, mx: 'auto' }}>
             Create a new pricing to get started. Your question responses and calculated prices will be automatically saved.
           </Typography>
+          <Button variant="contained" onClick={handleOpenCreateDialog}>
+            Create Proposal
+          </Button>
         </Paper>
       ) : (
         <Paper sx={{ borderRadius: '20px', overflow: 'hidden' }}>
@@ -620,6 +693,48 @@ export default function SavedPrices() {
             disabled={!cloneNameInput.trim() || isCloning}
           >
             {isCloning ? 'Cloning...' : 'Clone'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={createDialogOpen} onClose={handleCloseCreateDialog} maxWidth="sm" fullWidth>
+        <DialogTitle>Create Proposal</DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            margin="dense"
+            label="Client Name"
+            type="text"
+            fullWidth
+            variant="outlined"
+            value={clientNameInput}
+            onChange={(e) => setClientNameInput(e.target.value)}
+            sx={{ mt: 2 }}
+            placeholder="Enter client name"
+          />
+          <FormControl sx={{ mt: 3 }} fullWidth>
+            <FormLabel id="service-type-label">What services do you provide?</FormLabel>
+            <RadioGroup
+              aria-labelledby="service-type-label"
+              name="service-type"
+              value={serviceType}
+              onChange={(e) => setServiceType(e.target.value)}
+            >
+              {!isBookkeeper && (
+                <FormControlLabel value="accounting" control={<Radio />} label="Accounting" />
+              )}
+              <FormControlLabel value="bookkeeping" control={<Radio />} label="Bookkeeping" />
+            </RadioGroup>
+          </FormControl>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseCreateDialog}>Cancel</Button>
+          <Button
+            variant="contained"
+            onClick={handleCreateProposal}
+            disabled={!clientNameInput.trim() || !serviceType || isCreating}
+          >
+            {isCreating ? 'Creating...' : 'Create Proposal'}
           </Button>
         </DialogActions>
       </Dialog>

@@ -26,6 +26,7 @@ import {
 } from '@mui/material';
 import CheckIcon from '@mui/icons-material/Check';
 import { useSelector } from 'react-redux';
+import posthog from 'posthog-js';
 import { calculateGoldMonthlyPricing } from '../utils/calculateGoldPricing';
 import { calculateComplianceOnlyPrice } from '../utils/pricingCalculator';
 import { createPrice, getPrices } from '../services/priceApi';
@@ -187,12 +188,21 @@ export default function Pricing() {
         totalOnceOff: questionsOnceOffFee + serviceCatalogOnceOffFee,
       };
 
-      await createPrice(priceData);
+      const saved = await createPrice(priceData);
+      posthog.capture('proposal_saved', {
+        proposal_id: saved?.id,
+        revenue_segment: revenueSegment,
+        bronze_monthly: bronzeMonthly,
+        silver_monthly: silverMonthly,
+        gold_monthly: goldMonthly,
+        total_once_off: questionsOnceOffFee + serviceCatalogOnceOffFee,
+      });
       setSaveSuccess('Price saved successfully!');
       setTimeout(() => {
         handleCloseSaveDialog();
       }, 2000);
     } catch (error) {
+      posthog.captureException(error, { $exception_source: 'Pricing.handleSavePrice' });
       setSaveError(
         error?.message || 'Failed to save price. Please check your connection and try again.'
       );

@@ -21,6 +21,7 @@ import CheckIcon from '@mui/icons-material/Check';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth0 } from '@auth0/auth0-react';
 import { useDispatch, useSelector } from 'react-redux';
+import posthog from 'posthog-js';
 import { fetchProducts, selectPlan } from '../features/subscription/subscriptionSlice';
 
 const steps = ['Your Name', 'Create Organisation', 'Select Plan', 'Set Pricing'];
@@ -279,9 +280,16 @@ export default function Onboarding() {
         }
       }
 
+      posthog.capture('onboarding_completed', {
+        plan_type: selectedPlanType,
+        accounting_hourly_rate: selectedPlanType === PLAN_TYPES.ACCOUNTING_PRACTICE ? pricingModifier : undefined,
+        bookkeeping_hourly_rate: bookkeepingPricingModifier,
+      });
+
       // Successfully created - redirect to clients
       navigate('/clients');
     } catch (err) {
+      posthog.captureException(err, { $exception_source: 'Onboarding.handleSubmit' });
       setError(err.message);
     } finally {
       setLoading(false);
@@ -300,6 +308,7 @@ export default function Onboarding() {
     setSelectedPlanType(planType);
     const planProduct = planProducts?.[planType];
     setSelectedPriceId(planProduct?.price?.id || null);
+    posthog.capture('plan_type_selected', { plan_type: planType });
   };
 
   // Plan type cards for step 3

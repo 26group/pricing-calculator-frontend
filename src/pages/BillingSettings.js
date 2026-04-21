@@ -19,6 +19,7 @@ import CreditCardIcon from '@mui/icons-material/CreditCard';
 import SettingsIcon from '@mui/icons-material/Settings';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
+import posthog from 'posthog-js';
 import { fetchSubscription, fetchProducts } from '../features/subscription/subscriptionSlice';
 import * as subscriptionApi from '../services/subscriptionApi';
 
@@ -89,8 +90,13 @@ export default function BillingSettings() {
     setActionError(null);
     try {
       const { url } = await subscriptionApi.createCheckoutSession();
+      posthog.capture('payment_method_initiated', {
+        plan_name: subscription?.plan?.name,
+        subscription_status: subscription?.status,
+      });
       window.location.href = url;
     } catch (err) {
+      posthog.captureException(err, { $exception_source: 'BillingSettings.handleAddPayment' });
       setActionError(err.message);
     } finally {
       setActionLoading(false);
@@ -115,10 +121,15 @@ export default function BillingSettings() {
     setActionError(null);
     try {
       await subscriptionApi.cancelSubscription(true);
+      posthog.capture('subscription_cancelled', {
+        plan_name: subscription?.plan?.name,
+        subscription_status: subscription?.status,
+      });
       setCancelDialogOpen(false);
       setSuccessMessage('Subscription will be canceled at the end of the billing period.');
       dispatch(fetchSubscription());
     } catch (err) {
+      posthog.captureException(err, { $exception_source: 'BillingSettings.handleCancelSubscription' });
       setActionError(err.message);
     } finally {
       setActionLoading(false);

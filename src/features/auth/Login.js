@@ -3,6 +3,7 @@ import { Button, Stack, Typography, Container, Alert, CircularProgress } from '@
 import { useAuth0 } from '@auth0/auth0-react';
 import { Navigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
+import posthog from 'posthog-js';
 import { loginSuccess, setToken, setOrganisation } from './authSlice';
 import { getSessionExpiredMessage } from '../../utils/sessionManager';
 
@@ -68,6 +69,16 @@ export default function Login() {
             dispatch(setToken(token));
             dispatch(loginSuccess(data.user));
             console.log('🔄 Login: Token obtained and stored');
+
+            posthog.identify(user.sub, {
+              email: user.email,
+              name: user.name,
+            });
+            if (data.isNewUser) {
+              posthog.capture('user_signed_up', { email: user.email });
+            } else {
+              posthog.capture('user_logged_in', { email: user.email });
+            }
             
             // Check if backend returned a pending invite token (from Auth0 metadata)
             // The backend auto-accepts the invite, so redirect to invited user onboarding

@@ -16,6 +16,7 @@ import {
 import CheckIcon from '@mui/icons-material/Check';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
+import posthog from 'posthog-js';
 import { fetchProducts, selectPlan } from '../features/subscription/subscriptionSlice';
 
 const formatCurrency = (amount, currency = 'usd') => {
@@ -58,9 +59,17 @@ export default function SelectPlan() {
     setSubmitting(true);
     try {
       await dispatch(selectPlan(selectedPriceId)).unwrap();
+      const selectedProduct = products.find((p) => p.price?.id === selectedPriceId);
+      posthog.capture('subscription_plan_selected', {
+        plan_name: selectedProduct?.name,
+        price_id: selectedPriceId,
+        price_amount: selectedProduct?.price?.unitAmount,
+        price_interval: selectedProduct?.price?.interval,
+      });
       navigate('/clients');
     } catch (err) {
       console.error('Failed to select plan:', err);
+      posthog.captureException(err, { $exception_source: 'SelectPlan.handleSelectPlan' });
     } finally {
       setSubmitting(false);
     }

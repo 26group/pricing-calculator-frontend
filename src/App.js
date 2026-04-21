@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { ThemeProvider, CssBaseline, AppBar, Toolbar, Button, Typography, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Menu, MenuItem, Box, FormControl, FormLabel, RadioGroup, FormControlLabel, Radio } from '@mui/material';
 import { BrowserRouter, Routes, Route, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
+import posthog from 'posthog-js';
 import { loginSuccess, logout, setOrganisation } from './features/auth/authSlice';
 import { setClientName, setActivePriceId, resetPriceState, updateResponse } from './features/questions/responsesSlice';
 import { useAuth0 } from '@auth0/auth0-react';
@@ -192,9 +193,12 @@ function AppContent() {
   const isLoggedIn = !!localStorage.getItem('token') || isAuthenticated || !!storedUser;
 
   const handleLogout = async () => {
+    posthog.capture('user_logged_out');
+    posthog.reset();
+
     // Call backend logout endpoint first to invalidate refresh token
     await authApi.logout();
-    
+
     // Then clear local state
     localStorage.removeItem('token');
     localStorage.removeItem('userEmail');
@@ -239,6 +243,10 @@ function AppContent() {
         dispatch(setClientName(clientNameInput));
         dispatch(setActivePriceId(response.id));
         dispatch(updateResponse({ questionId: 'serviceType', value: serviceType }));
+        posthog.capture('proposal_created', {
+          service_type: serviceType,
+          proposal_id: response.id,
+        });
         setOpenModal(false);
         setClientNameInput('');
         setServiceType('');
@@ -251,6 +259,7 @@ function AppContent() {
         }
       } catch (error) {
         console.error('Error creating price record:', error);
+        posthog.captureException(error, { $exception_source: 'handleClientNameSubmit' });
         setIsCreating(false);
         alert('Error creating price record. Please try again.');
       }
