@@ -68,7 +68,6 @@ export default function SelectPlan() {
       });
       navigate('/clients');
     } catch (err) {
-      console.error('Failed to select plan:', err);
       posthog.captureException(err, { $exception_source: 'SelectPlan.handleSelectPlan' });
     } finally {
       setSubmitting(false);

@@ -80,8 +80,7 @@ export default function PricingModifier() {
             setBookkeepingPricingModifier(100); // Default to $100
           }
         }
-      } catch (err) {
-        console.error('Error fetching organisation:', err);
+      } catch {
       } finally {
         setLoadingData(false);
       }

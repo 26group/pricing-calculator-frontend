@@ -77,22 +77,16 @@ function AppContent() {
         return;
       }
 
-      console.log('🔍 checkOnboardingStatus response status:', response.status, 'ok:', response.ok);
       if (response.ok) {
         const data = await response.json();
-        console.log('📦 App.js org data:', { isOwner: data.isOwner, isManager: data.isManager, owner: data.owner, name: data.name, planType: data.planType });
-        console.log('📦 App.js: Setting isOwner to:', data.isOwner, 'isManager to:', data.isManager);
-        console.log('📦 Full organisation data:', JSON.stringify(data, null, 2));
         setOnboardingComplete(true);
         
         // Set organisation and owner/manager status in Redux
-        console.log('📦 DISPATCHING setOrganisation with isOwner:', data.isOwner, 'isManager:', data.isManager);
         dispatch(setOrganisation({
           organisation: data,
           isOwner: data.isOwner || false,
           isManager: data.isManager || false,
         }));
-        console.log('📦 DISPATCH COMPLETE');
         
         // Check if plan type is selected (new onboarding flow uses planType)
         if (!data.planType) {
@@ -108,9 +102,7 @@ function AppContent() {
           navigate('/onboarding');
         }
       }
-    } catch (error) {
-      console.error('Error checking onboarding status:', error);
-    }
+    } catch {}
   };
 
   useEffect(() => {
@@ -150,6 +142,38 @@ function AppContent() {
     }
   }, [tokenReady, user, storedUser, location.pathname]);
 
+  // Track button-like UI triggers globally with readable labels
+  useEffect(() => {
+    const getTriggerLabel = (element) => {
+      if (!element) return null;
+      const explicitLabel = element.getAttribute('data-posthog-label');
+      if (explicitLabel) return explicitLabel;
+
+      const ariaLabel = element.getAttribute('aria-label');
+      if (ariaLabel) return ariaLabel;
+
+      const text = element.textContent?.replace(/\s+/g, ' ').trim();
+      return text || null;
+    };
+
+    const handleGlobalClick = (event) => {
+      const triggerElement = event.target?.closest?.('button, [role="button"], [role="menuitem"], a');
+      if (!triggerElement) return;
+
+      const eventLabel = getTriggerLabel(triggerElement);
+      if (!eventLabel) return;
+
+      posthog.capture('ui_trigger_clicked', {
+        event_label: eventLabel,
+        trigger_type: triggerElement.tagName?.toLowerCase(),
+        path: location.pathname,
+      });
+    };
+
+    document.addEventListener('click', handleGlobalClick);
+    return () => document.removeEventListener('click', handleGlobalClick);
+  }, [location.pathname]);
+
   const getJWTToken = async (auth0User) => {
     try {
       // Get the ID token from Auth0
@@ -174,9 +198,7 @@ function AppContent() {
           setTokenReady(true);
         }
       }
-    } catch (error) {
-      console.error('Error getting JWT token:', error);
-    }
+    } catch {}
   };
 
   // Get active user - prefer Auth0 user, then stored user from Redux, then localStorage
@@ -258,7 +280,6 @@ function AppContent() {
           navigate('/questions');
         }
       } catch (error) {
-        console.error('Error creating price record:', error);
         posthog.captureException(error, { $exception_source: 'handleClientNameSubmit' });
         setIsCreating(false);
         alert('Error creating price record. Please try again.');
@@ -323,7 +344,6 @@ function AppContent() {
             open={settingsMenuOpen}
             onClose={handleSettingsClose}
           >
-            {console.log('🔧 Menu rendering, isOwner:', isOwner)}
             {isOwner && (
               <MenuItem onClick={() => { handleSettingsClose(); navigate('/settings/billing'); }}>
                 Billing & Subscription

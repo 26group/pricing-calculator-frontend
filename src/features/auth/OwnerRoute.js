@@ -11,7 +11,6 @@ export default function OwnerRoute({ children }) {
   
   // If user is not the owner, redirect to home
   if (!isOwner) {
-    console.log('🛡️ OwnerRoute: User is not owner, redirecting to /');
     return <Navigate to="/" replace />;
   }
 

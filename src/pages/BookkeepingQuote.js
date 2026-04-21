@@ -61,9 +61,7 @@ export default function BookkeepingQuote() {
       if (stored) {
         setBookkeepingResponses(JSON.parse(stored));
       }
-    } catch (error) {
-      console.error('Error loading bookkeeping responses:', error);
-    }
+    } catch {}
   }, []);
 
   // Get Redux state
@@ -115,7 +113,6 @@ export default function BookkeepingQuote() {
       setAutoSaveStatus('saved');
       setTimeout(() => setAutoSaveStatus('idle'), 2000);
     } catch (error) {
-      console.error('Auto-save pricing failed:', error);
       setAutoSaveStatus('error');
       setTimeout(() => setAutoSaveStatus('idle'), 3000);
     }

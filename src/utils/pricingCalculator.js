@@ -322,8 +322,6 @@ export const calculateTotalMonthlyPrice = (responses, pricingModifier = 200) => 
   let total = 0;
   const multiplier = getPricingMultiplier(pricingModifier);
 
-  console.log('calculateTotalMonthlyPrice called with responses:', responses, 'pricingModifier:', pricingModifier, 'multiplier:', multiplier);
-
   // Helper function to get segment for service lookup
   const getSegment = (originalSegment) => {
     if (['micro', 'small', 'medium', 'large'].includes(originalSegment)) {
@@ -412,7 +410,6 @@ export const calculateTotalMonthlyPrice = (responses, pricingModifier = 200) => 
   }
 
   // q6: BAS (quarterly or monthly)
-  console.log('DEBUG q6:', responses.q6, 'segment:', segment);
   if (responses.q6 && responses.q6 !== 'no' && segment) {
     const basService = serviceValuesAccounting.taxServices.bas[segment];
     if (basService) {
@@ -494,17 +491,10 @@ export const calculateTotalMonthlyPrice = (responses, pricingModifier = 200) => 
   }
 
   // q11: Payroll tax returns (medium/large only)
-  console.log('Q11 Debug:', {
-    q11Value: responses.q11,
-    segment,
-    payrollTaxReturns: serviceValuesAccounting.payrollServices.payrollTaxReturns,
-    segmentValue: serviceValuesAccounting.payrollServices.payrollTaxReturns?.[segment],
-  });
   if (responses.q11 === 'yes' && segment) {
     const payrollTaxService = serviceValuesAccounting.payrollServices.payrollTaxReturns?.[segment];
     if (payrollTaxService) {
       total += payrollTaxService.monthly;
-      console.log('Q11 adding to total:', payrollTaxService.monthly, 'new total:', total);
     }
   }
 
@@ -689,7 +679,6 @@ export const calculateTotalMonthlyPrice = (responses, pricingModifier = 200) => 
   // (handled in calculateTotalOnceOffFee)
 
   const adjustedTotal = Math.round(total * multiplier * 100) / 100;
-  console.log('calculateTotalMonthlyPrice returning:', adjustedTotal, '(base:', total, 'x multiplier:', multiplier, ')');
   return adjustedTotal; // Round to 2 decimal places with pricing modifier applied
 };
 
@@ -721,17 +710,9 @@ export const calculateTotalOnceOffFee = (responses, pricingModifier = 200) => {
 
   const segment = getSegment(responses.q1);
 
-  // Debug logging
-  if (process.env.NODE_ENV === 'development') {
-    console.log('calculateTotalOnceOffFee - q1:', responses.q1, 'segment:', segment, 'q17:', responses.q17);
-  }
-
   // q16: Tax structuring (once-off)
   if (responses.q16 === 'yes' && segment && serviceValuesAccounting?.advisoryServices?.taxStructuringAdvice) {
     const taxStructuring = serviceValuesAccounting.advisoryServices.taxStructuringAdvice[segment];
-    if (process.env.NODE_ENV === 'development') {
-      console.log('Adding taxStructuringAdvice:', taxStructuring);
-    }
     if (taxStructuring) {
       total += taxStructuring.onceOff || taxStructuring.yearly;
     }
@@ -740,9 +721,6 @@ export const calculateTotalOnceOffFee = (responses, pricingModifier = 200) => {
   // q17: Xero Setup (once-off)
   if (responses.q17 === 'yes' && segment && serviceValuesAccounting?.advisoryServices?.xeroSetup) {
     const xeroSetup = serviceValuesAccounting.advisoryServices.xeroSetup[segment];
-    if (process.env.NODE_ENV === 'development') {
-      console.log('Adding xeroSetup:', xeroSetup);
-    }
     if (xeroSetup) {
       total += xeroSetup.onceOff || xeroSetup.yearly;
     }
@@ -751,9 +729,6 @@ export const calculateTotalOnceOffFee = (responses, pricingModifier = 200) => {
   // q17a: Xero Training (once-off)
   if (responses.q17a === 'yes' && segment && serviceValuesAccounting?.advisoryServices?.xeroTraining) {
     const xeroTraining = serviceValuesAccounting.advisoryServices.xeroTraining[segment];
-    if (process.env.NODE_ENV === 'development') {
-      console.log('Adding xeroTraining:', xeroTraining);
-    }
     if (xeroTraining) {
       total += xeroTraining.onceOff || xeroTraining.yearly;
     }
@@ -766,9 +741,6 @@ export const calculateTotalOnceOffFee = (responses, pricingModifier = 200) => {
       atoPlan = serviceValuesAccounting.atoPaymentPlans?.basic;
     } else if (responses.q26 === 'hardship') {
       atoPlan = serviceValuesAccounting.atoPaymentPlans?.hardship;
-    }
-    if (process.env.NODE_ENV === 'development') {
-      console.log('Adding atoPaymentPlans:', atoPlan);
     }
     if (atoPlan) {
       total += atoPlan.onceOff || 0;
@@ -927,9 +899,6 @@ export const calculateTotalOnceOffFee = (responses, pricingModifier = 200) => {
       }
     }
 
-    if (process.env.NODE_ENV === 'development') {
-      console.log('Q27 prior year lodgements total:', total);
-    }
   }
 
   return Math.round(total * multiplier * 100) / 100; // Round to 2 decimal places with pricing modifier applied

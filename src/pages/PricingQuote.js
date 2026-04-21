@@ -88,7 +88,6 @@ export default function PricingQuote() {
       setAutoSaveStatus('saving');
       // Extract revenue segment from Q1
       const revenueSegmentValue = questionResponses?.q1 || undefined;
-      console.log('💾 Auto-saving pricing with Q1:', questionResponses?.q1, 'Revenue Segment:', revenueSegmentValue);
       await updatePrice(activePriceId, {
         questionsPricing,
         questionsOnceOffFee,
@@ -105,7 +104,6 @@ export default function PricingQuote() {
       setAutoSaveStatus('saved');
       setTimeout(() => setAutoSaveStatus('idle'), 2000);
     } catch (error) {
-      console.error('Auto-save pricing failed:', error);
       setAutoSaveStatus('error');
       setTimeout(() => setAutoSaveStatus('idle'), 3000);
     }
@@ -117,11 +115,6 @@ export default function PricingQuote() {
     autoSaveTimerRef.current = setTimeout(() => autoSavePricing(), 1500);
     return () => { if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current); };
   }, [activePriceId, autoSavePricing]);
-
-  // Debug logging
-  console.log('PricingQuote - questionsPricing:', questionsPricing, 'questionsOnceOffFee:', questionsOnceOffFee, 'bronzeMonthly:', bronzeMonthly);
-  console.log('PricingQuote - Full Redux state questionResponses:', questionResponses);
-  console.log('PricingQuote - q4 value:', questionResponses.q4, 'q7 value:', questionResponses.q7);
 
   // Check if tax services are included (based on q4, q5, q6, q16, q17)
   const hasTaxServices =
@@ -217,9 +210,7 @@ export default function PricingQuote() {
 
   // Set revenue segment from Q1 response
   useEffect(() => {
-    console.log('🔄 useEffect checking Q1 - questionResponses.q1:', questionResponses?.q1);
     if (questionResponses?.q1) {
-      console.log('✅ Setting revenueSegment to:', questionResponses.q1);
       setRevenueSegment(questionResponses.q1);
     }
   }, [questionResponses?.q1]);
@@ -251,7 +242,6 @@ export default function PricingQuote() {
     try {
       // Always use q1 from questionResponses as the revenue segment
       const revenueSegmentValue = questionResponses?.q1 || '';
-      console.log('💾 Manual save - using Q1 as revenueSegment:', revenueSegmentValue);
       const priceData = {
         clientName: clientNameInput,
         revenueSegment: revenueSegmentValue,

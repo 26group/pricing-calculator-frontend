@@ -66,9 +66,6 @@ export default function BillingSettings() {
 
   // Check if current user is the organisation owner
   const { isOwner } = useSelector((state) => state.auth);
-  
-  // Debug logging
-  console.log('BillingSettings Debug:', { isOwner, subscription, user });
 
   useEffect(() => {
     dispatch(fetchSubscription());

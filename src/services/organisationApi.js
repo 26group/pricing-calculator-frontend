@@ -4,7 +4,6 @@ const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:4000/v1';
 
 const getAuthHeaders = () => {
   const token = localStorage.getItem('token');
-  console.log('📤 organisationApi token:', token ? token.substring(0, 30) + '...' : 'NONE');
   return {
     'Content-Type': 'application/json',
     ...(token && { Authorization: `Bearer ${token}` }),
@@ -98,7 +97,6 @@ export const getMembers = async (orgId) => {
 };
 
 export const inviteMember = async (orgId, email) => {
-  console.log('📤 inviteMember API call:', { orgId, email });
   const response = await fetch(`${API_URL}/organisations/${orgId}/members/invite`, {
     method: 'POST',
     headers: getAuthHeaders(),

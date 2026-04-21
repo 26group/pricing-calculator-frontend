@@ -178,8 +178,7 @@ export default function Onboarding() {
         return data.available;
       }
       return true;
-    } catch (error) {
-      console.error('Error checking org name:', error);
+    } catch {
       return true;
     }
   };
@@ -274,8 +273,7 @@ export default function Onboarding() {
       if (selectedPriceId) {
         try {
           await dispatch(selectPlan(selectedPriceId)).unwrap();
-        } catch (planError) {
-          console.error('Failed to select plan:', planError);
+        } catch {
           // Continue anyway - they can select plan later
         }
       }

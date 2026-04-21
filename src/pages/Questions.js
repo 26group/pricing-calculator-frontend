@@ -596,9 +596,6 @@ export const segmentForServices = (segment) => {
 };
 
 const resolveBasIasService = (segment, selection) => {
-  console.log('resolveBasIasService called with:', { segment, selection });
-  console.log('selection.bas:', selection?.bas, 'selection.ias:', selection?.ias);
-  
   if (!segment) {
     return { bas: undefined, ias: undefined };
   }
@@ -614,8 +611,7 @@ const resolveBasIasService = (segment, selection) => {
     if (selection.ias === 'iasMonthly') {
       result.ias = serviceValues.taxServices.ias[segment];
     }
-    
-    console.log('Resolved BAS/IAS (object format):', result);
+
     return result;
   }
 
@@ -632,7 +628,6 @@ const resolveBasIasService = (segment, selection) => {
     };
   }
 
-  console.log('No BAS/IAS selection found');
   return { bas: undefined, ias: undefined };
 };
 
@@ -765,11 +760,6 @@ export default function Questions() {
   // Get pricing modifier from organisation (already have organisation from above)
   const pricingModifier = organisation?.pricingModifier ?? DEFAULT_PRICING_MODIFIER;
   
-  // Debug: Log when pricingModifier changes
-  useEffect(() => {
-    console.log('🔍 Questions.js - pricingModifier changed:', pricingModifier, 'organisation:', organisation);
-  }, [pricingModifier, organisation]);
-  
   const [focusedQuestion, setFocusedQuestion] = useState(null);
   const [saveStatus, setSaveStatus] = useState('idle'); // 'idle' | 'saving' | 'saved' | 'error'
   const saveTimerRef = useRef(null);
@@ -807,7 +797,6 @@ export default function Questions() {
       const totalOnceOff = calculateTotalOnceOffFee(currentResponses, pricingModifier);
       // Extract revenue segment from Q1
       const revenueSegment = currentResponses?.q1 || undefined;
-      console.log('💾 Questions auto-save - Q1:', currentResponses?.q1, 'revenueSegment:', revenueSegment);
       await updatePrice(activePriceId, {
         questionResponses,
         questionsPricing: totalMonthly,
@@ -818,7 +807,6 @@ export default function Questions() {
       setSaveStatus('saved');
       setTimeout(() => setSaveStatus('idle'), 2000);
     } catch (error) {
-      console.error('Auto-save failed:', error);
       setSaveStatus('error');
       setTimeout(() => setSaveStatus('idle'), 3000);
     }
@@ -847,15 +835,12 @@ export default function Questions() {
         
         if (response.ok) {
           const data = await response.json();
-          console.log('📊 Questions.js - Fetched organisation:', { pricingModifier: data.pricingModifier });
           dispatch(setOrganisation({
             organisation: data,
             isOwner: data.isOwner || false,
           }));
         }
-      } catch (error) {
-        console.error('Error fetching organisation:', error);
-      }
+      } catch {}
     };
     
     fetchOrganisation();
@@ -885,13 +870,9 @@ export default function Questions() {
   const q7StringKey = useMemo(() => JSON.stringify(responses.q7), [responses.q7]);
 
   useEffect(() => {
-    console.log('Pricing calculation effect triggered', { q7: responses.q7, q1: responses.q1 });
     setSelectedServices((prev) => {
       const originalSegment = responses.q1;
       const segment = segmentForServices(originalSegment);
-      if (originalSegment && !segment) {
-        console.log('No service mapping for revenue segment', { question1Value: originalSegment });
-      }
       const smsfCandidate =
         responses.q6 === 'yes' && segment ? serviceValues.taxServices.smsf[segment] : undefined;
       const fbtCandidate =
@@ -899,8 +880,6 @@ export default function Questions() {
           ? serviceValues.taxServices.fbtReturns[segment]
           : undefined;
       const { bas: basCandidate, ias: iasCandidate } = resolveBasIasService(segment, responses.q7);
-
-      console.log('After resolveBasIasService:', { basCandidate, iasCandidate });
 
       let payload = {
         payrollTaxCandidate: undefined,
@@ -923,24 +902,10 @@ export default function Questions() {
 
       if (responses.q13 === 'yes' && (segment === 'medium' || segment === 'large')) {
         payload.payrollTaxCandidate = serviceValues.payrollServices.payrollTaxReturns?.[segment];
-        if (!payload.payrollTaxCandidate) {
-          console.log('No payroll tax service value found for segment', {
-            question: 'q13',
-            revenueSelection: originalSegment,
-            segment,
-          });
-        }
       }
 
       if (responses.q14 === 'yes' && segment) {
         payload.workersCompCandidate = serviceValues.payrollServices.workersCompensation?.[segment];
-        if (!payload.workersCompCandidate) {
-          console.log('No workers compensation service value found for segment', {
-            question: 'q14',
-            revenueSelection: originalSegment,
-            segment,
-          });
-        }
       }
 
       if (
@@ -948,24 +913,10 @@ export default function Questions() {
         (segment === 'medium' || segment === 'large')
       ) {
         payload.superPrepCandidate = serviceValues.payrollServices.payrollTaxReturns?.[segment];
-        if (!payload.superPrepCandidate) {
-          console.log('No payroll tax service value found for question 12 segment', {
-            question: 'q12',
-            revenueSelection: originalSegment,
-            segment,
-          });
-        }
       }
 
       if (responses.q16 === 'yes' && segment) {
         payload.tparCandidate = serviceValues.taxServices.tpar?.[segment];
-        if (!payload.tparCandidate) {
-          console.log('No TPAR service value found for segment', {
-            question: 'q16',
-            revenueSelection: originalSegment,
-            segment,
-          });
-        }
       }
 
       if (
@@ -973,35 +924,14 @@ export default function Questions() {
         (segment === 'micro' || segment === 'small' || segment === 'medium' || segment === 'large')
       ) {
         payload.fbtReturnCandidate = serviceValues.taxServices.fbtReturns?.[segment];
-        if (!payload.fbtReturnCandidate) {
-          console.log('No FBT return service value found for segment', {
-            question: 'q17',
-            revenueSelection: originalSegment,
-            segment,
-          });
-        }
       }
 
       if (responses.q18 === 'yes' && segment) {
         payload.taxPlanningCandidate = serviceValues.advisoryServices.taxPlanningReview?.[segment];
-        if (!payload.taxPlanningCandidate) {
-          console.log('No Tax Planning service value found for segment', {
-            question: 'q18',
-            revenueSelection: originalSegment,
-            segment,
-          });
-        }
       }
 
       if (responses.q19 === 'yes' && segment) {
         payload.taxStructuringCandidate = serviceValues.advisoryServices.taxStructuringAdvice?.[segment];
-        if (!payload.taxStructuringCandidate) {
-          console.log('No Tax Structuring service value found for segment', {
-            question: 'q19',
-            revenueSelection: originalSegment,
-            segment,
-          });
-        }
       }
 
       if (
@@ -1009,24 +939,10 @@ export default function Questions() {
         (segment === 'micro' || segment === 'small' || segment === 'medium' || segment === 'large')
       ) {
         payload.financialStatementsCandidate = serviceValues.reporting.financialStatementsTax?.[segment];
-        if (!payload.financialStatementsCandidate) {
-          console.log('No Financial Statements service value found for segment', {
-            question: 'q20',
-            revenueSelection: originalSegment,
-            segment,
-          });
-        }
       }
 
       if (responses.q21 === 'yes' && segment) {
         payload.statutoryStatementsCandidate = serviceValues.reporting.statutoryFinancialStatements?.[segment];
-        if (!payload.statutoryStatementsCandidate) {
-          console.log('No Statutory Financial Statements service value found for segment', {
-            question: 'q21',
-            revenueSelection: originalSegment,
-            segment,
-          });
-        }
       }
 
       if (
@@ -1034,13 +950,6 @@ export default function Questions() {
         (segment === 'micro' || segment === 'small' || segment === 'medium' || segment === 'large')
       ) {
         payload.managementStatementsCandidate = serviceValues.reporting.managementFinancialStatements?.[segment];
-        if (!payload.managementStatementsCandidate) {
-          console.log('No Management Financial Statements service value found for segment', {
-            question: 'q22',
-            revenueSelection: originalSegment,
-            segment,
-          });
-        }
       }
 
       if (
@@ -1048,51 +957,20 @@ export default function Questions() {
         (segment === 'micro' || segment === 'small' || segment === 'medium' || segment === 'large')
       ) {
         payload.reviewNumbersCandidate = serviceValues.meetings.reviewNumbers?.[segment];
-        if (!payload.reviewNumbersCandidate) {
-          console.log('No Review Numbers service value found for segment', {
-            question: 'q23',
-            revenueSelection: originalSegment,
-            segment,
-          });
-        }
       }
 
       const supportSelection = responses.q25;
       if (supportSelection && segment) {
         if (supportSelection === 'emailTeam' || supportSelection === 'emailPhoneTeamCsm') {
           payload.supportTeamCandidate = serviceValues.supportServices.teamOrEmail?.[segment];
-          if (!payload.supportTeamCandidate) {
-            console.log('No Team support service value found for segment', {
-              question: 'q25',
-              selection: supportSelection,
-              revenueSelection: originalSegment,
-              segment,
-            });
-          }
         }
 
         if (supportSelection === 'emailPhoneTeamCsm' || supportSelection === 'emailPhoneCsmOwner') {
           payload.supportCsmCandidate = serviceValues.supportServices.clientServiceManager?.[segment];
-          if (!payload.supportCsmCandidate) {
-            console.log('No Client Service Manager value found for segment', {
-              question: 'q25',
-              selection: supportSelection,
-              revenueSelection: originalSegment,
-              segment,
-            });
-          }
         }
 
         if (supportSelection === 'emailPhoneCsmOwner') {
           payload.supportOwnerCandidate = serviceValues.supportServices.principalOwner?.[segment];
-          if (!payload.supportOwnerCandidate) {
-            console.log('No Principal/Owner support value found for segment', {
-              question: 'q25',
-              selection: supportSelection,
-              revenueSelection: originalSegment,
-              segment,
-            });
-          }
         }
       }
 
@@ -1132,192 +1010,120 @@ export default function Questions() {
 
       if (smsfCandidate) {
         if (!prev.smsf || prev.smsf.inclusion !== smsfCandidate.inclusion) {
-          console.log('Selected SMSF service value', {
-            revenueSelection: originalSegment,
-            resolvedSegment: segment,
-            service: smsfCandidate,
-          });
           changed = true;
         }
         next.smsf = smsfCandidate;
       } else if (prev.smsf) {
-        console.log('Cleared SMSF service selection');
         delete next.smsf;
         changed = true;
       }
 
       if (fbtCandidate) {
         if (!prev.fbt || prev.fbt.inclusion !== fbtCandidate.inclusion) {
-          console.log('Selected FBT service value', {
-            revenueSelection: originalSegment,
-            resolvedSegment: segment,
-            service: fbtCandidate,
-          });
           changed = true;
         }
         next.fbt = fbtCandidate;
       } else if (prev.fbt) {
-        console.log('Cleared FBT service selection');
         delete next.fbt;
         changed = true;
       }
 
       if (basCandidate) {
         if (!prev.bas || prev.bas.inclusion !== basCandidate.inclusion) {
-          console.log('Selected BAS service value', {
-            revenueSelection: originalSegment,
-            resolvedSegment: segment,
-            service: basCandidate,
-          });
           changed = true;
         }
         next.bas = basCandidate;
       } else if (prev.bas) {
-        console.log('Cleared BAS service selection');
         delete next.bas;
         changed = true;
       }
 
       if (iasCandidate) {
         if (!prev.ias || prev.ias.inclusion !== iasCandidate.inclusion) {
-          console.log('Selected IAS service value', {
-            revenueSelection: originalSegment,
-            resolvedSegment: segment,
-            service: iasCandidate,
-          });
           changed = true;
         }
         next.ias = iasCandidate;
       } else if (prev.ias) {
-        console.log('Cleared IAS service selection');
         delete next.ias;
         changed = true;
       }
 
       if (payrollTaxCandidate) {
         if (!prev.payrollTax || prev.payrollTax.inclusion !== payrollTaxCandidate.inclusion) {
-          console.log('Selected Payroll Tax service value', {
-            revenueSelection: originalSegment,
-            resolvedSegment: segment,
-            service: payrollTaxCandidate,
-          });
           changed = true;
         }
         next.payrollTax = payrollTaxCandidate;
       } else if (prev.payrollTax) {
-        console.log('Cleared Payroll Tax service selection');
         delete next.payrollTax;
         changed = true;
       }
 
       if (workersCompCandidate) {
         if (!prev.workersComp || prev.workersComp.inclusion !== workersCompCandidate.inclusion) {
-          console.log('Selected Workers Compensation service value', {
-            revenueSelection: originalSegment,
-            resolvedSegment: segment,
-            service: workersCompCandidate,
-          });
           changed = true;
         }
         next.workersComp = workersCompCandidate;
       } else if (prev.workersComp) {
-        console.log('Cleared Workers Compensation service selection');
         delete next.workersComp;
         changed = true;
       }
 
       if (superPrepCandidate) {
         if (!prev.superPrep || prev.superPrep.inclusion !== superPrepCandidate.inclusion) {
-          console.log('Selected Superannuation Lodgement service value', {
-            revenueSelection: originalSegment,
-            resolvedSegment: segment,
-            service: superPrepCandidate,
-          });
           changed = true;
         }
         next.superPrep = superPrepCandidate;
       } else if (prev.superPrep) {
-        console.log('Cleared Superannuation Lodgement service selection');
         delete next.superPrep;
         changed = true;
       }
 
       if (tparCandidate) {
         if (!prev.tpar || prev.tpar.inclusion !== tparCandidate.inclusion) {
-          console.log('Selected TPAR service value', {
-            revenueSelection: originalSegment,
-            resolvedSegment: segment,
-            service: tparCandidate,
-          });
           changed = true;
         }
         next.tpar = tparCandidate;
       } else if (prev.tpar) {
-        console.log('Cleared TPAR service selection');
         delete next.tpar;
         changed = true;
       }
 
       if (fbtReturnCandidate) {
         if (!prev.fbtReturn || prev.fbtReturn.inclusion !== fbtReturnCandidate.inclusion) {
-          console.log('Selected FBT return service value', {
-            revenueSelection: originalSegment,
-            resolvedSegment: segment,
-            service: fbtReturnCandidate,
-          });
           changed = true;
         }
         next.fbtReturn = fbtReturnCandidate;
       } else if (prev.fbtReturn) {
-        console.log('Cleared FBT return service selection');
         delete next.fbtReturn;
         changed = true;
       }
 
       if (taxPlanningCandidate) {
         if (!prev.taxPlanning || prev.taxPlanning.inclusion !== taxPlanningCandidate.inclusion) {
-          console.log('Selected Tax Planning service value', {
-            revenueSelection: originalSegment,
-            resolvedSegment: segment,
-            service: taxPlanningCandidate,
-          });
           changed = true;
         }
         next.taxPlanning = taxPlanningCandidate;
       } else if (prev.taxPlanning) {
-        console.log('Cleared Tax Planning service selection');
         delete next.taxPlanning;
         changed = true;
       }
 
       if (taxStructuringCandidate) {
         if (!prev.taxStructuring || prev.taxStructuring.inclusion !== taxStructuringCandidate.inclusion) {
-          console.log('Selected Tax Structuring service value', {
-            revenueSelection: originalSegment,
-            resolvedSegment: segment,
-            service: taxStructuringCandidate,
-          });
           changed = true;
         }
         next.taxStructuring = taxStructuringCandidate;
       } else if (prev.taxStructuring) {
-        console.log('Cleared Tax Structuring service selection');
         delete next.taxStructuring;
         changed = true;
       }
 
       if (financialStatementsCandidate) {
         if (!prev.financialStatementsTax || prev.financialStatementsTax.inclusion !== financialStatementsCandidate.inclusion) {
-          console.log('Selected Financial Statements service value', {
-            revenueSelection: originalSegment,
-            resolvedSegment: segment,
-            service: financialStatementsCandidate,
-          });
           changed = true;
         }
         next.financialStatementsTax = financialStatementsCandidate;
       } else if (prev.financialStatementsTax) {
-        console.log('Cleared Financial Statements service selection');
         delete next.financialStatementsTax;
         changed = true;
       }
@@ -1327,16 +1133,10 @@ export default function Questions() {
           !prev.statutoryFinancialStatements ||
           prev.statutoryFinancialStatements.inclusion !== statutoryStatementsCandidate.inclusion
         ) {
-          console.log('Selected Statutory Financial Statements service value', {
-            revenueSelection: originalSegment,
-            resolvedSegment: segment,
-            service: statutoryStatementsCandidate,
-          });
           changed = true;
         }
         next.statutoryFinancialStatements = statutoryStatementsCandidate;
       } else if (prev.statutoryFinancialStatements) {
-        console.log('Cleared Statutory Financial Statements service selection');
         delete next.statutoryFinancialStatements;
         changed = true;
       }
@@ -1346,80 +1146,50 @@ export default function Questions() {
           !prev.managementFinancialStatements ||
           prev.managementFinancialStatements.inclusion !== managementStatementsCandidate.inclusion
         ) {
-          console.log('Selected Management Financial Statements service value', {
-            revenueSelection: originalSegment,
-            resolvedSegment: segment,
-            service: managementStatementsCandidate,
-          });
           changed = true;
         }
         next.managementFinancialStatements = managementStatementsCandidate;
       } else if (prev.managementFinancialStatements) {
-        console.log('Cleared Management Financial Statements service selection');
         delete next.managementFinancialStatements;
         changed = true;
       }
 
       if (reviewNumbersCandidate) {
         if (!prev.reviewNumbers || prev.reviewNumbers.inclusion !== reviewNumbersCandidate.inclusion) {
-          console.log('Selected Review Numbers service value', {
-            revenueSelection: originalSegment,
-            resolvedSegment: segment,
-            service: reviewNumbersCandidate,
-          });
           changed = true;
         }
         next.reviewNumbers = reviewNumbersCandidate;
       } else if (prev.reviewNumbers) {
-        console.log('Cleared Review Numbers service selection');
         delete next.reviewNumbers;
         changed = true;
       }
 
       if (supportTeamCandidate) {
         if (!prev.teamSupport || prev.teamSupport.inclusion !== supportTeamCandidate.inclusion) {
-          console.log('Selected Team support service value', {
-            revenueSelection: originalSegment,
-            resolvedSegment: segment,
-            service: supportTeamCandidate,
-          });
           changed = true;
         }
         next.teamSupport = supportTeamCandidate;
       } else if (prev.teamSupport) {
-        console.log('Cleared Team support service selection');
         delete next.teamSupport;
         changed = true;
       }
 
       if (supportCsmCandidate) {
         if (!prev.clientServiceManager || prev.clientServiceManager.inclusion !== supportCsmCandidate.inclusion) {
-          console.log('Selected Client Service Manager value', {
-            revenueSelection: originalSegment,
-            resolvedSegment: segment,
-            service: supportCsmCandidate,
-          });
           changed = true;
         }
         next.clientServiceManager = supportCsmCandidate;
       } else if (prev.clientServiceManager) {
-        console.log('Cleared Client Service Manager selection');
         delete next.clientServiceManager;
         changed = true;
       }
 
       if (supportOwnerCandidate) {
         if (!prev.principalOwner || prev.principalOwner.inclusion !== supportOwnerCandidate.inclusion) {
-          console.log('Selected Principal/Owner support value', {
-            revenueSelection: originalSegment,
-            resolvedSegment: segment,
-            service: supportOwnerCandidate,
-          });
           changed = true;
         }
         next.principalOwner = supportOwnerCandidate;
       } else if (prev.principalOwner) {
-        console.log('Cleared Principal/Owner support selection');
         delete next.principalOwner;
         changed = true;
       }
@@ -1429,30 +1199,20 @@ export default function Questions() {
           !prev.corporateSecretarial ||
           prev.corporateSecretarial.inclusion !== corporateSecretarialCandidate.inclusion
         ) {
-          console.log('Selected Corporate Secretarial service value', {
-            questionSelection: responses.q26,
-            service: corporateSecretarialCandidate,
-          });
           changed = true;
         }
         next.corporateSecretarial = corporateSecretarialCandidate;
       } else if (prev.corporateSecretarial) {
-        console.log('Cleared Corporate Secretarial service selection');
         delete next.corporateSecretarial;
         changed = true;
       }
 
       if (atoPaymentPlanCandidate) {
         if (!prev.atoPaymentPlan || prev.atoPaymentPlan.inclusion !== atoPaymentPlanCandidate.inclusion) {
-          console.log('Selected ATO payment plan service value', {
-            questionSelection: responses.q26b,
-            service: atoPaymentPlanCandidate,
-          });
           changed = true;
         }
         next.atoPaymentPlan = atoPaymentPlanCandidate;
       } else if (prev.atoPaymentPlan) {
-        console.log('Cleared ATO payment plan selection');
         delete next.atoPaymentPlan;
         changed = true;
       }
@@ -1463,29 +1223,16 @@ export default function Questions() {
         (segment === 'micro' || segment === 'small' || segment === 'medium' || segment === 'large')
       ) {
         annualTaxCandidate = serviceValues.meetings.annualTaxMeetings?.[segment];
-        if (!annualTaxCandidate) {
-          console.log('No Annual Tax Meetings service value found for segment', {
-            question: 'q24',
-            revenueSelection: originalSegment,
-            segment,
-          });
-        }
       } else {
         annualTaxCandidate = undefined;
       }
 
       if (annualTaxCandidate) {
         if (!prev.annualTaxMeetings || prev.annualTaxMeetings.inclusion !== annualTaxCandidate.inclusion) {
-          console.log('Selected Annual Tax Meetings service value', {
-            revenueSelection: originalSegment,
-            resolvedSegment: segment,
-            service: annualTaxCandidate,
-          });
           changed = true;
         }
         next.annualTaxMeetings = annualTaxCandidate;
       } else if (prev.annualTaxMeetings) {
-        console.log('Cleared Annual Tax Meetings service selection');
         delete next.annualTaxMeetings;
         changed = true;
       }
@@ -1516,7 +1263,6 @@ export default function Questions() {
   ]);
 
   const handleRadioChange = (questionId) => (event) => {
-    console.log(`Response updated`, { questionId, value: event.target.value });
     setResponses((prev) => ({
       ...prev,
       [questionId]: event.target.value,
@@ -1524,11 +1270,6 @@ export default function Questions() {
   };
 
   const handleCheckboxChange = (questionId, optionValue) => (event) => {
-    console.log(`Response updated`, {
-      questionId,
-      option: optionValue,
-      checked: event.target.checked,
-    });
     setResponses((prev) => ({
       ...prev,
       [questionId]: {
@@ -1539,7 +1280,6 @@ export default function Questions() {
   };
 
   const handleNumberChange = (questionId) => (event) => {
-    console.log(`Response updated`, { questionId, value: event.target.value });
     const value = event.target.value;
     
     setResponses((prev) => {
@@ -1562,7 +1302,6 @@ export default function Questions() {
   };
 
   const handleInputGroupChange = (questionId, optionValue) => (event) => {
-    console.log(`Response updated`, { questionId, option: optionValue, value: event.target.value });
     setResponses((prev) => ({
       ...prev,
       [questionId]: {
@@ -1575,11 +1314,6 @@ export default function Questions() {
   };
 
   const handleInputGroupCheckboxChange = (questionId, optionValue) => (event) => {
-    console.log(`Response updated`, {
-      questionId,
-      option: optionValue,
-      checked: event.target.checked,
-    });
     setResponses((prev) => ({
       ...prev,
       [questionId]: {
@@ -1653,16 +1387,6 @@ export default function Questions() {
   const { mapping: questionNumberMapping, parentMap } = useMemo(() => getQuestionNumberMapping(), [responses]);
 
   const renderQuestion = (question, depth = 0) => {
-    // Debug: log showWhen evaluation for q4's children
-    if (question.id === 'q4a' || question.id === 'q4b') {
-      console.log(`DEBUG renderQuestion ${question.id}:`, {
-        hasShowWhen: !!question.showWhen,
-        responsesQ4: responses.q4,
-        responsesQ4Type: typeof responses.q4,
-        showWhenResult: question.showWhen ? question.showWhen(responses) : 'no showWhen',
-      });
-    }
-    
     if (question.showWhen && !question.showWhen(responses)) {
       return null;
     }
@@ -2204,10 +1928,7 @@ export default function Questions() {
             )}
           </Stack>
         </Paper>
-        {question.children && (() => {
-          console.log(`DEBUG: Rendering children for ${question.id}:`, question.children.map(c => c.id));
-          return question.children.map((child) => renderQuestion(child, depth + 1));
-        })()}
+        {question.children && question.children.map((child) => renderQuestion(child, depth + 1))}
       </div>
     );
   };
@@ -2217,9 +1938,7 @@ export default function Questions() {
   }, [responses, pricingModifier]);
 
   const totalMonthlyPrice = useMemo(() => {
-    const price = calculateSilverMonthlyPricing(responses, pricingModifier);
-    console.log('📊 totalMonthlyPrice calculated:', price, 'with pricingModifier:', pricingModifier, 'responses.q1:', responses.q1);
-    return price;
+    return calculateSilverMonthlyPricing(responses, pricingModifier);
   }, [responses, pricingModifier]);
 
   const goldMonthlyPrice = useMemo(() => {
@@ -2233,7 +1952,6 @@ export default function Questions() {
   const combinedOnceOffTotal = totalOnceOffFee + serviceCatalogOnceOffFee;
 
   useEffect(() => {
-    console.log('DEBUG: Dispatching questionsPricing:', totalMonthlyPrice);
     if (typeof totalMonthlyPrice === 'number' && !isNaN(totalMonthlyPrice)) {
       dispatch(setQuestionsPricing(totalMonthlyPrice));
     }
@@ -2241,16 +1959,13 @@ export default function Questions() {
   
   // Re-dispatch pricing when pricingModifier changes
   useEffect(() => {
-    console.log('💰 Pricing modifier changed, recalculating prices with modifier:', pricingModifier);
     const recalculatedMonthly = calculateSilverMonthlyPricing(responses, pricingModifier);
     const recalculatedOnceOff = calculateTotalOnceOffFee(responses, pricingModifier);
-    console.log('💰 Recalculated prices:', { monthly: recalculatedMonthly, onceOff: recalculatedOnceOff, modifier: pricingModifier });
     dispatch(setQuestionsPricing(recalculatedMonthly));
     dispatch(setQuestionsOnceOffFee(recalculatedOnceOff));
   }, [pricingModifier, responses, dispatch]);
 
   useEffect(() => {
-    console.log('DEBUG: Dispatching questionsOnceOffFee:', totalOnceOffFee);
     if (typeof totalOnceOffFee === 'number' && !isNaN(totalOnceOffFee)) {
       dispatch(setQuestionsOnceOffFee(totalOnceOffFee));
     }

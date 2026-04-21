@@ -70,9 +70,7 @@ export default function InvitedUserOnboarding() {
           const data = await response.json();
           setOrgName(data.name);
         }
-      } catch (err) {
-        console.error('Error fetching org info:', err);
-      }
+      } catch {}
     };
     
     fetchOrgInfo();

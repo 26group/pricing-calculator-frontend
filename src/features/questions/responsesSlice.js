@@ -7,8 +7,7 @@ const loadFromStorage = () => {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     return stored ? JSON.parse(stored) : {};
-  } catch (error) {
-    console.error('Error loading from storage:', error);
+  } catch {
     return {};
   }
 };
@@ -20,9 +19,7 @@ const saveToStorage = (state) => {
     const excludeKeys = ['questionsPricing', 'serviceCatalogPricing', 'serviceSelections', 'questionsOnceOffFee', 'serviceCatalogOnceOffFee', 'activePriceId'];
     excludeKeys.forEach(key => delete toSave[key]);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
-  } catch (error) {
-    console.error('Error saving to storage:', error);
-  }
+  } catch {}
 };
 
 // Load saved responses from localStorage and merge with defaults

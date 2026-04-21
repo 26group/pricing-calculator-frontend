@@ -101,7 +101,6 @@ export default function AccountingQuote() {
       setAutoSaveStatus('saved');
       setTimeout(() => setAutoSaveStatus('idle'), 2000);
     } catch (error) {
-      console.error('Auto-save pricing failed:', error);
       setAutoSaveStatus('error');
       setTimeout(() => setAutoSaveStatus('idle'), 3000);
     }

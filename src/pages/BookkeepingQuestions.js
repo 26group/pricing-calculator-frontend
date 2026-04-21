@@ -89,8 +89,7 @@ const loadResponsesFromStorage = () => {
   try {
     const stored = localStorage.getItem('bookkeeping_responses');
     return stored ? JSON.parse(stored) : {};
-  } catch (error) {
-    console.error('Error loading from storage:', error);
+  } catch {
     return {};
   }
 };
@@ -120,11 +119,6 @@ export default function BookkeepingQuestions() {
   // Get bookkeeping pricing modifier from organisation
   const organisation = useSelector((state) => state.auth.organisation);
   const bookkeepingPricingModifier = organisation?.bookkeepingPricingModifier ?? DEFAULT_BOOKKEEPING_PRICING_MODIFIER;
-  
-  // Debug: Log when bookkeepingPricingModifier changes
-  useEffect(() => {
-    console.log('🔍 BookkeepingQuestions.js - bookkeepingPricingModifier changed:', bookkeepingPricingModifier, 'organisation:', organisation);
-  }, [bookkeepingPricingModifier, organisation]);
   
   const [focusedQuestion, setFocusedQuestion] = useState(null);
   const [saveStatus, setSaveStatus] = useState('idle'); // 'idle' | 'saving' | 'saved' | 'error'
@@ -163,7 +157,6 @@ export default function BookkeepingQuestions() {
       const totalOnceOff = calculateBookkeepingOnceOffFee(currentResponses, bookkeepingPricingModifier);
       // Extract revenue segment from Q1 (annual revenue question)
       const revenueSegment = currentResponses?.q1 || undefined;
-      console.log('💾 Bookkeeping auto-save - Q1:', currentResponses?.q1, 'revenueSegment:', revenueSegment, 'modifier:', bookkeepingPricingModifier);
       await updatePrice(activePriceId, {
         questionResponses,
         questionsPricing: totalMonthly,
@@ -174,7 +167,6 @@ export default function BookkeepingQuestions() {
       setSaveStatus('saved');
       setTimeout(() => setSaveStatus('idle'), 2000);
     } catch (error) {
-      console.error('Auto-save failed:', error);
       setSaveStatus('error');
       setTimeout(() => setSaveStatus('idle'), 3000);
     }
@@ -205,15 +197,12 @@ export default function BookkeepingQuestions() {
         
         if (response.ok) {
           const data = await response.json();
-          console.log('📊 BookkeepingQuestions.js - Fetched organisation:', { bookkeepingPricingModifier: data.bookkeepingPricingModifier });
           dispatch(setOrganisation({
             organisation: data,
             isOwner: data.isOwner || false,
           }));
         }
-      } catch (error) {
-        console.error('Error fetching organisation:', error);
-      }
+      } catch {}
     };
     
     fetchOrganisation();

@@ -63,8 +63,6 @@ const getServiceTypeLabel = (price) => {
   if (questionResponses?.q1 === 'bookkeeping') return 'Bookkeeping';
   if (questionResponses?.q1 === 'accounting' || questionResponses?.q1 === 'taxAccounting') return 'Accounting';
   
-  // Debug: log what we're getting to understand the data structure
-  console.warn('⚠️ No service type found. price:', price);
   return 'Unknown';
 };
 
@@ -103,7 +101,6 @@ export default function SavedPrices() {
     try {
       setLoading(true);
       setError(null);
-      console.log('📡 Fetching prices for page:', pageNum);
       const data = await getPrices({ 
         sortBy: 'updatedAt:desc', 
         limit: rowsPerPage, 
@@ -112,7 +109,6 @@ export default function SavedPrices() {
       setPrices(data.results || []);
       setTotalResults(data.totalResults || 0);
     } catch (err) {
-      console.error('Failed to fetch prices:', err);
       setError('Failed to load saved prices. Please try again.');
     } finally {
       setLoading(false);
@@ -127,7 +123,6 @@ export default function SavedPrices() {
   // Refetch prices when the page becomes visible (on tab focus)
   useEffect(() => {
     const handleFocus = () => {
-      console.log('📄 Page focused, resetting pagination and refreshing...');
       setPage(0); // Reset to page 0
     };
     window.addEventListener('focus', handleFocus);
@@ -172,7 +167,6 @@ export default function SavedPrices() {
         navigate('/questions');
       }
     } catch (err) {
-      console.error('Failed to load price:', err);
       setError('Failed to load the selected price. Please try again.');
     }
   };
@@ -191,10 +185,8 @@ export default function SavedPrices() {
       setDeleteDialogOpen(false);
       setPriceToDelete(null);
       // Reset pagination to page 0 after delete
-      console.log('🗑️ Price deleted, resetting to page 0');
       setPage(0);
     } catch (err) {
-      console.error('Failed to delete price:', err);
       setError('Failed to delete the price. Please try again.');
     } finally {
       setDeleting(false);
@@ -241,7 +233,6 @@ export default function SavedPrices() {
       // Refresh the list to show the new clone
       fetchPrices();
     } catch (err) {
-      console.error('Failed to clone price:', err);
       setError('Failed to clone the pricing. Please try again.');
     } finally {
       setIsCloning(false);
@@ -312,7 +303,6 @@ export default function SavedPrices() {
         navigate('/questions');
       }
     } catch (err) {
-      console.error('Failed to create proposal:', err);
       setError('Failed to create proposal. Please try again.');
     } finally {
       setIsCreating(false);

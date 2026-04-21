@@ -28,23 +28,19 @@ export default function Login() {
   // When Auth0 user is present, get token and check onboarding
   useEffect(() => {
     const handleAuth0User = async () => {
-      console.log('🔄 Login: handleAuth0User called', { user: !!user, isLoading, hasToken });
       // Skip if still loading Auth0 or if there's no user and no token
       if (isLoading) return;
       if (!user && !hasToken) return;
       
       // If user has Auth0 and we haven't checked yet, check onboarding
       if (!user && hasToken) {
-        console.log('🔄 Login: User has token but no Auth0 user, token likely valid, skipping auth0 check');
         return;
       }
       
-      console.log('🔄 Login: Auth0 user detected, checking onboarding...', { email: user.email, sub: user.sub });
       setIsCheckingOnboarding(true);
       
       // Always get a fresh token for Auth0 user to ensure it's valid
       let token = null;
-      console.log('🔄 Login: Fetching fresh token from backend...');
       try {
         const response = await fetch(`${API_URL}/auth/auth0-callback`, {
           method: 'POST',
@@ -55,10 +51,8 @@ export default function Login() {
           }),
         });
 
-        console.log('🔄 Login: Token response status:', response.status);
         if (response.ok) {
           const data = await response.json();
-          console.log('🔄 Login: Token response data:', { isNewUser: data.isNewUser, hasToken: !!data.tokens?.access?.token, pendingInviteToken: !!data.pendingInviteToken });
           if (data.tokens?.access?.token) {
             token = data.tokens.access.token;
             localStorage.setItem('token', token);
@@ -68,7 +62,6 @@ export default function Login() {
             }
             dispatch(setToken(token));
             dispatch(loginSuccess(data.user));
-            console.log('🔄 Login: Token obtained and stored');
 
             posthog.identify(user.sub, {
               email: user.email,
@@ -83,7 +76,6 @@ export default function Login() {
             // Check if backend returned a pending invite token (from Auth0 metadata)
             // The backend auto-accepts the invite, so redirect to invited user onboarding
             if (data.pendingInviteToken) {
-              console.log('🔄 Login: Backend auto-accepted invite, redirecting to invited-onboarding');
               localStorage.removeItem('pendingInviteToken');
               setRedirectPath('/invited-onboarding');
               setIsCheckingOnboarding(false);
@@ -91,13 +83,11 @@ export default function Login() {
             }
           }
         } else {
-          const errorText = await response.text();
-          console.error('🔄 Login: Failed to get token, status:', response.status, 'error:', errorText);
+          await response.text();
           setIsCheckingOnboarding(false);
           return;
         }
-      } catch (error) {
-        console.error('🔄 Login: Error getting token:', error);
+      } catch {
         setIsCheckingOnboarding(false);
         return;
       }
@@ -107,7 +97,6 @@ export default function Login() {
         // This handles the case where user clicks invite link, gets redirected to Auth0, then comes back
         const pendingInviteToken = localStorage.getItem('pendingInviteToken');
         if (pendingInviteToken) {
-          console.log('🔄 Login: Found pending invite in localStorage, redirecting to accept it');
           localStorage.removeItem('pendingInviteToken');
           setRedirectPath(`/invite/${pendingInviteToken}`);
           setIsCheckingOnboarding(false);
@@ -115,20 +104,15 @@ export default function Login() {
         }
         
         // Check onboarding status
-        console.log('🔄 Login: Checking organisation status...');
         try {
           const orgResponse = await fetch(`${API_URL}/organisations/me`, {
             headers: { Authorization: `Bearer ${token}` },
           });
           
-          console.log('🔄 Login: Org response status:', orgResponse.status);
-          
           if (orgResponse.status === 404) {
-            console.log('🔄 Login: No org found, redirecting to /onboarding');
             setRedirectPath('/onboarding');
           } else if (orgResponse.ok) {
             const orgData = await orgResponse.json();
-            console.log('🔄 Login: Org data:', orgData);
             
             // Set organisation and owner status in Redux
             dispatch(setOrganisation({
@@ -147,34 +131,26 @@ export default function Login() {
                 const userData = await userResponse.json();
                 // If user hasn't completed their profile setup, send to invited-onboarding
                 if (!userData.onboardingComplete) {
-                  console.log('🔄 Login: Invited user needs to complete profile, redirecting to /invited-onboarding');
                   setRedirectPath('/invited-onboarding');
                 } else {
-                  console.log('🔄 Login: Invited user profile complete, redirecting to /');
                   setRedirectPath('/');
                 }
               } else {
                 setRedirectPath('/');
               }
             } else if (!orgData.planType) {
-              console.log('🔄 Login: Owner has no plan type selected, redirecting to /onboarding');
               setRedirectPath('/onboarding');
             } else {
-              console.log('🔄 Login: Onboarding complete, redirecting to /');
               setRedirectPath('/');
             }
           } else {
-            const errorText = await orgResponse.text();
-            console.log('🔄 Login: Unexpected org response status, redirecting to /onboarding. Error:', errorText);
+            await orgResponse.text();
             // On 401 or other errors, assume new user and go to onboarding
             setRedirectPath('/onboarding');
           }
-        } catch (error) {
-          console.error('🔄 Login: Error checking org:', error);
+        } catch {
           setRedirectPath('/onboarding');
         }
-      } else {
-        console.log('🔄 Login: No token available after fetch attempt');
       }
       setIsCheckingOnboarding(false);
     };
@@ -183,22 +159,16 @@ export default function Login() {
   }, [user, isLoading, hasToken, dispatch]);
 
   const handleLogin = () => {
-    console.log('handleLogin clicked, isLoading:', isLoading);
     if (isLoading) {
-      console.log('Auth0 still loading, skipping login');
       return;
     }
-    console.log('Calling loginWithRedirect...');
     loginWithRedirect();
   };
 
   const handleSignUp = () => {
-    console.log('handleSignUp clicked, isLoading:', isLoading);
     if (isLoading) {
-      console.log('Auth0 still loading, skipping signup');
       return;
     }
-    console.log('Calling loginWithRedirect with signup screen hint...');
     loginWithRedirect({
       authorizationParams: {
         screen_hint: 'signup',
@@ -209,7 +179,6 @@ export default function Login() {
   // Don't auto-redirect here - let AppContent handle the redirect after checking onboarding
   // The onboarding check in App.js will redirect appropriately
   if (redirectPath) {
-    console.log('🔄 Login: Redirecting to', redirectPath, 'token in localStorage:', !!localStorage.getItem('token'));
     return <Navigate to={redirectPath} replace />;
   }
 

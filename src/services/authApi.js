@@ -16,7 +16,6 @@ export const refreshAccessToken = async () => {
   const refreshToken = localStorage.getItem('refreshToken');
   
   if (!refreshToken) {
-    console.log('No refresh token available');
     return null;
   }
   
@@ -34,15 +33,12 @@ export const refreshAccessToken = async () => {
         if (data.refresh && data.refresh.token) {
           localStorage.setItem('refreshToken', data.refresh.token);
         }
-        console.log('Token refreshed successfully');
         return data.access.token;
       }
     }
-    
-    console.log('Token refresh failed:', response.status);
+
     return null;
-  } catch (error) {
-    console.error('Token refresh error:', error);
+  } catch {
     return null;
   }
 };
@@ -59,11 +55,7 @@ export const logout = async () => {
     
     // Even if logout fails, we'll still clear local state
     // (user could have invalid/expired refresh token)
-    if (!response.ok && response.status !== 401 && response.status !== 404) {
-      console.error('Logout API error:', response.status);
-    }
-  } catch (error) {
-    console.error('Logout API call failed:', error.message);
+  } catch {
     // Continue with local logout even if API call fails
   }
 };

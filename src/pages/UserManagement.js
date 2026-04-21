@@ -58,13 +58,6 @@ export default function UserManagement() {
   const [removeDialogOpen, setRemoveDialogOpen] = useState(false);
   const [memberToRemove, setMemberToRemove] = useState(null);
   const [removeLoading, setRemoveLoading] = useState(false);
-  
-  // Debug logging
-  console.log('UserManagement Debug:', { 
-    isOwner, 
-    userId: user?.id,
-    organisation: organisation?.name 
-  });
 
   const fetchData = useCallback(async () => {
     try {
@@ -72,7 +65,6 @@ export default function UserManagement() {
       const org = await organisationApi.getOrganisation();
       setOrganisation(org);
       setIsOwner(org?.isOwner || false);
-      console.log('UserManagement: org fetched, isOwner:', org?.isOwner);
       if (org) {
         const membersList = await organisationApi.getMembers(org.id);
         setMembers(membersList);
@@ -91,12 +83,6 @@ export default function UserManagement() {
   const handleInviteMember = async () => {
     if (!inviteEmail.trim()) return;
     
-    console.log('🔍 handleInviteMember:', { 
-      orgId: organisation?.id, 
-      email: inviteEmail,
-      organisation
-    });
-    
     setInviteLoading(true);
     setInviteError(null);
     try {
@@ -105,7 +91,6 @@ export default function UserManagement() {
       // In development, show the invite link
       if (result.inviteLink) {
         setSuccessMessage(`Invitation sent to ${inviteEmail}`);
-        console.log('🔗 Invite link:', result.inviteLink);
       } else {
         setSuccessMessage(`Invitation sent to ${inviteEmail}`);
       }
