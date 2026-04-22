@@ -17,6 +17,8 @@ import Pricing from './pages/Pricing';
 import PricingQuote from './pages/PricingQuote';
 import BookkeepingQuote from './pages/BookkeepingQuote';
 import AccountingQuote from './pages/AccountingQuote';
+import TaxReturnQuestions from './pages/TaxReturnQuestions';
+import TaxReturnQuote from './pages/TaxReturnQuote';
 import ServiceValuesEditor from './pages/ServiceValuesEditor';
 import Onboarding from './pages/Onboarding';
 import PricingModifier from './pages/PricingModifier';
@@ -276,6 +278,8 @@ function AppContent() {
         // Navigate to appropriate questions page based on service type
         if (serviceType === 'bookkeeping') {
           navigate('/bookkeeping-questions');
+        } else if (serviceType === 'tax-return') {
+          navigate('/tax-return-questions');
         } else {
           navigate('/questions');
         }
@@ -372,6 +376,8 @@ function AppContent() {
             <Route path="/pricing-quote" element={<ProtectedRoute><PricingQuote /></ProtectedRoute>} />
             <Route path="/bookkeeping-quote" element={<ProtectedRoute><BookkeepingQuote /></ProtectedRoute>} />
             <Route path="/accounting-quote" element={<ProtectedRoute><AccountingQuote /></ProtectedRoute>} />
+            <Route path="/tax-return-questions" element={<ProtectedRoute><TaxReturnQuestions /></ProtectedRoute>} />
+            <Route path="/tax-return-quote" element={<ProtectedRoute><TaxReturnQuote /></ProtectedRoute>} />
             <Route path="/service-values-editor" element={<ProtectedRoute><ServiceValuesEditor /></ProtectedRoute>} />
             <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
             <Route path="/settings/billing" element={<ProtectedRoute><OwnerRoute><BillingSettings /></OwnerRoute></ProtectedRoute>} />
@@ -387,7 +393,7 @@ function AppContent() {
         </SubscriptionGuard>
       </div>
       <Dialog open={openModal} onClose={handleModalClose} maxWidth="sm" fullWidth>
-        <DialogTitle>Create New Price Quote</DialogTitle>
+        <DialogTitle>Create Proposal</DialogTitle>
         <DialogContent>
           <TextField
             autoFocus
@@ -414,6 +420,9 @@ function AppContent() {
                 <FormControlLabel value="accounting" control={<Radio />} label="Accounting" />
               )}
               <FormControlLabel value="bookkeeping" control={<Radio />} label="Bookkeeping" />
+              {!isBookkeeper && (
+                <FormControlLabel value="tax-return" control={<Radio />} label="Tax Return" />
+              )}
             </RadioGroup>
           </FormControl>
         </DialogContent>

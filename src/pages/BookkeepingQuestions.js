@@ -579,13 +579,17 @@ export default function BookkeepingQuestions() {
                     handleNumberChange(question.id)(e);
                   }}
                   onFocus={() => setFocusedQuestion(question.id)}
-                  label="Enter number"
+                  placeholder="Enter number"
                   size="small"
                   disabled={question.id !== 'q1' && !responses.q1}
                   variant="outlined"
                   sx={{
                     maxWidth: '150px',
                     pointerEvents: question.id !== 'q1' && !responses.q1 ? 'none' : 'auto',
+                    '& .MuiOutlinedInput-input::placeholder': {
+                      opacity: 0.8,
+                      color: '#666666',
+                    },
                     '& .MuiOutlinedInput-root': {
                       backgroundColor: '#ffffff',
                       transition: 'all 0.2s ease-in-out',
@@ -629,7 +633,7 @@ export default function BookkeepingQuestions() {
                     handleTextChange(question.id)(e);
                   }}
                   onFocus={() => setFocusedQuestion(question.id)}
-                  label="Enter details"
+                  placeholder="Enter details"
                   size="small"
                   disabled={question.id !== 'q1' && !responses.q1}
                   variant="outlined"
@@ -637,6 +641,10 @@ export default function BookkeepingQuestions() {
                     maxWidth: '400px',
                     width: '100%',
                     pointerEvents: question.id !== 'q1' && !responses.q1 ? 'none' : 'auto',
+                    '& .MuiOutlinedInput-input::placeholder': {
+                      opacity: 0.8,
+                      color: '#666666',
+                    },
                     '& .MuiOutlinedInput-root': {
                       backgroundColor: '#ffffff',
                       transition: 'all 0.2s ease-in-out',

@@ -44,6 +44,7 @@ const getServiceTypeLabel = (price) => {
   // Use the dedicated serviceType field if available
   if (price?.serviceType === 'bookkeeping') return 'Bookkeeping';
   if (price?.serviceType === 'accounting') return 'Accounting';
+  if (price?.serviceType === 'tax-return') return 'Tax Return';
   
   // Fallback: check questionResponses for old data
   const questionResponses = price?.questionResponses || price;
@@ -146,25 +147,30 @@ export default function SavedPrices() {
       }));
       
       // Determine service type - use the serviceType field from database first
-      let isBookkeeping = priceData.serviceType === 'bookkeeping';
-      
-      // Fallback for old data that doesn't have serviceType field
-      if (!priceData.serviceType) {
+      const serviceTypePrimary = priceData.serviceType;
+
+      if (serviceTypePrimary === 'bookkeeping') {
+        navigate('/bookkeeping-questions');
+      } else if (serviceTypePrimary === 'tax-return') {
+        localStorage.setItem('tax_return_responses', JSON.stringify(priceData.questionResponses || {}));
+        navigate('/tax-return-questions');
+      } else if (serviceTypePrimary === 'accounting') {
+        navigate('/questions');
+      } else {
+        // Fallback for old data that doesn't have serviceType field
         const qResp = priceData.questionResponses;
-        // Check for bookkeeping-specific questions
+        let isBookkeeping = false;
         if (qResp?.q2b) {
           isBookkeeping = true;
-        } else if (qResp?.q4 !== undefined) {
-          isBookkeeping = false;
         } else if (qResp?.serviceType === 'bookkeeping') {
           isBookkeeping = true;
         }
-      }
-      
-      if (isBookkeeping) {
-        navigate('/bookkeeping-questions');
-      } else {
-        navigate('/questions');
+
+        if (isBookkeeping) {
+          navigate('/bookkeeping-questions');
+        } else {
+          navigate('/questions');
+        }
       }
     } catch (err) {
       setError('Failed to load the selected price. Please try again.');
@@ -489,7 +495,10 @@ export default function SavedPrices() {
                       sx={{ 
                         fontWeight: 600, 
                         height: 24,
-                        backgroundColor: getServiceTypeLabel(price) === 'Bookkeeping' ? '#0891b2' : '#6d28d9',
+                        backgroundColor: 
+                          getServiceTypeLabel(price) === 'Bookkeeping' ? '#0891b2' : 
+                          getServiceTypeLabel(price) === 'Tax Return' ? '#6d28d9' : 
+                          '#422afb',
                         color: '#ffffff',
                       }}
                     />
