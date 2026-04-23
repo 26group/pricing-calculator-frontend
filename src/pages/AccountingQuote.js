@@ -289,6 +289,28 @@ export default function AccountingQuote() {
     }
   };
 
+  // Helper function to check if payroll processing has any employees entered
+  const hasPayrollProcessing = () => {
+    // Must explicitly be 'yes' for payroll to be selected
+    if (questionResponses.q10 !== 'yes') return false;
+    
+    if (!questionResponses.q10a && !questionResponses.q10b) return false;
+    
+    // Check q10a (salary employees)
+    if (questionResponses.q10a && typeof questionResponses.q10a === 'object') {
+      const q10aHasValue = Object.values(questionResponses.q10a).some(v => parseInt(v, 10) > 0);
+      if (q10aHasValue) return true;
+    }
+    
+    // Check q10b (timesheet employees)
+    if (questionResponses.q10b && typeof questionResponses.q10b === 'object') {
+      const q10bHasValue = Object.values(questionResponses.q10b).some(v => parseInt(v, 10) > 0);
+      if (q10bHasValue) return true;
+    }
+    
+    return false;
+  };
+
   const pricingRows = [
     { feature: 'Tax Services', isCategory: true },
     { feature: 'Individual Tax Returns', bronze: questionResponses.q2 && parseInt(questionResponses.q2, 10) > 0 ? <CheckMark /> : <NotIncluded />, silver: questionResponses.q2 && parseInt(questionResponses.q2, 10) > 0 ? <CheckMark /> : <NotIncluded />, gold: questionResponses.q2 && parseInt(questionResponses.q2, 10) > 0 ? <CheckMark /> : <NotIncluded /> },
@@ -299,7 +321,7 @@ export default function AccountingQuote() {
     { feature: 'TPAR', bronze: questionResponses.q8 && parseInt(questionResponses.q8, 10) > 0 ? <CheckMark /> : <NotIncluded />, silver: questionResponses.q8 && parseInt(questionResponses.q8, 10) > 0 ? <CheckMark /> : <NotIncluded />, gold: questionResponses.q8 && parseInt(questionResponses.q8, 10) > 0 ? <CheckMark /> : <NotIncluded /> },
     { feature: 'Payroll Services', isCategory: true },
     { feature: 'Workers Compensation', bronze: questionResponses.q9 === 'yes' ? <CheckMark /> : <NotIncluded />, silver: questionResponses.q9 === 'yes' ? <CheckMark /> : <NotIncluded />, gold: questionResponses.q9 === 'yes' ? <CheckMark /> : <NotIncluded /> },
-    { feature: 'Payroll Processing', bronze: questionResponses.q10a || questionResponses.q10b ? <CheckMark /> : <NotIncluded />, silver: questionResponses.q10a || questionResponses.q10b ? <CheckMark /> : <NotIncluded />, gold: questionResponses.q10a || questionResponses.q10b ? <CheckMark /> : <NotIncluded /> },
+    { feature: 'Payroll Processing', bronze: hasPayrollProcessing() ? <CheckMark /> : <NotIncluded />, silver: hasPayrollProcessing() ? <CheckMark /> : <NotIncluded />, gold: hasPayrollProcessing() ? <CheckMark /> : <NotIncluded /> },
     { feature: 'Payroll Tax Returns', bronze: <NotIncluded />, silver: questionResponses.q11 === 'yes' ? <CheckMark /> : <NotIncluded />, gold: questionResponses.q11 === 'yes' ? <CheckMark /> : <NotIncluded /> },
     { feature: 'Super Prep & Lodgement', bronze: questionResponses.q12 && questionResponses.q12 !== 'no' ? <CheckMark /> : <NotIncluded />, silver: questionResponses.q12 && questionResponses.q12 !== 'no' ? <CheckMark /> : <NotIncluded />, gold: questionResponses.q12 && questionResponses.q12 !== 'no' ? <CheckMark /> : <NotIncluded /> },
     { feature: 'STP Reporting', bronze: questionResponses.q13 && questionResponses.q13 !== 'no' ? <CheckMark /> : <NotIncluded />, silver: questionResponses.q13 && questionResponses.q13 !== 'no' ? <CheckMark /> : <NotIncluded />, gold: questionResponses.q13 && questionResponses.q13 !== 'no' ? <CheckMark /> : <NotIncluded /> },
