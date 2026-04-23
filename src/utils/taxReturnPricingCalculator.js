@@ -69,16 +69,28 @@ export const calculateTaxReturnBronzePrice = (responses, pricingModifier = 200) 
 
   // Q9–Q10: Business Schedules — Bronze = NO
 
-  // Q11–Q13: Deductions (Bronze=YES)
-  const deductionKeys = ['moreThan3Standard', 'motorVehicleLogBook', 'motorVehicleCPK'];
-  ['q11', 'q12', 'q13'].forEach((qId, idx) => {
-    const delivery = responses[qId];
-    if (delivery && delivery !== 'none') {
-      const svc = v.deductions[deductionKeys[idx]][delivery];
-      const count = Math.max(parseInt(responses[`${qId}_count`], 10) || 1, 1);
-      if (svc) total = addAnnual(total, svc.annualRate * count, m);
+  // Q11–Q13: Deductions (Bronze=YES) (q11 is parent with delivery, q11_count/q12_count/q13_count are children)
+  const bronzeDeductionDelivery = responses.q11;
+  if (bronzeDeductionDelivery && bronzeDeductionDelivery !== 'none') {
+    // Q11_count: Deductions — more than 3 standard expenses
+    const deductCount = Math.max(parseInt(responses.q11_count, 10) || 0, 0);
+    if (deductCount > 0) {
+      const svc = v.deductions.moreThan3Standard[bronzeDeductionDelivery];
+      if (svc) total = addAnnual(total, svc.annualRate * deductCount, m);
     }
-  });
+    // Q12_count: Motor Vehicle — log book method
+    const logBookCount = Math.max(parseInt(responses.q12_count, 10) || 0, 0);
+    if (logBookCount > 0) {
+      const svc = v.deductions.motorVehicleLogBook[bronzeDeductionDelivery];
+      if (svc) total = addAnnual(total, svc.annualRate * logBookCount, m);
+    }
+    // Q13_count: Motor Vehicle — Cents per kilometre method
+    const cpkCount = Math.max(parseInt(responses.q13_count, 10) || 0, 0);
+    if (cpkCount > 0) {
+      const svc = v.deductions.motorVehicleCPK[bronzeDeductionDelivery];
+      if (svc) total = addAnnual(total, svc.annualRate * cpkCount, m);
+    }
+  }
 
   // Q14: BAS — Bronze = NO
   // Q15: TPAR — Bronze = NO
@@ -135,38 +147,68 @@ export const calculateTaxReturnSilverPrice = (responses, pricingModifier = 200) 
     });
   }
 
-  // Q6–Q8: Capital Gains
-  const cgtMap = { q6: 'cgtShares', q7: 'cgtProperty', q8: 'balancingAdj' };
-  Object.entries(cgtMap).forEach(([qId, key]) => {
-    const delivery = responses[qId];
-    if (delivery && delivery !== 'none') {
-      const svc = v.capitalGains[key][delivery];
-      const count = Math.max(parseInt(responses[`${qId}_count`], 10) || 1, 1);
-      if (svc) total = addAnnual(total, svc.annualRate * count, m);
+  // Q6–Q8: Capital Gains (q6 is parent with delivery, q6_count/q7_count/q8_count are children)
+  const cgtDelivery = responses.q6;
+  if (cgtDelivery && cgtDelivery !== 'none') {
+    // Q6_count: CGT — Shares and equities
+    const sharesCount = Math.max(parseInt(responses.q6_count, 10) || 0, 0);
+    if (sharesCount > 0) {
+      const svc = v.capitalGains.cgtShares[cgtDelivery];
+      if (svc) total = addAnnual(total, svc.annualRate * sharesCount, m);
     }
-  });
+    // Q7_count: CGT — Property sales
+    const propertyCount = Math.max(parseInt(responses.q7_count, 10) || 0, 0);
+    if (propertyCount > 0) {
+      const svc = v.capitalGains.cgtProperty[cgtDelivery];
+      if (svc) total = addAnnual(total, svc.annualRate * propertyCount, m);
+    }
+    // Q8_count: Balancing adjustment — sale of business asset
+    const balancingCount = Math.max(parseInt(responses.q8_count, 10) || 0, 0);
+    if (balancingCount > 0) {
+      const svc = v.capitalGains.balancingAdj[cgtDelivery];
+      if (svc) total = addAnnual(total, svc.annualRate * balancingCount, m);
+    }
+  }
 
-  // Q9–Q10: Business Schedules
-  const bsMap = { q9: 'noGst', q10: 'withGst' };
-  Object.entries(bsMap).forEach(([qId, key]) => {
-    const delivery = responses[qId];
-    if (delivery && delivery !== 'none') {
-      const svc = v.businessSchedules[key][delivery];
-      const count = Math.max(parseInt(responses[`${qId}_count`], 10) || 1, 1);
-      if (svc) total = addAnnual(total, svc.annualRate * count, m);
+  // Q9–Q10: Business Schedules (q9 is parent with delivery, q9_count and q10_count are children)
+  const businessDelivery = responses.q9;
+  if (businessDelivery && businessDelivery !== 'none') {
+    // Q9_count: Business Schedule — no GST
+    const noGstCount = Math.max(parseInt(responses.q9_count, 10) || 0, 0);
+    if (noGstCount > 0) {
+      const svc = v.businessSchedules.noGst[businessDelivery];
+      if (svc) total = addAnnual(total, svc.annualRate * noGstCount, m);
     }
-  });
+    // Q10_count: Business Schedule — with GST
+    const withGstCount = Math.max(parseInt(responses.q10_count, 10) || 0, 0);
+    if (withGstCount > 0) {
+      const svc = v.businessSchedules.withGst[businessDelivery];
+      if (svc) total = addAnnual(total, svc.annualRate * withGstCount, m);
+    }
+  }
 
-  // Q11–Q13: Deductions
-  const deductionMap = { q11: 'moreThan3Standard', q12: 'motorVehicleLogBook', q13: 'motorVehicleCPK' };
-  Object.entries(deductionMap).forEach(([qId, key]) => {
-    const delivery = responses[qId];
-    if (delivery && delivery !== 'none') {
-      const svc = v.deductions[key][delivery];
-      const count = Math.max(parseInt(responses[`${qId}_count`], 10) || 1, 1);
-      if (svc) total = addAnnual(total, svc.annualRate * count, m);
+  // Q11–Q13: Deductions (q11 is parent with delivery, q11_count/q12_count/q13_count are children)
+  const deductionDelivery = responses.q11;
+  if (deductionDelivery && deductionDelivery !== 'none') {
+    // Q11_count: Deductions — more than 3 standard expenses
+    const deductCount = Math.max(parseInt(responses.q11_count, 10) || 0, 0);
+    if (deductCount > 0) {
+      const svc = v.deductions.moreThan3Standard[deductionDelivery];
+      if (svc) total = addAnnual(total, svc.annualRate * deductCount, m);
     }
-  });
+    // Q12_count: Motor Vehicle — log book method
+    const logBookCount = Math.max(parseInt(responses.q12_count, 10) || 0, 0);
+    if (logBookCount > 0) {
+      const svc = v.deductions.motorVehicleLogBook[deductionDelivery];
+      if (svc) total = addAnnual(total, svc.annualRate * logBookCount, m);
+    }
+    // Q13_count: Motor Vehicle — Cents per kilometre method
+    const cpkCount = Math.max(parseInt(responses.q13_count, 10) || 0, 0);
+    if (cpkCount > 0) {
+      const svc = v.deductions.motorVehicleCPK[deductionDelivery];
+      if (svc) total = addAnnual(total, svc.annualRate * cpkCount, m);
+    }
+  }
 
   // Q14: BAS
   if (responses.q14 && responses.q14 !== 'none') {
@@ -189,9 +231,9 @@ export const calculateTaxReturnSilverPrice = (responses, pricingModifier = 200) 
   }
 
   // Q17: Payroll Salary
-  const salaryDeliverySilver = responses.q17delivery;
-  if (salaryDeliverySilver && responses.q17 && typeof responses.q17 === 'object') {
-    const { weekly = '', fortnightly = '', monthly = '', annual = '' } = responses.q17;
+  const salaryDeliverySilver = responses.q17;
+  if (salaryDeliverySilver && responses.q17delivery && typeof responses.q17delivery === 'object') {
+    const { weekly = '', fortnightly = '', monthly = '', annual = '' } = responses.q17delivery;
     const salaryValues = v.payrollSalary[salaryDeliverySilver];
     if (salaryValues) {
       const wc = parseInt(weekly, 10) || 0;
@@ -298,38 +340,68 @@ export const calculateTaxReturnGoldPrice = (responses, pricingModifier = 200) =>
     });
   }
 
-  // Q6–Q8: Capital Gains
-  const cgtMap = { q6: 'cgtShares', q7: 'cgtProperty', q8: 'balancingAdj' };
-  Object.entries(cgtMap).forEach(([qId, key]) => {
-    const delivery = responses[qId];
-    if (delivery && delivery !== 'none') {
-      const svc = v.capitalGains[key][delivery];
-      const count = Math.max(parseInt(responses[`${qId}_count`], 10) || 1, 1);
-      if (svc) total = addAnnual(total, svc.annualRate * count, m);
+  // Q6–Q8: Capital Gains (q6 is parent with delivery, q6_count/q7_count/q8_count are children)
+  const cgtDeliveryGold = responses.q6;
+  if (cgtDeliveryGold && cgtDeliveryGold !== 'none') {
+    // Q6_count: CGT — Shares and equities
+    const sharesCountGold = Math.max(parseInt(responses.q6_count, 10) || 0, 0);
+    if (sharesCountGold > 0) {
+      const svc = v.capitalGains.cgtShares[cgtDeliveryGold];
+      if (svc) total = addAnnual(total, svc.annualRate * sharesCountGold, m);
     }
-  });
+    // Q7_count: CGT — Property sales
+    const propertyCountGold = Math.max(parseInt(responses.q7_count, 10) || 0, 0);
+    if (propertyCountGold > 0) {
+      const svc = v.capitalGains.cgtProperty[cgtDeliveryGold];
+      if (svc) total = addAnnual(total, svc.annualRate * propertyCountGold, m);
+    }
+    // Q8_count: Balancing adjustment — sale of business asset
+    const balancingCountGold = Math.max(parseInt(responses.q8_count, 10) || 0, 0);
+    if (balancingCountGold > 0) {
+      const svc = v.capitalGains.balancingAdj[cgtDeliveryGold];
+      if (svc) total = addAnnual(total, svc.annualRate * balancingCountGold, m);
+    }
+  }
 
-  // Q9–Q10: Business Schedules
-  const bsMap = { q9: 'noGst', q10: 'withGst' };
-  Object.entries(bsMap).forEach(([qId, key]) => {
-    const delivery = responses[qId];
-    if (delivery && delivery !== 'none') {
-      const svc = v.businessSchedules[key][delivery];
-      const count = Math.max(parseInt(responses[`${qId}_count`], 10) || 1, 1);
-      if (svc) total = addAnnual(total, svc.annualRate * count, m);
+  // Q9–Q10: Business Schedules (q9 is parent with delivery, q9_count and q10_count are children)
+  const businessDeliveryGold = responses.q9;
+  if (businessDeliveryGold && businessDeliveryGold !== 'none') {
+    // Q9_count: Business Schedule — no GST
+    const noGstCountGold = Math.max(parseInt(responses.q9_count, 10) || 0, 0);
+    if (noGstCountGold > 0) {
+      const svc = v.businessSchedules.noGst[businessDeliveryGold];
+      if (svc) total = addAnnual(total, svc.annualRate * noGstCountGold, m);
     }
-  });
+    // Q10_count: Business Schedule — with GST
+    const withGstCountGold = Math.max(parseInt(responses.q10_count, 10) || 0, 0);
+    if (withGstCountGold > 0) {
+      const svc = v.businessSchedules.withGst[businessDeliveryGold];
+      if (svc) total = addAnnual(total, svc.annualRate * withGstCountGold, m);
+    }
+  }
 
-  // Q11–Q13: Deductions
-  const deductionMap = { q11: 'moreThan3Standard', q12: 'motorVehicleLogBook', q13: 'motorVehicleCPK' };
-  Object.entries(deductionMap).forEach(([qId, key]) => {
-    const delivery = responses[qId];
-    if (delivery && delivery !== 'none') {
-      const svc = v.deductions[key][delivery];
-      const count = Math.max(parseInt(responses[`${qId}_count`], 10) || 1, 1);
-      if (svc) total = addAnnual(total, svc.annualRate * count, m);
+  // Q11–Q13: Deductions (q11 is parent with delivery, q11_count/q12_count/q13_count are children)
+  const deductionDeliveryGold = responses.q11;
+  if (deductionDeliveryGold && deductionDeliveryGold !== 'none') {
+    // Q11_count: Deductions — more than 3 standard expenses
+    const deductCountGold = Math.max(parseInt(responses.q11_count, 10) || 0, 0);
+    if (deductCountGold > 0) {
+      const svc = v.deductions.moreThan3Standard[deductionDeliveryGold];
+      if (svc) total = addAnnual(total, svc.annualRate * deductCountGold, m);
     }
-  });
+    // Q12_count: Motor Vehicle — log book method
+    const logBookCountGold = Math.max(parseInt(responses.q12_count, 10) || 0, 0);
+    if (logBookCountGold > 0) {
+      const svc = v.deductions.motorVehicleLogBook[deductionDeliveryGold];
+      if (svc) total = addAnnual(total, svc.annualRate * logBookCountGold, m);
+    }
+    // Q13_count: Motor Vehicle — Cents per kilometre method
+    const cpkCountGold = Math.max(parseInt(responses.q13_count, 10) || 0, 0);
+    if (cpkCountGold > 0) {
+      const svc = v.deductions.motorVehicleCPK[deductionDeliveryGold];
+      if (svc) total = addAnnual(total, svc.annualRate * cpkCountGold, m);
+    }
+  }
 
   // Q14: BAS
   if (responses.q14 && responses.q14 !== 'none') {
@@ -352,9 +424,9 @@ export const calculateTaxReturnGoldPrice = (responses, pricingModifier = 200) =>
   }
 
   // Q17: Payroll Salary
-  const salaryDelivery = responses.q17delivery;
-  if (salaryDelivery && responses.q17 && typeof responses.q17 === 'object') {
-    const { weekly = '', fortnightly = '', monthly = '', annual = '' } = responses.q17;
+  const salaryDelivery = responses.q17;
+  if (salaryDelivery && responses.q17delivery && typeof responses.q17delivery === 'object') {
+    const { weekly = '', fortnightly = '', monthly = '', annual = '' } = responses.q17delivery;
     const salaryValues = v.payrollSalary[salaryDelivery];
     if (salaryValues) {
       const wc = parseInt(weekly, 10) || 0;
@@ -477,18 +549,6 @@ export const calculateTaxReturnOnceOffFee = (responses, pricingModifier = 200) =
     if (svc) total += svc.onceOff * m;
   }
 
-  // Q32: Return Not Necessary
-  const returnNotNecessaryCount = parseInt(responses.q32, 10) || 0;
-  if (returnNotNecessaryCount > 0) {
-    total += v.returnNotNecessary.ratePerClient * returnNotNecessaryCount * m;
-  }
-
-  // Q33: Final Return
-  const finalReturnCount = parseInt(responses.q33, 10) || 0;
-  if (finalReturnCount > 0) {
-    total += v.finalReturn.ratePerClient * finalReturnCount * m;
-  }
-
   return total;
 };
 
@@ -525,20 +585,7 @@ export const getTaxReturnOnceOffBreakdown = (responses, pricingModifier = 200) =
     const svc = v.amendedReturns[responses.q31];
     if (svc) items.push({ label: svc.inclusion, amount: svc.onceOff * m });
   }
-  const returnNotNecessaryCount = parseInt(responses.q32, 10) || 0;
-  if (returnNotNecessaryCount > 0) {
-    items.push({
-      label: `${v.returnNotNecessary.inclusion}`,
-      amount: v.returnNotNecessary.ratePerClient * returnNotNecessaryCount * m,
-    });
-  }
-  const finalReturnCount = parseInt(responses.q33, 10) || 0;
-  if (finalReturnCount > 0) {
-    items.push({
-      label: `${v.finalReturn.inclusion}`,
-      amount: v.finalReturn.ratePerClient * finalReturnCount * m,
-    });
-  }
+
   return items;
 };
 // ─────────────────────────────────────────────────────────────────────────────
@@ -569,38 +616,68 @@ export const calculateTaxReturnUpfrontAnnualFee = (responses, pricingModifier = 
     });
   }
 
-  // Q6-Q8: Capital Gains (Upfront = YES for all)
-  const cgtMap = { q6: 'cgtShares', q7: 'cgtProperty', q8: 'balancingAdj' };
-  Object.entries(cgtMap).forEach(([qId, key]) => {
-    const delivery = responses[qId];
-    if (delivery && delivery !== 'none') {
-      const svc = v.capitalGains[key][delivery];
-      const count = Math.max(parseInt(responses[`${qId}_count`], 10) || 1, 1);
-      if (svc) total += svc.annualRate * count * m;
+  // Q6-Q8: Capital Gains (Upfront = YES for all) (q6 is parent with delivery, q6_count/q7_count/q8_count are children)
+  const cgtDeliveryUpfront = responses.q6;
+  if (cgtDeliveryUpfront && cgtDeliveryUpfront !== 'none') {
+    // Q6_count: CGT — Shares and equities
+    const sharesCountUpfront = Math.max(parseInt(responses.q6_count, 10) || 0, 0);
+    if (sharesCountUpfront > 0) {
+      const svc = v.capitalGains.cgtShares[cgtDeliveryUpfront];
+      if (svc) total += svc.annualRate * sharesCountUpfront * m;
     }
-  });
+    // Q7_count: CGT — Property sales
+    const propertyCountUpfront = Math.max(parseInt(responses.q7_count, 10) || 0, 0);
+    if (propertyCountUpfront > 0) {
+      const svc = v.capitalGains.cgtProperty[cgtDeliveryUpfront];
+      if (svc) total += svc.annualRate * propertyCountUpfront * m;
+    }
+    // Q8_count: Balancing adjustment — sale of business asset
+    const balancingCountUpfront = Math.max(parseInt(responses.q8_count, 10) || 0, 0);
+    if (balancingCountUpfront > 0) {
+      const svc = v.capitalGains.balancingAdj[cgtDeliveryUpfront];
+      if (svc) total += svc.annualRate * balancingCountUpfront * m;
+    }
+  }
 
-  // Q9-Q10: Business Schedules (Upfront = YES)
-  const bsMap = { q9: 'noGst', q10: 'withGst' };
-  Object.entries(bsMap).forEach(([qId, key]) => {
-    const delivery = responses[qId];
-    if (delivery && delivery !== 'none') {
-      const svc = v.businessSchedules[key][delivery];
-      const count = Math.max(parseInt(responses[`${qId}_count`], 10) || 1, 1);
-      if (svc) total += svc.annualRate * count * m;
+  // Q9-Q10: Business Schedules (Upfront = YES) (q9 is parent with delivery, q9_count and q10_count are children)
+  const businessDeliveryUpfront = responses.q9;
+  if (businessDeliveryUpfront && businessDeliveryUpfront !== 'none') {
+    // Q9_count: Business Schedule — no GST
+    const noGstCountUpfront = Math.max(parseInt(responses.q9_count, 10) || 0, 0);
+    if (noGstCountUpfront > 0) {
+      const svc = v.businessSchedules.noGst[businessDeliveryUpfront];
+      if (svc) total += svc.annualRate * noGstCountUpfront * m;
     }
-  });
+    // Q10_count: Business Schedule — with GST
+    const withGstCountUpfront = Math.max(parseInt(responses.q10_count, 10) || 0, 0);
+    if (withGstCountUpfront > 0) {
+      const svc = v.businessSchedules.withGst[businessDeliveryUpfront];
+      if (svc) total += svc.annualRate * withGstCountUpfront * m;
+    }
+  }
 
-  // Q11-Q13: Deductions (Upfront = YES)
-  const deductionKeys = ['moreThan3Standard', 'motorVehicleLogBook', 'motorVehicleCPK'];
-  ['q11', 'q12', 'q13'].forEach((qId, idx) => {
-    const delivery = responses[qId];
-    if (delivery && delivery !== 'none') {
-      const svc = v.deductions[deductionKeys[idx]][delivery];
-      const count = Math.max(parseInt(responses[`${qId}_count`], 10) || 1, 1);
-      if (svc) total += svc.annualRate * count * m;
+  // Q11-Q13: Deductions (Upfront = YES) (q11 is parent with delivery, q11_count/q12_count/q13_count are children)
+  const deductionDeliveryUpfront = responses.q11;
+  if (deductionDeliveryUpfront && deductionDeliveryUpfront !== 'none') {
+    // Q11_count: Deductions — more than 3 standard expenses
+    const deductCountUpfront = Math.max(parseInt(responses.q11_count, 10) || 0, 0);
+    if (deductCountUpfront > 0) {
+      const svc = v.deductions.moreThan3Standard[deductionDeliveryUpfront];
+      if (svc) total += svc.annualRate * deductCountUpfront * m;
     }
-  });
+    // Q12_count: Motor Vehicle — log book method
+    const logBookCountUpfront = Math.max(parseInt(responses.q12_count, 10) || 0, 0);
+    if (logBookCountUpfront > 0) {
+      const svc = v.deductions.motorVehicleLogBook[deductionDeliveryUpfront];
+      if (svc) total += svc.annualRate * logBookCountUpfront * m;
+    }
+    // Q13_count: Motor Vehicle — Cents per kilometre method
+    const cpkCountUpfront = Math.max(parseInt(responses.q13_count, 10) || 0, 0);
+    if (cpkCountUpfront > 0) {
+      const svc = v.deductions.motorVehicleCPK[deductionDeliveryUpfront];
+      if (svc) total += svc.annualRate * cpkCountUpfront * m;
+    }
+  }
 
   // Q14: BAS (Upfront = YES) - rate × frequency
   if (responses.q14 && responses.q14 !== 'none' && responses.q14a) {
@@ -623,9 +700,9 @@ export const calculateTaxReturnUpfrontAnnualFee = (responses, pricingModifier = 
   }
 
   // Q17: Payroll Salary (Upfront = YES)
-  const salaryDelivery = responses.q17delivery;
-  if (salaryDelivery && salaryDelivery !== 'none' && responses.q17) {
-    const { weekly = '', fortnightly = '', monthly = '', annual = '' } = responses.q17 || {};
+  const salaryDelivery = responses.q17;
+  if (salaryDelivery && salaryDelivery !== 'none' && responses.q17delivery) {
+    const { weekly = '', fortnightly = '', monthly = '', annual = '' } = responses.q17delivery || {};
     const salaryValues = v.payrollSalary[salaryDelivery];
     if (salaryValues) {
       const wc = parseInt(weekly, 10) || 0;
@@ -641,7 +718,7 @@ export const calculateTaxReturnUpfrontAnnualFee = (responses, pricingModifier = 
 
   // Q18: Payroll Timesheet (Upfront = YES)
   const timesheetDelivery = responses.q18delivery;
-  if (timesheetDelivery && timesheetDelivery !== 'none' && responses.q18) {
+  if (timesheetDelivery && responses.q18) {
     const { weekly = '', fortnightly = '', monthly = '' } = responses.q18 || {};
     const timesheetValues = v.payrollTimesheet[timesheetDelivery];
     if (timesheetValues) {
@@ -691,6 +768,16 @@ export const calculateTaxReturnUpfrontAnnualFee = (responses, pricingModifier = 
     total += v.adviceMeeting.annualRate * m;
   }
 
+  // Q32: Return Not Necessary (Upfront = YES)
+  if (responses.q32 === 'yes') {
+    total += v.returnNotNecessary.ratePerClient * m;
+  }
+
+  // Q33: Final Return (Upfront = YES)
+  if (responses.q33 === 'yes') {
+    total += v.finalReturn.ratePerClient * m;
+  }
+
   // Support Services (Q17, Q18, Q19) have Upfront = NO, so they are NOT included here
 
   // Q28: Xero Support has Upfront = NO, so NOT included here
@@ -727,38 +814,68 @@ export const getTaxReturnUpfrontAnnualBreakdown = (responses, pricingModifier = 
     });
   }
 
-  // Q6-Q8: Capital Gains
-  const cgtMap = { q6: 'cgtShares', q7: 'cgtProperty', q8: 'balancingAdj' };
-  Object.entries(cgtMap).forEach(([qId, key]) => {
-    const delivery = responses[qId];
-    if (delivery && delivery !== 'none') {
-      const svc = v.capitalGains[key][delivery];
-      const count = Math.max(parseInt(responses[`${qId}_count`], 10) || 1, 1);
-      if (svc) items.push({ label: `${svc.inclusion}`, amount: svc.annualRate * count * m });
+  // Q6-Q8: Capital Gains (q6 is parent with delivery, q6_count/q7_count/q8_count are children)
+  const cgtDeliveryBreakdown = responses.q6;
+  if (cgtDeliveryBreakdown && cgtDeliveryBreakdown !== 'none') {
+    // Q6_count: CGT — Shares and equities
+    const sharesCountBreakdown = Math.max(parseInt(responses.q6_count, 10) || 0, 0);
+    if (sharesCountBreakdown > 0) {
+      const svc = v.capitalGains.cgtShares[cgtDeliveryBreakdown];
+      if (svc) items.push({ label: `${svc.inclusion}`, amount: svc.annualRate * sharesCountBreakdown * m });
     }
-  });
+    // Q7_count: CGT — Property sales
+    const propertyCountBreakdown = Math.max(parseInt(responses.q7_count, 10) || 0, 0);
+    if (propertyCountBreakdown > 0) {
+      const svc = v.capitalGains.cgtProperty[cgtDeliveryBreakdown];
+      if (svc) items.push({ label: `${svc.inclusion}`, amount: svc.annualRate * propertyCountBreakdown * m });
+    }
+    // Q8_count: Balancing adjustment — sale of business asset
+    const balancingCountBreakdown = Math.max(parseInt(responses.q8_count, 10) || 0, 0);
+    if (balancingCountBreakdown > 0) {
+      const svc = v.capitalGains.balancingAdj[cgtDeliveryBreakdown];
+      if (svc) items.push({ label: `${svc.inclusion}`, amount: svc.annualRate * balancingCountBreakdown * m });
+    }
+  }
 
-  // Q9-Q10: Business Schedules
-  const bsMap = { q9: 'noGst', q10: 'withGst' };
-  Object.entries(bsMap).forEach(([qId, key]) => {
-    const delivery = responses[qId];
-    if (delivery && delivery !== 'none') {
-      const svc = v.businessSchedules[key][delivery];
-      const count = Math.max(parseInt(responses[`${qId}_count`], 10) || 1, 1);
-      if (svc) items.push({ label: `${svc.inclusion}`, amount: svc.annualRate * count * m });
+  // Q9-Q10: Business Schedules (q9 is parent with delivery, q9_count and q10_count are children)
+  const businessDeliveryBreakdown = responses.q9;
+  if (businessDeliveryBreakdown && businessDeliveryBreakdown !== 'none') {
+    // Q9_count: Business Schedule — no GST
+    const noGstCountBreakdown = Math.max(parseInt(responses.q9_count, 10) || 0, 0);
+    if (noGstCountBreakdown > 0) {
+      const svc = v.businessSchedules.noGst[businessDeliveryBreakdown];
+      if (svc) items.push({ label: `${svc.inclusion}`, amount: svc.annualRate * noGstCountBreakdown * m });
     }
-  });
+    // Q10_count: Business Schedule — with GST
+    const withGstCountBreakdown = Math.max(parseInt(responses.q10_count, 10) || 0, 0);
+    if (withGstCountBreakdown > 0) {
+      const svc = v.businessSchedules.withGst[businessDeliveryBreakdown];
+      if (svc) items.push({ label: `${svc.inclusion}`, amount: svc.annualRate * withGstCountBreakdown * m });
+    }
+  }
 
-  // Q11-Q13: Deductions
-  const deductionKeys = ['moreThan3Standard', 'motorVehicleLogBook', 'motorVehicleCPK'];
-  ['q11', 'q12', 'q13'].forEach((qId, idx) => {
-    const delivery = responses[qId];
-    if (delivery && delivery !== 'none') {
-      const svc = v.deductions[deductionKeys[idx]][delivery];
-      const count = Math.max(parseInt(responses[`${qId}_count`], 10) || 1, 1);
-      if (svc) items.push({ label: `${svc.inclusion}`, amount: svc.annualRate * count * m });
+  // Q11-Q13: Deductions (q11 is parent with delivery, q11_count/q12_count/q13_count are children)
+  const deductionDeliveryBreakdown = responses.q11;
+  if (deductionDeliveryBreakdown && deductionDeliveryBreakdown !== 'none') {
+    // Q11_count: Deductions — more than 3 standard expenses
+    const deductCountBreakdown = Math.max(parseInt(responses.q11_count, 10) || 0, 0);
+    if (deductCountBreakdown > 0) {
+      const svc = v.deductions.moreThan3Standard[deductionDeliveryBreakdown];
+      if (svc) items.push({ label: `${svc.inclusion}`, amount: svc.annualRate * deductCountBreakdown * m });
     }
-  });
+    // Q12_count: Motor Vehicle — log book method
+    const logBookCountBreakdown = Math.max(parseInt(responses.q12_count, 10) || 0, 0);
+    if (logBookCountBreakdown > 0) {
+      const svc = v.deductions.motorVehicleLogBook[deductionDeliveryBreakdown];
+      if (svc) items.push({ label: `${svc.inclusion}`, amount: svc.annualRate * logBookCountBreakdown * m });
+    }
+    // Q13_count: Motor Vehicle — Cents per kilometre method
+    const cpkCountBreakdown = Math.max(parseInt(responses.q13_count, 10) || 0, 0);
+    if (cpkCountBreakdown > 0) {
+      const svc = v.deductions.motorVehicleCPK[deductionDeliveryBreakdown];
+      if (svc) items.push({ label: `${svc.inclusion}`, amount: svc.annualRate * cpkCountBreakdown * m });
+    }
+  }
 
   // Q14: BAS
   if (responses.q14 && responses.q14 !== 'none' && responses.q14a) {
@@ -781,9 +898,9 @@ export const getTaxReturnUpfrontAnnualBreakdown = (responses, pricingModifier = 
   }
 
   // Q17: Payroll Salary
-  const salaryDeliveryBreakdown = responses.q17delivery;
-  if (salaryDeliveryBreakdown && salaryDeliveryBreakdown !== 'none' && responses.q17) {
-    const { weekly = '', fortnightly = '', monthly = '', annual = '' } = responses.q17 || {};
+  const salaryDeliveryBreakdown = responses.q17;
+  if (salaryDeliveryBreakdown && salaryDeliveryBreakdown !== 'none' && responses.q17delivery) {
+    const { weekly = '', fortnightly = '', monthly = '', annual = '' } = responses.q17delivery || {};
     const salaryValues = v.payrollSalary[salaryDeliveryBreakdown];
     if (salaryValues) {
       const wc = parseInt(weekly, 10) || 0;
@@ -799,7 +916,7 @@ export const getTaxReturnUpfrontAnnualBreakdown = (responses, pricingModifier = 
 
   // Q18: Payroll Timesheet
   const timesheetDeliveryBreakdown = responses.q18delivery;
-  if (timesheetDeliveryBreakdown && timesheetDeliveryBreakdown !== 'none' && responses.q18) {
+  if (timesheetDeliveryBreakdown && timesheetDeliveryBreakdown !== 'none' && responses.q18 && typeof responses.q18 === 'object') {
     const { weekly = '', fortnightly = '', monthly = '' } = responses.q18 || {};
     const timesheetValues = v.payrollTimesheet[timesheetDeliveryBreakdown];
     if (timesheetValues) {
@@ -846,6 +963,16 @@ export const getTaxReturnUpfrontAnnualBreakdown = (responses, pricingModifier = 
   // Q25: Advice Meeting
   if (responses.q25 === 'yes') {
     items.push({ label: v.adviceMeeting.inclusion, amount: v.adviceMeeting.annualRate * m });
+  }
+
+  // Q32: Return Not Necessary (Upfront = YES)
+  if (responses.q32 === 'yes') {
+    items.push({ label: v.returnNotNecessary.inclusion, amount: v.returnNotNecessary.ratePerClient * m });
+  }
+
+  // Q33: Final Return (Upfront = YES)
+  if (responses.q33 === 'yes') {
+    items.push({ label: v.finalReturn.inclusion, amount: v.finalReturn.ratePerClient * m });
   }
 
   return items;

@@ -222,14 +222,14 @@ export default function TaxReturnQuote() {
 
   // Payroll
   const hasWorkersComp = r.q16 && r.q16 !== 'none';
-  const hasSalaryPayroll = r.q17 && typeof r.q17 === 'object' && (
-    parseInt(r.q17.weekly, 10) > 0 || parseInt(r.q17.fortnightly, 10) > 0 ||
-    parseInt(r.q17.monthly, 10) > 0 || parseInt(r.q17.annual, 10) > 0
+  const hasSalaryPayroll = r.q17 && r.q17 !== 'none' && r.q17delivery && typeof r.q17delivery === 'object' && (
+    parseInt(r.q17delivery.weekly, 10) > 0 || parseInt(r.q17delivery.fortnightly, 10) > 0 ||
+    parseInt(r.q17delivery.monthly, 10) > 0 || parseInt(r.q17delivery.annual, 10) > 0
   );
   const hasTimesheetPayroll = r.q18 && typeof r.q18 === 'object' && (
     parseInt(r.q18.weekly, 10) > 0 || parseInt(r.q18.fortnightly, 10) > 0 ||
     parseInt(r.q18.monthly, 10) > 0
-  );
+  ) && r.q18delivery;
   const hasSuper = r.q19 && r.q19 !== 'none';
   const hasStp  = r.q20 && r.q20 !== 'none';
   const hasLsl  = r.q21 && r.q21 !== 'none';

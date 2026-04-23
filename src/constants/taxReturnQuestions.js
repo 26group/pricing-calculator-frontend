@@ -209,7 +209,7 @@ export const taxReturnQuestionData = [
     ],
   },
   {
-    id: 'q17',
+    id: 'q17delivery',
     prompt: 'Payroll Processing — Salary ONLY employees (enter number per pay run frequency)',
     type: 'inputGroup',
     options: [
@@ -218,18 +218,20 @@ export const taxReturnQuestionData = [
       { label: 'Monthly', value: 'monthly', control: 'number' },
       { label: 'Annual', value: 'annual', control: 'number' },
     ],
-  },
-  {
-    id: 'q17delivery',
-    prompt: 'Payroll Processing (Salary) — how is this prepared?',
-    showWhen: (responses) => {
-      const q17 = responses.q17;
-      return q17 && (parseInt(q17.weekly, 10) > 0 || parseInt(q17.fortnightly, 10) > 0 || parseInt(q17.monthly, 10) > 0 || parseInt(q17.annual, 10) > 0);
-    },
-    type: 'radio',
-    options: [
-      { label: 'Summary by Client', value: 'byClient' },
-      { label: 'Summary by Firm', value: 'byFirm' },
+    children: [
+      {
+        id: 'q17',
+        prompt: 'Payroll Processing (Salary) — how is this prepared?',
+        type: 'radio',
+        showWhen: (responses) => {
+          const q17delivery = responses.q17delivery;
+          return q17delivery && (parseInt(q17delivery.weekly, 10) > 0 || parseInt(q17delivery.fortnightly, 10) > 0 || parseInt(q17delivery.monthly, 10) > 0 || parseInt(q17delivery.annual, 10) > 0);
+        },
+        options: [
+          { label: 'Summary by Client', value: 'byClient' },
+          { label: 'Summary by Firm', value: 'byFirm' },
+        ],
+      },
     ],
   },
   {
@@ -241,18 +243,21 @@ export const taxReturnQuestionData = [
       { label: 'Fortnightly', value: 'fortnightly', control: 'number' },
       { label: 'Monthly', value: 'monthly', control: 'number' },
     ],
-  },
-  {
-    id: 'q18delivery',
-    prompt: 'Payroll Processing (Timesheet) — how is this prepared?',
-    showWhen: (responses) => {
-      const q18 = responses.q18;
-      return q18 && (parseInt(q18.weekly, 10) > 0 || parseInt(q18.fortnightly, 10) > 0 || parseInt(q18.monthly, 10) > 0);
-    },
-    type: 'radio',
-    options: [
-      { label: 'Summary by Client', value: 'byClient' },
-      { label: 'Summary by Firm', value: 'byFirm' },
+    children: [
+      {
+        id: 'q18delivery',
+        prompt: 'Payroll Processing (Timesheet) — how is this prepared?',
+        type: 'radio',
+        showWhen: (responses) => {
+          if (!responses.q18 || typeof responses.q18 !== 'object') return false;
+          const { weekly = '', fortnightly = '', monthly = '' } = responses.q18;
+          return parseInt(weekly) > 0 || parseInt(fortnightly) > 0 || parseInt(monthly) > 0;
+        },
+        options: [
+          { label: 'Summary by Client', value: 'byClient' },
+          { label: 'Summary by Firm', value: 'byFirm' },
+        ],
+      },
     ],
   },
   {
@@ -367,9 +372,9 @@ export const taxReturnQuestionData = [
     type: 'radio',
     options: [
       { label: 'None', value: 'none' },
-      { label: 'Basic (reconciling & GST) — $300', value: 'basic' },
-      { label: 'Everyday (+ payables & receivables) — $500', value: 'everyday' },
-      { label: 'Advanced (+ payroll) — $650', value: 'advanced' },
+      { label: 'Basic (reconciling & GST)', value: 'basic' },
+      { label: 'Everyday (+ payables & receivables)', value: 'everyday' },
+      { label: 'Advanced (+ payroll)', value: 'advanced' },
     ],
   },
   {
@@ -378,9 +383,9 @@ export const taxReturnQuestionData = [
     type: 'radio',
     options: [
       { label: 'None', value: 'none' },
-      { label: 'Basic (reconciling & GST) — $360/yr', value: 'basic' },
-      { label: 'Everyday (+ payables & receivables) — $600/yr', value: 'everyday' },
-      { label: 'Advanced (+ payroll) — $900/yr', value: 'advanced' },
+      { label: 'Basic (reconciling & GST)', value: 'basic' },
+      { label: 'Everyday (+ payables & receivables)', value: 'everyday' },
+      { label: 'Advanced (+ payroll)', value: 'advanced' },
     ],
   },
 
@@ -394,8 +399,8 @@ export const taxReturnQuestionData = [
     type: 'radio',
     options: [
       { label: 'None', value: 'none' },
-      { label: 'Basic — $500', value: 'basic' },
-      { label: 'Hardship — $1,000', value: 'hardship' },
+      { label: 'Basic', value: 'basic' },
+      { label: 'Hardship', value: 'hardship' },
     ],
   },
 
@@ -404,9 +409,13 @@ export const taxReturnQuestionData = [
   // ===================
   {
     id: 'q30',
-    sectionTitle: 'Prior Year & Amendments',
-    prompt: 'Prior Year Lodgements — how many prior year returns are required? (Once-off — enter number)',
-    type: 'number',
+    sectionTitle: 'Prior Year and amendments',
+    prompt: 'Do they require prior year lodgements?',
+    type: 'inputGroup',
+    options: [
+      { label: 'List all items from Tax Services', value: 'taxServices', control: 'text' },
+      { label: 'List all items from Payroll', value: 'payroll', control: 'text' },
+    ],
   },
   {
     id: 'q31',
@@ -414,20 +423,31 @@ export const taxReturnQuestionData = [
     type: 'radio',
     options: [
       { label: 'None', value: 'none' },
-      { label: 'Original by Firm — by Client ($100)', value: 'origByFirmClient' },
-      { label: 'Original by Firm — by Firm ($200)', value: 'origByFirmFirm' },
-      { label: 'NOT by Firm — by Client ($200)', value: 'origNotByFirmClient' },
-      { label: 'NOT by Firm — by Firm ($400)', value: 'origNotByFirmFirm' },
+      { label: 'Original by Firm — by Client', value: 'origByFirmClient' },
+      { label: 'Original by Firm — by Firm', value: 'origByFirmFirm' },
+      { label: 'NOT by Firm — by Client', value: 'origNotByFirmClient' },
+      { label: 'NOT by Firm — by Firm', value: 'origNotByFirmFirm' },
     ],
   },
   {
     id: 'q32',
-    prompt: 'Return Not Necessary — how many clients require notification of Return Not Necessary? ($50 each, once-off)',
-    type: 'number',
+    sectionTitle: 'Return Not necessary or Final return',
+    prompt: 'Do they require notification of Return not necessary',
+    label: 'Return not necessary',
+    type: 'radio',
+    options: [
+      { label: 'Yes', value: 'yes' },
+      { label: 'No', value: 'no' },
+    ],
   },
   {
     id: 'q33',
-    prompt: 'Final Return — how many clients require notification of Final Return? ($20 each, once-off)',
-    type: 'number',
+    prompt: 'Do they require notification of Final Return',
+    label: 'Final Return',
+    type: 'radio',
+    options: [
+      { label: 'Yes', value: 'yes' },
+      { label: 'No', value: 'no' },
+    ],
   },
 ];
