@@ -214,9 +214,17 @@ export default function AccountingQuote() {
 
   // Q7: Corporate Secretarial & ATO Plans
   const hasCorporateSecretarial =
-    (questionResponses.q25 === 'yes') || // ASIC Annual Return
+    (Array.isArray(questionResponses.q25) && questionResponses.q25.includes('annualReturns')) || // ASIC Annual Return (array)
+    (typeof questionResponses.q25 === 'object' && questionResponses.q25?.annualReturns) || // ASIC Annual Return (object)
+    (questionResponses.q25 === 'annualReturns') || // ASIC Annual Return (string)
     (questionResponses.q25a && parseInt(questionResponses.q25a, 10) > 0) || // ASIC Form Lodgements
     (questionResponses.q26 && questionResponses.q26 !== 'none'); // ATO Payment Plans
+
+  // Helper to check if ASIC Annual Return is selected
+  const hasAsicAnnualReturn =
+    (Array.isArray(questionResponses.q25) && questionResponses.q25.includes('annualReturns')) ||
+    (typeof questionResponses.q25 === 'object' && questionResponses.q25?.annualReturns) ||
+    (questionResponses.q25 === 'annualReturns');
 
   // Q8: Prior Year Lodgements
   const hasPriorYearLodgements =
@@ -341,7 +349,7 @@ export default function AccountingQuote() {
     { feature: 'Client Service Manager', bronze: <NotIncluded />, silver: questionResponses.q24 && questionResponses.q24 !== 'no' ? <CheckMark /> : <NotIncluded />, gold: questionResponses.q24 && questionResponses.q24 !== 'no' ? <CheckMark /> : <NotIncluded /> },
     { feature: 'Principal / Owner', bronze: <NotIncluded />, silver: <NotIncluded />, gold: questionResponses.q24 && questionResponses.q24 !== 'no' ? <CheckMark /> : <NotIncluded /> },
     { feature: 'Corporate Secretarial & ATO Plans', isCategory: true },
-    { feature: 'Corporate Secretarial', bronze: questionResponses.q25 === 'yes' ? <CheckMark /> : <NotIncluded />, silver: questionResponses.q25 === 'yes' ? <CheckMark /> : <NotIncluded />, gold: questionResponses.q25 === 'yes' ? <CheckMark /> : <NotIncluded /> },
+    { feature: 'Corporate Secretarial', bronze: hasAsicAnnualReturn ? <CheckMark /> : <NotIncluded />, silver: hasAsicAnnualReturn ? <CheckMark /> : <NotIncluded />, gold: hasAsicAnnualReturn ? <CheckMark /> : <NotIncluded /> },
   ];
 
   return (

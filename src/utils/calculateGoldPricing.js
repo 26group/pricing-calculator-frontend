@@ -67,13 +67,17 @@ export const calculateGoldMonthlyPricing = (responses, pricingModifier = 200) =>
       if (extraKey === 'none' || extraKey === 'returnNotNecessary' || !value) return;
       
       const extraPricing = extras[extraKey];
-      if (extraPricing && extraPricing[summaryType]) {
-        if (typeof value === 'boolean' && value === true) {
-          total += extraPricing[summaryType].monthly;
-        } else {
-          const quantity = parseInt(value, 10);
-          if (!isNaN(quantity) && quantity > 0) {
-            total += extraPricing[summaryType].monthly * quantity;
+      if (extraPricing) {
+        // Business schedules use 'all' key instead of providedByClient/preparedByFirm
+        const pricingTier = extraPricing.all || extraPricing[summaryType];
+        if (pricingTier) {
+          if (typeof value === 'boolean' && value === true) {
+            total += pricingTier.monthly;
+          } else {
+            const quantity = parseInt(value, 10);
+            if (!isNaN(quantity) && quantity > 0) {
+              total += pricingTier.monthly * quantity;
+            }
           }
         }
       }
@@ -316,25 +320,41 @@ export const calculateGoldMonthlyPricing = (responses, pricingModifier = 200) =>
   // ==================== SUPPORT SERVICES ====================
   // Gold ALWAYS includes Principal/Owner support (hard-coded)
   
-  // q24: Team/Email support (if selected)
-  if (responses.q24 === 'yes') {
-    const teamSupport = serviceValuesAccounting.support.emailOnlyTeam?.[segment];
-    if (teamSupport) {
-      total += teamSupport.monthly;
+  // q24: Support level
+  if (responses.q24 && responses.q24 !== 'no') {
+    // Email only — Team
+    if (responses.q24 === 'emailTeam') {
+      const teamSupport = serviceValuesAccounting.support.emailOnlyTeam?.[segment];
+      if (teamSupport) {
+        total += teamSupport.monthly;
+      }
+    }
+    // Email & Phone — Team & CSM (includes both Team and CSM)
+    else if (responses.q24 === 'emailPhoneTeamCsm') {
+      const teamSupport = serviceValuesAccounting.support.emailOnlyTeam?.[segment];
+      if (teamSupport) {
+        total += teamSupport.monthly;
+      }
+      const csmSupport = serviceValuesAccounting.support.clientServiceManager?.[segment];
+      if (csmSupport) {
+        total += csmSupport.monthly;
+      }
+    }
+    // Email & Phone — CSM & Owner (includes CSM and Owner)
+    else if (responses.q24 === 'emailPhoneCsmOwner') {
+      const csmSupport = serviceValuesAccounting.support.clientServiceManager?.[segment];
+      if (csmSupport) {
+        total += csmSupport.monthly;
+      }
+      const ownerSupport = serviceValuesAccounting.support.principalOwner?.[segment];
+      if (ownerSupport) {
+        total += ownerSupport.monthly;
+      }
     }
   }
 
-  // Gold ALWAYS includes Client Service Manager (hard-coded for Gold)
-  const csmSupport = serviceValuesAccounting.support.clientServiceManager?.[segment];
-  if (csmSupport) {
-    total += csmSupport.monthly;
-  }
-
-  // Gold ALWAYS includes Principal/Owner support (hard-coded for Gold)
-  const ownerSupport = serviceValuesAccounting.support.principalOwner?.[segment];
-  if (ownerSupport) {
-    total += ownerSupport.monthly;
-  }
+  // Note: Gold package support is already handled above based on q24 selection
+  // No additional hard-coded support additions for Gold
 
   // ==================== CORPORATE SECRETARIAL ====================
 
@@ -419,13 +439,17 @@ export const calculateSilverMonthlyPricing = (responses, pricingModifier = 200) 
       if (extraKey === 'none' || extraKey === 'returnNotNecessary' || !value) return;
       
       const extraPricing = extras[extraKey];
-      if (extraPricing && extraPricing[summaryType]) {
-        if (typeof value === 'boolean' && value === true) {
-          total += extraPricing[summaryType].monthly;
-        } else {
-          const quantity = parseInt(value, 10);
-          if (!isNaN(quantity) && quantity > 0) {
-            total += extraPricing[summaryType].monthly * quantity;
+      if (extraPricing) {
+        // Business schedules use 'all' key instead of providedByClient/preparedByFirm
+        const pricingTier = extraPricing.all || extraPricing[summaryType];
+        if (pricingTier) {
+          if (typeof value === 'boolean' && value === true) {
+            total += pricingTier.monthly;
+          } else {
+            const quantity = parseInt(value, 10);
+            if (!isNaN(quantity) && quantity > 0) {
+              total += pricingTier.monthly * quantity;
+            }
           }
         }
       }
@@ -666,27 +690,38 @@ export const calculateSilverMonthlyPricing = (responses, pricingModifier = 200) 
   }
 
   // ==================== SUPPORT SERVICES ====================
-  // Silver ALWAYS includes Client Service Manager (hard-coded)
+  // Silver: Support based on q24 selection
   
-  // q24: Team/Email support (if selected)
-  if (responses.q24 === 'yes') {
-    const teamSupport = serviceValuesAccounting.support.emailOnlyTeam?.[segment];
-    if (teamSupport) {
-      total += teamSupport.monthly;
+  // q24: Support level
+  if (responses.q24 && responses.q24 !== 'no') {
+    // Email only — Team
+    if (responses.q24 === 'emailTeam') {
+      const teamSupport = serviceValuesAccounting.support.emailOnlyTeam?.[segment];
+      if (teamSupport) {
+        total += teamSupport.monthly;
+      }
     }
-  }
-
-  // Silver ALWAYS includes Client Service Manager (hard-coded for Silver)
-  const csmSupport = serviceValuesAccounting.support.clientServiceManager?.[segment];
-  if (csmSupport) {
-    total += csmSupport.monthly;
-  }
-
-  // q24b: Principal/Owner support (if selected by user)
-  if (responses.q24b === 'yes') {
-    const ownerSupport = serviceValuesAccounting.support.principalOwner?.[segment];
-    if (ownerSupport) {
-      total += ownerSupport.monthly;
+    // Email & Phone — Team & CSM (includes both Team and CSM)
+    else if (responses.q24 === 'emailPhoneTeamCsm') {
+      const teamSupport = serviceValuesAccounting.support.emailOnlyTeam?.[segment];
+      if (teamSupport) {
+        total += teamSupport.monthly;
+      }
+      const csmSupport = serviceValuesAccounting.support.clientServiceManager?.[segment];
+      if (csmSupport) {
+        total += csmSupport.monthly;
+      }
+    }
+    // Email & Phone — CSM & Owner (includes CSM and Owner)
+    else if (responses.q24 === 'emailPhoneCsmOwner') {
+      const csmSupport = serviceValuesAccounting.support.clientServiceManager?.[segment];
+      if (csmSupport) {
+        total += csmSupport.monthly;
+      }
+      const ownerSupport = serviceValuesAccounting.support.principalOwner?.[segment];
+      if (ownerSupport) {
+        total += ownerSupport.monthly;
+      }
     }
   }
 
