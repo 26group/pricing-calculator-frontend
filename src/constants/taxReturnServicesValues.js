@@ -185,8 +185,20 @@ export const serviceValuesTaxReturn = {
   // Bronze = NO
   // ===================
   stpReporting: {
-    byClient: { annualRate: 25.00, inclusion: 'STP Reporting — Summary by Client' },
-    byFirm:   { annualRate: 50.00, inclusion: 'STP Reporting — Summary by Firm' },
+    byClient: {
+      weekly:      { annualRate: 150.00, inclusion: 'STP Reporting — Summary by Client (Weekly)' },
+      fortnightly: { annualRate: 125.00, inclusion: 'STP Reporting — Summary by Client (Fortnightly)' },
+      monthly:     { annualRate: 75.00, inclusion: 'STP Reporting — Summary by Client (Monthly)' },
+      quarterly:   { annualRate: 50.00, inclusion: 'STP Reporting — Summary by Client (Quarterly)' },
+      annual:      { annualRate: 25.00, inclusion: 'STP Reporting — Summary by Client (Annual)' },
+    },
+    byFirm: {
+      weekly:      { annualRate: 300.00, inclusion: 'STP Reporting — Summary by Firm (Weekly)' },
+      fortnightly: { annualRate: 250.00, inclusion: 'STP Reporting — Summary by Firm (Fortnightly)' },
+      monthly:     { annualRate: 150.00, inclusion: 'STP Reporting — Summary by Firm (Monthly)' },
+      quarterly:   { annualRate: 100.00, inclusion: 'STP Reporting — Summary by Firm (Quarterly)' },
+      annual:      { annualRate: 50.00, inclusion: 'STP Reporting — Summary by Firm (Annual)' },
+    },
   },
 
   // ===================

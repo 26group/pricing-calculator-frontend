@@ -1,453 +1,546 @@
-// Tax Return Questions - Based on Tax Return Pricing Calculator v1 CSV
-// Questions use flat array format for TaxReturnQuestions.js page
-// Includes sectionTitle for grouping display
-// No revenue segment gating — all questions enabled by default
+// Tax Return Questions — rebuilt from scratch against
+// "Tax return ONLY Pricing Calculator v1.xlsx — Copy of Accounting Price List.csv"
+//
+// Conventions:
+//   - Items described in the CSV with a "Unit" (count) => number input field
+//   - Items described with a Frequency (weekly/fortnightly/monthly/quarterly/
+//     annual) => frequency radio buttons
+//   - "Summary by Client" / "Summary by Firm" => delivery radio with "No"
+//     as the off state; child counts/frequency only appear once a delivery
+//     option is selected
+//
+// Pricing model (see utils/taxReturnPricingCalculator.js):
+//   - Bronze / Silver / Gold: monthly fee = annualAmount / 12 × multiplier
+//   - Once-off total: true one-off services (tax structuring, ATO plans,
+//     xero setup/training, prior year, amendments, return-not-necessary,
+//     final return) PLUS the full annual amount of every Upfront=YES
+//     recurring service. Support Services and Xero Support are the only
+//     items flagged Upfront=NO and are therefore excluded from once-off.
 
 export const taxReturnQuestionData = [
 
-  // ===================
-  // SECTION: TAX RETURNS
-  // ===================
+  // ════════════════════════════════════════════════════════════════════
+  // Q1 — TAX SERVICES · INDIVIDUAL TAX RETURNS
+  // ════════════════════════════════════════════════════════════════════
   {
     id: 'q1',
-    sectionTitle: 'Individual Tax Returns',
-    prompt: 'How many individuals do they want tax returns lodged for?',
+    sectionTitle: 'Tax Services',
+    prompt: 'How many Individuals do they want tax returns lodged for?',
     type: 'number',
   },
 
-  // ===================
-  // SECTION: INCOME ITEMS
-  // ===================
+  // ────────────────────────────────────────────────────────────────────
+  // Q2 — Income Items
+  // ────────────────────────────────────────────────────────────────────
   {
     id: 'q2',
-    sectionTitle: 'Income Items',
     prompt: 'Do they have Investment income items — how are these prepared?',
     type: 'radio',
     options: [
       { label: 'Summary by Client', value: 'byClient' },
-      { label: 'Summary by Firm', value: 'byFirm' },
-      { label: 'None', value: 'none' },
+      { label: 'Summary by Firm',   value: 'byFirm' },
+      { label: 'No',                value: 'none' },
     ],
     children: [
       {
-        id: 'q2a',
-        prompt: 'Dividends not reported to ATO',
+        id: 'q2_dividends',
+        prompt: 'Dividends not reported to ATO — quantity',
         type: 'number',
-        showWhen: (responses) => responses.q2 && responses.q2 !== 'none',
+        showWhen: (r) => r.q2 && r.q2 !== 'none',
       },
       {
-        id: 'q2b',
-        prompt: 'Interest not reported to ATO',
+        id: 'q2_interest',
+        prompt: 'Interest not reported to ATO — quantity',
         type: 'number',
-        showWhen: (responses) => responses.q2 && responses.q2 !== 'none',
+        showWhen: (r) => r.q2 && r.q2 !== 'none',
       },
       {
-        id: 'q2c',
-        prompt: 'Managed Funds',
+        id: 'q2_managedFunds',
+        prompt: 'Managed Funds — quantity',
         type: 'number',
-        showWhen: (responses) => responses.q2 && responses.q2 !== 'none',
+        showWhen: (r) => r.q2 && r.q2 !== 'none',
       },
       {
-        id: 'q2d',
-        prompt: 'Rental Property',
+        id: 'q2_rentalProperty',
+        prompt: 'Rental Property — quantity',
         type: 'number',
-        showWhen: (responses) => responses.q2 && responses.q2 !== 'none',
+        showWhen: (r) => r.q2 && r.q2 !== 'none',
       },
     ],
   },
 
-  // ===================
-  // SECTION: CAPITAL GAINS
-  // ===================
+  // ────────────────────────────────────────────────────────────────────
+  // Q3 — Capital Gains
+  // ────────────────────────────────────────────────────────────────────
   {
-    id: 'q6',
-    sectionTitle: 'Capital Gains',
+    id: 'q3',
     prompt: 'Did they sell a capital asset for gain and require a schedule?',
     type: 'radio',
     options: [
       { label: 'Summary by Client', value: 'byClient' },
-      { label: 'Summary by Firm', value: 'byFirm' },
-      { label: 'None', value: 'none' },
+      { label: 'Summary by Firm',   value: 'byFirm' },
+      { label: 'No',                value: 'none' },
     ],
     children: [
       {
-        id: 'q6_count',
-        prompt: 'CGT — Shares and equities — How many CGT share events?',
+        id: 'q3_cgtShares',
+        prompt: 'CGT — Shares and equities — quantity',
         type: 'number',
-        showWhen: (responses) => responses.q6 && responses.q6 !== 'none',
+        showWhen: (r) => r.q3 && r.q3 !== 'none',
       },
       {
-        id: 'q7_count',
-        prompt: 'CGT — Property sales — How many property sales?',
+        id: 'q3_cgtProperty',
+        prompt: 'CGT — Property sales — quantity',
         type: 'number',
-        showWhen: (responses) => responses.q6 && responses.q6 !== 'none',
+        showWhen: (r) => r.q3 && r.q3 !== 'none',
       },
       {
-        id: 'q8_count',
-        prompt: 'Balancing adjustment — sale of business asset — How many balancing adjustments?',
+        id: 'q3_balancingAdj',
+        prompt: 'Balancing adjustment — sale of business asset — quantity',
         type: 'number',
-        showWhen: (responses) => responses.q6 && responses.q6 !== 'none',
+        showWhen: (r) => r.q3 && r.q3 !== 'none',
       },
     ],
   },
 
-  // ===================
-  // SECTION: BUSINESS SCHEDULES
-  // ===================
+  // ────────────────────────────────────────────────────────────────────
+  // Q4 — Business Schedules
+  // ────────────────────────────────────────────────────────────────────
   {
-    id: 'q9',
-    sectionTitle: 'Business Schedules',
+    id: 'q4',
     prompt: 'Do they have a business to report?',
     type: 'radio',
     options: [
       { label: 'Summary by Client', value: 'byClient' },
-      { label: 'Summary by Firm', value: 'byFirm' },
-      { label: 'None', value: 'none' },
+      { label: 'Summary by Firm',   value: 'byFirm' },
+      { label: 'No',                value: 'none' },
     ],
     children: [
       {
-        id: 'q9_count',
-        prompt: 'Business Schedule — no GST — How many business schedules (no GST)?',
+        id: 'q4_noGst',
+        prompt: 'Business Schedule — no GST — quantity',
         type: 'number',
-        showWhen: (responses) => responses.q9 && responses.q9 !== 'none',
+        showWhen: (r) => r.q4 && r.q4 !== 'none',
       },
       {
-        id: 'q10_count',
-        prompt: 'Business Schedule — with GST — How many business schedules (with GST)?',
+        id: 'q4_withGst',
+        prompt: 'Business Schedule — with GST — quantity',
         type: 'number',
-        showWhen: (responses) => responses.q9 && responses.q9 !== 'none',
+        showWhen: (r) => r.q4 && r.q4 !== 'none',
       },
     ],
   },
 
-  // ===================
-  // SECTION: DEDUCTIONS
-  // ===================
-  // SECTION: DEDUCTIONS
-  // ===================
+  // ────────────────────────────────────────────────────────────────────
+  // Q5 — Deductions
+  // ────────────────────────────────────────────────────────────────────
   {
-    id: 'q11',
-    sectionTitle: 'Deductions',
+    id: 'q5',
     prompt: 'Do they have deductions to claim?',
     type: 'radio',
     options: [
       { label: 'Summary by Client', value: 'byClient' },
-      { label: 'Summary by Firm', value: 'byFirm' },
-      { label: 'None', value: 'none' },
+      { label: 'Summary by Firm',   value: 'byFirm' },
+      { label: 'No',                value: 'none' },
     ],
     children: [
       {
-        id: 'q11_count',
-        prompt: 'Deductions — more than 3 standard expenses — How many deduction items?',
+        id: 'q5_standard',
+        prompt: 'Deductions — more than 3 standard expenses — quantity',
         type: 'number',
-        showWhen: (responses) => responses.q11 && responses.q11 !== 'none',
+        showWhen: (r) => r.q5 && r.q5 !== 'none',
       },
       {
-        id: 'q12_count',
-        prompt: 'Motor Vehicle — log book method — How many motor vehicles (log book)?',
+        id: 'q5_motorLogBook',
+        prompt: 'Motor Vehicle — log book method — quantity',
         type: 'number',
-        showWhen: (responses) => responses.q11 && responses.q11 !== 'none',
+        showWhen: (r) => r.q5 && r.q5 !== 'none',
       },
       {
-        id: 'q13_count',
-        prompt: 'Motor Vehicle — Cents per kilometre method — How many motor vehicles (CPK)?',
+        id: 'q5_motorCPK',
+        prompt: 'Motor Vehicle — Cents per kilometre method — quantity',
         type: 'number',
-        showWhen: (responses) => responses.q11 && responses.q11 !== 'none',
+        showWhen: (r) => r.q5 && r.q5 !== 'none',
       },
     ],
   },
 
-  // ===================
-  // SECTION: BAS & TPAR
-  // ===================
+  // ────────────────────────────────────────────────────────────────────
+  // Q6 — BAS (per return, frequency-based)
+  // ────────────────────────────────────────────────────────────────────
   {
-    id: 'q14',
-    sectionTitle: 'BAS & TPAR',
+    id: 'q6',
     prompt: 'BAS — do they want you to lodge BAS?',
     type: 'radio',
     options: [
       { label: 'Summary by Client', value: 'byClient' },
-      { label: 'Summary by Firm', value: 'byFirm' },
-      { label: 'No', value: 'none' },
+      { label: 'Summary by Firm',   value: 'byFirm' },
+      { label: 'No',                value: 'none' },
     ],
     children: [
       {
-        id: 'q14a',
-        prompt: 'BAS Frequency',
+        id: 'q6_frequency',
+        prompt: 'BAS — Frequency',
         type: 'radio',
-        showWhen: (responses) => responses.q14 && responses.q14 !== 'none',
+        showWhen: (r) => r.q6 && r.q6 !== 'none',
         options: [
           { label: 'Quarterly', value: 'quarterly' },
-          { label: 'Annual', value: 'annual' },
+          { label: 'Annual',    value: 'annual' },
         ],
       },
     ],
   },
+
+  // ────────────────────────────────────────────────────────────────────
+  // Q7 — TPAR (per return, # suppliers as unit)
+  // ────────────────────────────────────────────────────────────────────
   {
-    id: 'q15',
+    id: 'q7',
     prompt: 'TPAR — does the client require TPAR?',
     type: 'radio',
     options: [
       { label: 'Summary by Client', value: 'byClient' },
-      { label: 'Summary by Firm', value: 'byFirm' },
-      { label: 'No', value: 'none' },
+      { label: 'Summary by Firm',   value: 'byFirm' },
+      { label: 'No',                value: 'none' },
+    ],
+    children: [
+      {
+        id: 'q7_suppliers',
+        prompt: 'Number of suppliers',
+        type: 'number',
+        showWhen: (r) => r.q7 && r.q7 !== 'none',
+      },
     ],
   },
 
-  // ===================
-  // SECTION: PAYROLL SERVICES
-  // ===================
+  // ════════════════════════════════════════════════════════════════════
+  // Q8 — PAYROLL SERVICES · Workers Compensation
+  // ════════════════════════════════════════════════════════════════════
   {
-    id: 'q16',
+    id: 'q8',
     sectionTitle: 'Payroll Services',
     prompt: 'Workers Compensation — do they want you to lodge Workers Compensation forms?',
     type: 'radio',
     options: [
       { label: 'Summary by Client', value: 'byClient' },
-      { label: 'Summary by Firm', value: 'byFirm' },
-      { label: 'No', value: 'none' },
-    ],
-  },
-  {
-    id: 'q17delivery',
-    prompt: 'Payroll Processing — Salary ONLY employees (enter number per pay run frequency)',
-    type: 'inputGroup',
-    options: [
-      { label: 'Weekly', value: 'weekly', control: 'number' },
-      { label: 'Fortnightly', value: 'fortnightly', control: 'number' },
-      { label: 'Monthly', value: 'monthly', control: 'number' },
-      { label: 'Annual', value: 'annual', control: 'number' },
+      { label: 'Summary by Firm',   value: 'byFirm' },
+      { label: 'No',                value: 'none' },
     ],
     children: [
       {
-        id: 'q17',
-        prompt: 'Payroll Processing (Salary) — how is this prepared?',
-        type: 'radio',
-        showWhen: (responses) => {
-          const q17delivery = responses.q17delivery;
-          return q17delivery && (parseInt(q17delivery.weekly, 10) > 0 || parseInt(q17delivery.fortnightly, 10) > 0 || parseInt(q17delivery.monthly, 10) > 0 || parseInt(q17delivery.annual, 10) > 0);
-        },
+        id: 'q8_count',
+        prompt: 'Number of lodgements per year',
+        type: 'number',
+        showWhen: (r) => r.q8 && r.q8 !== 'none',
+      },
+    ],
+  },
+
+  // ────────────────────────────────────────────────────────────────────
+  // Q9 — Payroll Processing
+  //   Salary ONLY employees × pay-run frequency (per CSV)
+  //   Timesheet ONLY employees × pay-run frequency (per CSV)
+  // ────────────────────────────────────────────────────────────────────
+  {
+    id: 'q9_salary',
+    prompt: 'Payroll Processing — Salary ONLY employees: how is this prepared?',
+    type: 'radio',
+    options: [
+      { label: 'Summary by Client', value: 'byClient' },
+      { label: 'Summary by Firm',   value: 'byFirm' },
+      { label: 'No',                value: 'none' },
+    ],
+    children: [
+      {
+        id: 'q9_salaryCounts',
+        prompt: 'Enter number of salary-only employees per pay-run frequency',
+        type: 'inputGroup',
+        showWhen: (r) => r.q9_salary && r.q9_salary !== 'none',
         options: [
-          { label: 'Summary by Client', value: 'byClient' },
-          { label: 'Summary by Firm', value: 'byFirm' },
+          { label: 'Weekly (×52)',      value: 'weekly',      control: 'number' },
+          { label: 'Fortnightly (×26)', value: 'fortnightly', control: 'number' },
+          { label: 'Monthly (×12)',     value: 'monthly',     control: 'number' },
+          { label: 'Quarterly (×4)',    value: 'quarterly',   control: 'number' },
+          { label: 'Annual (×1)',       value: 'annual',      control: 'number' },
         ],
       },
     ],
   },
   {
-    id: 'q18',
-    prompt: 'Payroll Processing — Timesheet ONLY employees (enter number per pay run frequency)',
-    type: 'inputGroup',
+    id: 'q9_timesheet',
+    prompt: 'Payroll Processing — Timesheet ONLY employees: how is this prepared?',
+    type: 'radio',
     options: [
-      { label: 'Weekly', value: 'weekly', control: 'number' },
-      { label: 'Fortnightly', value: 'fortnightly', control: 'number' },
-      { label: 'Monthly', value: 'monthly', control: 'number' },
+      { label: 'Summary by Client', value: 'byClient' },
+      { label: 'Summary by Firm',   value: 'byFirm' },
+      { label: 'No',                value: 'none' },
     ],
     children: [
       {
-        id: 'q18delivery',
-        prompt: 'Payroll Processing (Timesheet) — how is this prepared?',
-        type: 'radio',
-        showWhen: (responses) => {
-          if (!responses.q18 || typeof responses.q18 !== 'object') return false;
-          const { weekly = '', fortnightly = '', monthly = '' } = responses.q18;
-          return parseInt(weekly) > 0 || parseInt(fortnightly) > 0 || parseInt(monthly) > 0;
-        },
+        id: 'q9_timesheetCounts',
+        prompt: 'Enter number of timesheet-only employees per pay-run frequency',
+        type: 'inputGroup',
+        showWhen: (r) => r.q9_timesheet && r.q9_timesheet !== 'none',
         options: [
-          { label: 'Summary by Client', value: 'byClient' },
-          { label: 'Summary by Firm', value: 'byFirm' },
+          { label: 'Weekly (×52)',      value: 'weekly',      control: 'number' },
+          { label: 'Fortnightly (×26)', value: 'fortnightly', control: 'number' },
+          { label: 'Monthly (×12)',     value: 'monthly',     control: 'number' },
+          { label: 'Quarterly (×4)',    value: 'quarterly',   control: 'number' },
+          { label: 'Annual (×1)',       value: 'annual',      control: 'number' },
         ],
       },
     ],
   },
+
+  // ────────────────────────────────────────────────────────────────────
+  // Q10 — Super Prep & Lodgement (frequency-based)
+  // ────────────────────────────────────────────────────────────────────
   {
-    id: 'q19',
+    id: 'q10',
     prompt: 'Super Prep & Lodgement — do they want you to lodge Superannuation payments?',
     type: 'radio',
     options: [
-      { label: 'Weekly', value: 'weekly' },
-      { label: 'Fortnightly', value: 'fortnightly' },
-      { label: 'Monthly', value: 'monthly' },
-      { label: 'Quarterly', value: 'quarterly' },
-      { label: 'Annual', value: 'annual' },
-      { label: 'No', value: 'none' },
+      { label: 'Summary by Client', value: 'byClient' },
+      { label: 'Summary by Firm',   value: 'byFirm' },
+      { label: 'No',                value: 'none' },
     ],
     children: [
       {
-        id: 'q19delivery',
-        prompt: 'Super Prep & Lodgement — how is this prepared?',
+        id: 'q10_frequency',
+        prompt: 'Super — Frequency',
         type: 'radio',
-        showWhen: (responses) => responses.q19 && responses.q19 !== 'none',
+        showWhen: (r) => r.q10 && r.q10 !== 'none',
         options: [
-          { label: 'Summary by Client', value: 'byClient' },
-          { label: 'Summary by Firm', value: 'byFirm' },
+          { label: 'Weekly',      value: 'weekly' },
+          { label: 'Fortnightly', value: 'fortnightly' },
+          { label: 'Monthly',     value: 'monthly' },
+          { label: 'Quarterly',   value: 'quarterly' },
+          { label: 'Annual',      value: 'annual' },
         ],
       },
     ],
   },
+
+  // ────────────────────────────────────────────────────────────────────
+  // Q11 — STP Reporting (frequency-based)
+  // ────────────────────────────────────────────────────────────────────
   {
-    id: 'q20',
+    id: 'q11',
     prompt: 'STP Reporting — do they want you to lodge Single Touch Payroll?',
     type: 'radio',
     options: [
       { label: 'Summary by Client', value: 'byClient' },
-      { label: 'Summary by Firm', value: 'byFirm' },
-      { label: 'No', value: 'none' },
+      { label: 'Summary by Firm',   value: 'byFirm' },
+      { label: 'No',                value: 'none' },
+    ],
+    children: [
+      {
+        id: 'q11_frequency',
+        prompt: 'STP — Frequency',
+        type: 'radio',
+        showWhen: (r) => r.q11 && r.q11 !== 'none',
+        options: [
+          { label: 'Weekly',      value: 'weekly' },
+          { label: 'Fortnightly', value: 'fortnightly' },
+          { label: 'Monthly',     value: 'monthly' },
+          { label: 'Quarterly',   value: 'quarterly' },
+          { label: 'Annual',      value: 'annual' },
+        ],
+      },
     ],
   },
+
+  // ────────────────────────────────────────────────────────────────────
+  // Q12 — LSL Construction Reporting
+  // ────────────────────────────────────────────────────────────────────
   {
-    id: 'q21',
+    id: 'q12',
     prompt: 'LSL Construction — do they want you to lodge Long Service Leave forms?',
     type: 'radio',
     options: [
       { label: 'Summary by Client', value: 'byClient' },
-      { label: 'Summary by Firm', value: 'byFirm' },
-      { label: 'No', value: 'none' },
+      { label: 'Summary by Firm',   value: 'byFirm' },
+      { label: 'No',                value: 'none' },
     ],
   },
 
-  // ===================
-  // SECTION: ADVISORY SERVICES
-  // ===================
+  // ════════════════════════════════════════════════════════════════════
+  // Q13 — ADVISORY SERVICES · Tax Planning
+  // ════════════════════════════════════════════════════════════════════
   {
-    id: 'q22',
+    id: 'q13',
     sectionTitle: 'Advisory Services',
     prompt: 'Tax Planning — do they require Tax Planning / Review?',
     type: 'radio',
     options: [
       { label: 'Summary by Client', value: 'byClient' },
-      { label: 'Summary by Firm', value: 'byFirm' },
-      { label: 'No', value: 'none' },
+      { label: 'Summary by Firm',   value: 'byFirm' },
+      { label: 'No',                value: 'none' },
     ],
   },
+
+  // ────────────────────────────────────────────────────────────────────
+  // Q14 — Tax Structuring Advice (once-off)
+  // ────────────────────────────────────────────────────────────────────
   {
-    id: 'q23',
+    id: 'q14',
     prompt: 'Tax Structuring Advice — do they require Tax Restructuring Review? (Once-off fee)',
     type: 'radio',
     options: [
       { label: 'Yes', value: 'yes' },
-      { label: 'No', value: 'no' },
+      { label: 'No',  value: 'no' },
     ],
   },
 
-  // ===================
-  // SECTION: MEETINGS
-  // ===================
+  // ════════════════════════════════════════════════════════════════════
+  // Q15 — MEETINGS · Annual Tax Meeting
+  // ════════════════════════════════════════════════════════════════════
   {
-    id: 'q24',
+    id: 'q15',
     sectionTitle: 'Meetings',
     prompt: 'Annual Tax Meeting — do they require Annual Tax Meetings?',
     type: 'radio',
     options: [
       { label: 'Yes', value: 'yes' },
-      { label: 'No', value: 'no' },
+      { label: 'No',  value: 'no' },
     ],
   },
   {
-    id: 'q25',
+    id: 'q16',
     prompt: 'Advice Meeting — do they require Advice Meetings?',
     type: 'radio',
     options: [
       { label: 'Yes', value: 'yes' },
-      { label: 'No', value: 'no' },
+      { label: 'No',  value: 'no' },
     ],
   },
 
-  // ===================
-  // SECTION: XERO
-  // ===================
+  // ════════════════════════════════════════════════════════════════════
+  // Q17 — ATO PAYMENT PLANS (once-off)
+  // Support Services are applied automatically by tier (no question)
+  // ════════════════════════════════════════════════════════════════════
   {
-    id: 'q26',
+    id: 'q17',
+    sectionTitle: 'ATO Payment Plans',
+    prompt: 'ATO Payment Plans — do they need ATO Payment Plans set up? (Once-off fee)',
+    type: 'radio',
+    options: [
+      { label: 'None',     value: 'none' },
+      { label: 'Basic',    value: 'basic' },
+      { label: 'Hardship', value: 'hardship' },
+    ],
+  },
+
+  // ════════════════════════════════════════════════════════════════════
+  // Q18–Q20 — XERO SETUP / TRAINING / SUPPORT
+  // ════════════════════════════════════════════════════════════════════
+  {
+    id: 'q18',
     sectionTitle: 'Xero Setup, Training & Support',
     prompt: 'Xero Setup — do they need an accounting system set up? (Once-off fee)',
     type: 'radio',
     options: [
       { label: 'Yes', value: 'yes' },
-      { label: 'No', value: 'no' },
+      { label: 'No',  value: 'no' },
     ],
   },
   {
-    id: 'q27',
+    id: 'q19',
     prompt: 'Xero Training — would they like Xero Training? (Once-off fee)',
     type: 'radio',
     options: [
-      { label: 'None', value: 'none' },
-      { label: 'Basic (reconciling & GST)', value: 'basic' },
-      { label: 'Everyday (+ payables & receivables)', value: 'everyday' },
-      { label: 'Advanced (+ payroll)', value: 'advanced' },
+      { label: 'None',                                  value: 'none' },
+      { label: 'Basic (reconciling & GST)',             value: 'basic' },
+      { label: 'Everyday (+ payables & receivables)',   value: 'everyday' },
+      { label: 'Advanced (+ payroll)',                  value: 'advanced' },
     ],
   },
   {
-    id: 'q28',
+    id: 'q20',
     prompt: 'Xero Support — would they like ongoing Xero Support?',
     type: 'radio',
     options: [
-      { label: 'None', value: 'none' },
-      { label: 'Basic (reconciling & GST)', value: 'basic' },
-      { label: 'Everyday (+ payables & receivables)', value: 'everyday' },
-      { label: 'Advanced (+ payroll)', value: 'advanced' },
+      { label: 'None',                                  value: 'none' },
+      { label: 'Basic (reconciling & GST)',             value: 'basic' },
+      { label: 'Everyday (+ payables & receivables)',   value: 'everyday' },
+      { label: 'Advanced (+ payroll)',                  value: 'advanced' },
     ],
   },
 
-  // ===================
-  // SECTION: ATO PAYMENT PLANS
-  // ===================
+  // ════════════════════════════════════════════════════════════════════
+  // Q21 — PRIOR YEAR LODGEMENTS (once-off · $200 per return)
+  //   Two number fields: total Tax Services returns + total Payroll returns
+  // ════════════════════════════════════════════════════════════════════
   {
-    id: 'q29',
-    sectionTitle: 'ATO Payment Plans',
-    prompt: 'ATO Payment Plans — do they need ATO Payment Plans set up? (Once-off fee)',
+    id: 'q21',
+    sectionTitle: 'Prior Year Lodgements & Amendments',
+    prompt: 'Prior Year Lodgements — do they require prior year lodgements?',
     type: 'radio',
     options: [
-      { label: 'None', value: 'none' },
-      { label: 'Basic', value: 'basic' },
-      { label: 'Hardship', value: 'hardship' },
+      { label: 'Yes', value: 'yes' },
+      { label: 'No',  value: 'no' },
+    ],
+    children: [
+      {
+        id: 'q21_taxServices',
+        prompt: 'Tax Services — total number of prior year lodgements (Individual Returns, Income Items, Capital Gains, Business Schedules, Deductions, BAS, TPAR)',
+        type: 'number',
+        showWhen: (r) => r.q21 === 'yes',
+      },
+      {
+        id: 'q21_payroll',
+        prompt: 'Payroll Services — total number of prior year lodgements (Workers Comp, Payroll, Super, STP, LSL)',
+        type: 'number',
+        showWhen: (r) => r.q21 === 'yes',
+      },
     ],
   },
 
-  // ===================
-  // SECTION: PRIOR YEAR & AMENDMENTS
-  // ===================
+  // ────────────────────────────────────────────────────────────────────
+  // Q22 — Amended Returns (once-off)
+  // ────────────────────────────────────────────────────────────────────
   {
-    id: 'q30',
-    sectionTitle: 'Prior Year and amendments',
-    prompt: 'Do they require prior year lodgements?',
-    type: 'inputGroup',
-    options: [
-      { label: 'List all items from Tax Services', value: 'taxServices', control: 'text' },
-      { label: 'List all items from Payroll', value: 'payroll', control: 'text' },
-    ],
-  },
-  {
-    id: 'q31',
+    id: 'q22',
     prompt: 'Amended Returns — do they require previous year amended returns? (Once-off)',
     type: 'radio',
     options: [
-      { label: 'None', value: 'none' },
-      { label: 'Original by Firm — by Client', value: 'origByFirmClient' },
-      { label: 'Original by Firm — by Firm', value: 'origByFirmFirm' },
-      { label: 'NOT by Firm — by Client', value: 'origNotByFirmClient' },
-      { label: 'NOT by Firm — by Firm', value: 'origNotByFirmFirm' },
+      { label: 'None',                           value: 'none' },
+      { label: 'Original by Firm — by Client',   value: 'origByFirmClient' },
+      { label: 'Original by Firm — by Firm',     value: 'origByFirmFirm' },
+      { label: 'NOT by Firm — by Client',        value: 'origNotByFirmClient' },
+      { label: 'NOT by Firm — by Firm',          value: 'origNotByFirmFirm' },
+    ],
+    children: [
+      {
+        id: 'q22_count',
+        prompt: 'How many amended returns?',
+        type: 'number',
+        showWhen: (r) => r.q22 && r.q22 !== 'none',
+      },
     ],
   },
+
+  // ════════════════════════════════════════════════════════════════════
+  // Q23 — RETURN NOT NECESSARY (once-off, per client)
+  // Q24 — FINAL RETURN (once-off, per client)
+  // ════════════════════════════════════════════════════════════════════
   {
-    id: 'q32',
-    sectionTitle: 'Return Not necessary or Final return',
-    prompt: 'Do they require notification of Return not necessary',
-    label: 'Return not necessary',
+    id: 'q23',
+    sectionTitle: 'Return Not Necessary / Final Return',
+    prompt: 'Do they require notification of Return Not Necessary?',
     type: 'radio',
     options: [
       { label: 'Yes', value: 'yes' },
-      { label: 'No', value: 'no' },
+      { label: 'No',  value: 'no' },
     ],
   },
   {
-    id: 'q33',
-    prompt: 'Do they require notification of Final Return',
-    label: 'Final Return',
+    id: 'q24',
+    prompt: 'Do they require notification of Final Return?',
     type: 'radio',
     options: [
       { label: 'Yes', value: 'yes' },
-      { label: 'No', value: 'no' },
+      { label: 'No',  value: 'no' },
     ],
   },
 ];

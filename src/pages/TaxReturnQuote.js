@@ -96,8 +96,11 @@ export default function TaxReturnQuote() {
   const bronzeMonthly = calculateTaxReturnBronzePrice(taxReturnResponses, pricingModifier);
   const silverMonthly = calculateTaxReturnSilverPrice(taxReturnResponses, pricingModifier);
   const goldMonthly = calculateTaxReturnGoldPrice(taxReturnResponses, pricingModifier);
+  // Once-off now includes both true once-off fees AND Upfront=YES recurring services
+  // at their full annual amount (see calculateTaxReturnOnceOffFee).
   const onceOffPricing = calculateTaxReturnOnceOffFee(taxReturnResponses, pricingModifier);
   const onceOffBreakdown = getTaxReturnOnceOffBreakdown(taxReturnResponses, pricingModifier);
+  // Retained for backwards compatibility with saved price records.
   const upfrontAnnualPricing = calculateTaxReturnUpfrontAnnualFee(taxReturnResponses, pricingModifier);
   const upfrontAnnualBreakdown = getTaxReturnUpfrontAnnualBreakdown(taxReturnResponses, pricingModifier);
 
@@ -106,9 +109,9 @@ export default function TaxReturnQuote() {
   const silverAnnual = silverMonthly * 12;
   const goldAnnual = goldMonthly * 12;
 
-  // Total once-off includes both the true once-off fees (tax structuring, etc.) 
-  // AND the optional upfront annual payment for recurring services
-  const totalOnceOffWithUpfront = onceOffPricing + upfrontAnnualPricing;
+  // Merged single once-off figure (prior separate "upfront annual" is already
+  // included in onceOffPricing).
+  const totalOnceOffWithUpfront = onceOffPricing;
 
   const [openSaveDialog, setOpenSaveDialog] = useState(false);
   const [clientNameInput, setClientNameInput] = useState(clientName);
@@ -192,69 +195,74 @@ export default function TaxReturnQuote() {
   };
 
   // ── Determine which services were selected ───────────────────────────────
+  // ID scheme matches the rebuilt taxReturnQuestions.js (q1 … q24)
   const r = taxReturnResponses;
+  const pos = (v) => parseInt(v, 10) > 0;
+  const incomeSel = r.q2 && r.q2 !== 'none';
+  const cgtSel    = r.q3 && r.q3 !== 'none';
+  const bizSel    = r.q4 && r.q4 !== 'none';
+  const dedSel    = r.q5 && r.q5 !== 'none';
 
-  const hasIndividualReturns = parseInt(r.q1, 10) > 0;
+  const hasIndividualReturns = pos(r.q1);
 
-  // Income items
-  const hasDividends      = r.q2a && r.q2a !== 'none';
-  const hasInterest       = r.q2b && r.q2b !== 'none';
-  const hasManagedFunds   = r.q2c && r.q2c !== 'none';
-  const hasRentalProperty = r.q2d && r.q2d !== 'none';
+  // Income items (shared delivery q2, individual counts)
+  const hasDividends      = incomeSel && pos(r.q2_dividends);
+  const hasInterest       = incomeSel && pos(r.q2_interest);
+  const hasManagedFunds   = incomeSel && pos(r.q2_managedFunds);
+  const hasRentalProperty = incomeSel && pos(r.q2_rentalProperty);
 
-  // Capital gains
-  const hasCgtShares   = r.q6 && r.q6 !== 'none';
-  const hasCgtProperty = r.q7 && r.q7 !== 'none';
-  const hasBalancingAdj = r.q8 && r.q8 !== 'none';
+  // Capital gains (shared delivery q3)
+  const hasCgtShares    = cgtSel && pos(r.q3_cgtShares);
+  const hasCgtProperty  = cgtSel && pos(r.q3_cgtProperty);
+  const hasBalancingAdj = cgtSel && pos(r.q3_balancingAdj);
 
-  // Business schedules
-  const hasBusinessNoGst   = r.q9 && r.q9 !== 'none';
-  const hasBusinessWithGst = r.q10 && r.q10 !== 'none';
+  // Business schedules (shared delivery q4)
+  const hasBusinessNoGst   = bizSel && pos(r.q4_noGst);
+  const hasBusinessWithGst = bizSel && pos(r.q4_withGst);
 
-  // Deductions
-  const hasDeductionsStd = r.q11 && r.q11 !== 'none';
-  const hasMotorLogBook  = r.q12 && r.q12 !== 'none';
-  const hasMotorCPK      = r.q13 && r.q13 !== 'none';
+  // Deductions (shared delivery q5)
+  const hasDeductionsStd = dedSel && pos(r.q5_standard);
+  const hasMotorLogBook  = dedSel && pos(r.q5_motorLogBook);
+  const hasMotorCPK      = dedSel && pos(r.q5_motorCPK);
 
   // BAS & TPAR
-  const hasBas  = r.q14 && r.q14 !== 'none';
-  const hasTpar = r.q15 && r.q15 !== 'none';
+  const hasBas  = r.q6 && r.q6 !== 'none' && r.q6_frequency;
+  const hasTpar = r.q7 && r.q7 !== 'none';
 
   // Payroll
-  const hasWorkersComp = r.q16 && r.q16 !== 'none';
-  const hasSalaryPayroll = r.q17 && r.q17 !== 'none' && r.q17delivery && typeof r.q17delivery === 'object' && (
-    parseInt(r.q17delivery.weekly, 10) > 0 || parseInt(r.q17delivery.fortnightly, 10) > 0 ||
-    parseInt(r.q17delivery.monthly, 10) > 0 || parseInt(r.q17delivery.annual, 10) > 0
-  );
-  const hasTimesheetPayroll = r.q18 && typeof r.q18 === 'object' && (
-    parseInt(r.q18.weekly, 10) > 0 || parseInt(r.q18.fortnightly, 10) > 0 ||
-    parseInt(r.q18.monthly, 10) > 0
-  ) && r.q18delivery;
-  const hasSuper = r.q19 && r.q19 !== 'none';
-  const hasStp  = r.q20 && r.q20 !== 'none';
-  const hasLsl  = r.q21 && r.q21 !== 'none';
+  const hasWorkersComp = r.q8 && r.q8 !== 'none';
+  const hasSalaryPayroll = r.q9_salary && r.q9_salary !== 'none'
+    && r.q9_salaryCounts && typeof r.q9_salaryCounts === 'object'
+    && Object.values(r.q9_salaryCounts).some(pos);
+  const hasTimesheetPayroll = r.q9_timesheet && r.q9_timesheet !== 'none'
+    && r.q9_timesheetCounts && typeof r.q9_timesheetCounts === 'object'
+    && Object.values(r.q9_timesheetCounts).some(pos);
+  const hasSuper = r.q10 && r.q10 !== 'none' && r.q10_frequency;
+  const hasStp   = r.q11 && r.q11 !== 'none' && r.q11_frequency;
+  const hasLsl   = r.q12 && r.q12 !== 'none';
 
   // Advisory
-  const hasTaxPlanning    = r.q22 && r.q22 !== 'none';
-  const hasTaxStructuring = r.q23 === 'yes';
+  const hasTaxPlanning    = r.q13 && r.q13 !== 'none';
+  const hasTaxStructuring = r.q14 === 'yes';
 
   // Meetings
-  const hasAnnualTaxMeeting = r.q24 === 'yes';
-  const hasAdviceMeeting    = r.q25 === 'yes';
-
-  // Xero
-  const hasXeroSetup      = r.q26 === 'yes';
-  const hasXeroTraining   = r.q27 && r.q27 !== 'none';
-  const hasXeroSupport    = r.q28 && r.q28 !== 'none';
+  const hasAnnualTaxMeeting = r.q15 === 'yes';
+  const hasAdviceMeeting    = r.q16 === 'yes';
 
   // ATO
-  const hasAtoPayment = r.q29 && r.q29 !== 'none';
+  const hasAtoPayment = r.q17 && r.q17 !== 'none';
+
+  // Xero
+  const hasXeroSetup      = r.q18 === 'yes';
+  const hasXeroTraining   = r.q19 && r.q19 !== 'none';
+  const hasXeroSupport    = r.q20 && r.q20 !== 'none';
+  const xeroSupportAdvanced = r.q20 === 'advanced';
 
   // Prior year & amendments
-  const hasPriorYear       = parseInt(r.q30, 10) > 0;
-  const hasAmendments      = r.q31 && r.q31 !== 'none';
-  const hasReturnNotNec    = parseInt(r.q32, 10) > 0;
-  const hasFinalReturn     = parseInt(r.q33, 10) > 0;
+  const hasPriorYear    = r.q21 === 'yes';
+  const hasAmendments   = r.q22 && r.q22 !== 'none';
+  const hasReturnNotNec = r.q23 === 'yes';
+  const hasFinalReturn  = r.q24 === 'yes';
 
   const pricingRows = [
     // ── TAX RETURNS ──────────────────────────────────────────────────────────
@@ -318,7 +326,7 @@ export default function TaxReturnQuote() {
     { feature: 'Xero', isCategory: true },
     { feature: 'Xero Setup',     bronze: hasXeroSetup ? <Typography variant="body2">Once-off</Typography> : <NotIncluded />,    silver: <NotIncluded />, gold: <NotIncluded /> },
     { feature: 'Xero Training',  bronze: hasXeroTraining ? <Typography variant="body2">Once-off</Typography> : <NotIncluded />, silver: <NotIncluded />, gold: <NotIncluded /> },
-    { feature: 'Xero Support',   bronze: <NotIncluded />, silver: (hasXeroSupport && r.q28 !== 'advanced') ? <CheckMark /> : <NotIncluded />, gold: hasXeroSupport ? <CheckMark /> : <NotIncluded /> },
+    { feature: 'Xero Support',   bronze: <NotIncluded />, silver: (hasXeroSupport && !xeroSupportAdvanced) ? <CheckMark /> : <NotIncluded />, gold: hasXeroSupport ? <CheckMark /> : <NotIncluded /> },
 
     // ── ATO PAYMENT PLANS ─────────────────────────────────────────────────────
     { feature: 'ATO & Prior Year', isCategory: true },
