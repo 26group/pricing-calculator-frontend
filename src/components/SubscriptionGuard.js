@@ -26,7 +26,7 @@ export default function SubscriptionGuard({ children }) {
     if (user?.organisation) {
       dispatch(fetchSubscription());
     }
-  }, [dispatch, user?.organisation]);
+  }, [dispatch, user?.organisation, location.pathname]);
 
   // Check if current route is exempt
   const isExemptRoute = EXEMPT_ROUTES.some((route) => location.pathname.startsWith(route));

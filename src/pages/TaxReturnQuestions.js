@@ -83,9 +83,12 @@ export default function TaxReturnQuestions() {
 
   const initialState = useMemo(() => {
     const built = buildInitialState();
-    const storedResponses = loadResponsesFromStorage();
-    if (Object.keys(storedResponses).length) return { ...built, ...storedResponses };
-    if (storeResponses && Object.keys(storeResponses).length) return { ...built, ...storeResponses };
+    // Only restore from storage/Redux when editing an existing saved price
+    if (activePriceId) {
+      const storedResponses = loadResponsesFromStorage();
+      if (Object.keys(storedResponses).length) return { ...built, ...storedResponses };
+      if (storeResponses && Object.keys(storeResponses).length) return { ...built, ...storeResponses };
+    }
     return built;
   }, [storeResponses]);
 
@@ -99,6 +102,10 @@ export default function TaxReturnQuestions() {
   const prevActivePriceIdRef = useRef(activePriceId);
   useEffect(() => {
     if (prevActivePriceIdRef.current !== activePriceId) {
+      if (!activePriceId) {
+        // New proposal — wipe any leftover localStorage so old values don't leak in
+        localStorage.removeItem('tax_return_responses');
+      }
       setResponses(initialState);
       lastSavedRef.current = null;
       prevActivePriceIdRef.current = activePriceId;
@@ -318,9 +325,21 @@ export default function TaxReturnQuestions() {
           }}
         >
           <Stack spacing={1.5}>
-            {question.type !== 'number' && (
+            {(question.type !== 'number' || question.countLabel) && (
               <Typography variant="subtitle1" sx={{ fontWeight: 700, color: 'text.primary', fontSize: '1rem' }}>
                 {displayPrompt}
+              </Typography>
+            )}
+            {question.description && (
+              <Typography
+                variant="body2"
+                sx={{
+                  color: 'text.primary',
+                  fontSize: '0.875rem',
+                  mt: '0px !important',
+                }}
+              >
+                {question.description}
               </Typography>
             )}
 
@@ -385,11 +404,11 @@ export default function TaxReturnQuestions() {
             )}
 
             {question.type === 'number' && (
-              <div style={{ display: 'inline-block' }}>
+              <div style={{ display: 'inline-block', marginTop: question.description ? '24px' : undefined }}>
                 <TextField
                   type="number"
                   inputProps={{ min: 0 }}
-                  label={question.prompt}
+                  label={question.countLabel || question.prompt}
                   value={responses[question.id] || ''}
                   onChange={(e) => handleNumberChange(question.id)(e)}
                   onFocus={() => setFocusedQuestion(question.id)}
@@ -504,7 +523,9 @@ export default function TaxReturnQuestions() {
     calculateTaxReturnOnceOffFee(responses, pricingModifier), [responses, pricingModifier]);
   const upfrontAnnualFee = useMemo(() =>
     calculateTaxReturnUpfrontAnnualFee(responses, pricingModifier), [responses, pricingModifier]);
-  const totalOnceOffWithUpfront = useMemo(() => totalOnceOffFee + upfrontAnnualFee, [totalOnceOffFee, upfrontAnnualFee]);
+  // totalOnceOffFee already includes Upfront=YES items at full annual amount.
+  // Do NOT add upfrontAnnualFee again — that would double-count.
+  const totalOnceOffWithUpfront = totalOnceOffFee;
 
   return (
     <>

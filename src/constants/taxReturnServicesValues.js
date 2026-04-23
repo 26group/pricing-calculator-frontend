@@ -13,6 +13,10 @@ export const serviceValuesTaxReturn = {
     annualRate: 200.00,
     frequency: 1, // lodged once per year
     inclusion: 'Individual Tax Returns',
+    workpaper: {
+      byClient: { annualRate: 10.00, inclusion: 'Individual Returns — Summary provided by Client' },
+      byFirm:   { annualRate: 50.00, inclusion: 'Individual Returns — Firm to prepare workpaper' },
+    },
   },
 
   // ===================
@@ -21,21 +25,21 @@ export const serviceValuesTaxReturn = {
   // ===================
   incomeItems: {
     dividends: {
-      byClient: { annualRate: 50.00, inclusion: 'Dividends not reported to ATO — Summary by Client' },
-      byFirm:   { annualRate: 100.00, inclusion: 'Dividends not reported to ATO — Summary by Firm' },
+      byClient: { annualRate: 50.00, inclusion: 'Dividends not reported to ATO — Summary provided by Client' },
+      byFirm:   { annualRate: 100.00, inclusion: 'Dividends not reported to ATO — Firm to prepare workpaper' },
     },
     interest: {
-      byClient: { annualRate: 50.00, inclusion: 'Interest not reported to ATO — Summary by Client' },
-      byFirm:   { annualRate: 100.00, inclusion: 'Interest not reported to ATO — Summary by Firm' },
+      byClient: { annualRate: 50.00, inclusion: 'Interest not reported to ATO — Summary provided by Client' },
+      byFirm:   { annualRate: 100.00, inclusion: 'Interest not reported to ATO — Firm to prepare workpaper' },
     },
     managedFunds: {
-      byClient: { annualRate: 50.00, inclusion: 'Managed Funds — Summary by Client' },
-      byFirm:   { annualRate: 100.00, inclusion: 'Managed Funds — Summary by Firm' },
+      byClient: { annualRate: 50.00, inclusion: 'Managed Funds — Summary provided by Client' },
+      byFirm:   { annualRate: 100.00, inclusion: 'Managed Funds — Firm to prepare workpaper' },
     },
     rentalProperty: {
       // Bronze = NO
-      byClient: { annualRate: 150.00, inclusion: 'Rental Property — Summary by Client' },
-      byFirm:   { annualRate: 300.00, inclusion: 'Rental Property — Summary by Firm' },
+      byClient: { annualRate: 150.00, inclusion: 'Rental Property — Summary provided by Client' },
+      byFirm:   { annualRate: 300.00, inclusion: 'Rental Property — Firm to prepare workpaper' },
     },
   },
 
@@ -44,18 +48,18 @@ export const serviceValuesTaxReturn = {
   // ===================
   capitalGains: {
     cgtShares: {
-      byClient: { annualRate: 150.00, inclusion: 'CGT — Shares and equities — Summary by Client' },
-      byFirm:   { annualRate: 300.00, inclusion: 'CGT — Shares and equities — Summary by Firm' },
+      byClient: { annualRate: 150.00, inclusion: 'CGT — Shares and equities — Summary provided by Client' },
+      byFirm:   { annualRate: 300.00, inclusion: 'CGT — Shares and equities — Firm to prepare workpaper' },
     },
     cgtProperty: {
       // Bronze = NO
-      byClient: { annualRate: 550.00, inclusion: 'CGT — Property sales — Summary by Client' },
-      byFirm:   { annualRate: 1100.00, inclusion: 'CGT — Property sales — Summary by Firm' },
+      byClient: { annualRate: 550.00, inclusion: 'CGT — Property sales — Summary provided by Client' },
+      byFirm:   { annualRate: 1100.00, inclusion: 'CGT — Property sales — Firm to prepare workpaper' },
     },
     balancingAdj: {
       // Bronze = NO
-      byClient: { annualRate: 50.00, inclusion: 'Balancing adjustment — sale of business asset — Summary by Client' },
-      byFirm:   { annualRate: 100.00, inclusion: 'Balancing adjustment — sale of business asset — Summary by Firm' },
+      byClient: { annualRate: 50.00, inclusion: 'Balancing adjustment — sale of business asset — Summary provided by Client' },
+      byFirm:   { annualRate: 100.00, inclusion: 'Balancing adjustment — sale of business asset — Firm to prepare workpaper' },
     },
   },
 
@@ -65,12 +69,12 @@ export const serviceValuesTaxReturn = {
   // ===================
   businessSchedules: {
     noGst: {
-      byClient: { annualRate: 200.00, inclusion: 'Business Schedule — no GST — Summary by Client' },
-      byFirm:   { annualRate: 400.00, inclusion: 'Business Schedule — no GST — Summary by Firm' },
+      byClient: { annualRate: 200.00, inclusion: 'Business Schedule — no GST — Summary provided by Client' },
+      byFirm:   { annualRate: 400.00, inclusion: 'Business Schedule — no GST — Firm to prepare workpaper' },
     },
     withGst: {
-      byClient: { annualRate: 300.00, inclusion: 'Business Schedule — with GST — Summary by Client' },
-      byFirm:   { annualRate: 600.00, inclusion: 'Business Schedule — with GST — Summary by Firm' },
+      byClient: { annualRate: 300.00, inclusion: 'Business Schedule — with GST — Summary provided by Client' },
+      byFirm:   { annualRate: 600.00, inclusion: 'Business Schedule — with GST — Firm to prepare workpaper' },
     },
   },
 
@@ -80,16 +84,16 @@ export const serviceValuesTaxReturn = {
   // ===================
   deductions: {
     moreThan3Standard: {
-      byClient: { annualRate: 50.00, inclusion: 'Deductions — more than 3 standard expenses — Summary by Client' },
-      byFirm:   { annualRate: 100.00, inclusion: 'Deductions — more than 3 standard expenses — Summary by Firm' },
+      byClient: { annualRate: 50.00, inclusion: 'Deductions — more than 3 standard expenses — Summary provided by Client' },
+      byFirm:   { annualRate: 100.00, inclusion: 'Deductions — more than 3 standard expenses — Firm to prepare workpaper' },
     },
     motorVehicleLogBook: {
-      byClient: { annualRate: 50.00, inclusion: 'Motor Vehicle — log book method — Summary by Client' },
-      byFirm:   { annualRate: 100.00, inclusion: 'Motor Vehicle — log book method — Summary by Firm' },
+      byClient: { annualRate: 50.00, inclusion: 'Motor Vehicle — log book method — Summary provided by Client' },
+      byFirm:   { annualRate: 100.00, inclusion: 'Motor Vehicle — log book method — Firm to prepare workpaper' },
     },
     motorVehicleCPK: {
-      byClient: { annualRate: 50.00, inclusion: 'Motor Vehicle — Cents per kilometre method — Summary by Client' },
-      byFirm:   { annualRate: 100.00, inclusion: 'Motor Vehicle — Cents per kilometre method — Summary by Firm' },
+      byClient: { annualRate: 50.00, inclusion: 'Motor Vehicle — Cents per kilometre method — Summary provided by Client' },
+      byFirm:   { annualRate: 100.00, inclusion: 'Motor Vehicle — Cents per kilometre method — Firm to prepare workpaper' },
     },
   },
 
@@ -100,12 +104,12 @@ export const serviceValuesTaxReturn = {
   // ===================
   bas: {
     byClient: {
-      quarterly: { ratePerReturn: 150.00, frequency: 4, inclusion: 'BAS Quarterly — Summary by Client' },
-      annual:    { ratePerReturn: 150.00, frequency: 1, inclusion: 'BAS Annual — Summary by Client' },
+      quarterly: { ratePerReturn: 150.00, frequency: 4, inclusion: 'BAS Quarterly — Summary provided by Client' },
+      annual:    { ratePerReturn: 150.00, frequency: 1, inclusion: 'BAS Annual — Summary provided by Client' },
     },
     byFirm: {
-      quarterly: { ratePerReturn: 400.00, frequency: 4, inclusion: 'BAS Quarterly — Summary by Firm' },
-      annual:    { ratePerReturn: 400.00, frequency: 1, inclusion: 'BAS Annual — Summary by Firm' },
+      quarterly: { ratePerReturn: 400.00, frequency: 4, inclusion: 'BAS Quarterly — Firm to prepare workpaper' },
+      annual:    { ratePerReturn: 400.00, frequency: 1, inclusion: 'BAS Annual — Firm to prepare workpaper' },
     },
   },
 
@@ -114,8 +118,8 @@ export const serviceValuesTaxReturn = {
   // Bronze = NO
   // ===================
   tpar: {
-    byClient: { annualRate: 100.00, inclusion: 'TPAR — Summary by Client' },
-    byFirm:   { annualRate: 200.00, inclusion: 'TPAR — Summary by Firm' },
+    byClient: { annualRate: 100.00, inclusion: 'TPAR — Summary provided by Client' },
+    byFirm:   { annualRate: 200.00, inclusion: 'TPAR — Firm to prepare workpaper' },
   },
 
   // ===================
@@ -123,8 +127,8 @@ export const serviceValuesTaxReturn = {
   // Bronze = YES
   // ===================
   workersComp: {
-    byClient: { annualRate: 200.00, inclusion: 'Workers Compensation — Summary by Client' },
-    byFirm:   { annualRate: 400.00, inclusion: 'Workers Compensation — Summary by Firm' },
+    byClient: { annualRate: 200.00, inclusion: 'Workers Compensation — Summary provided by Client' },
+    byFirm:   { annualRate: 400.00, inclusion: 'Workers Compensation — Firm to prepare workpaper' },
   },
 
   // ===================
@@ -186,18 +190,18 @@ export const serviceValuesTaxReturn = {
   // ===================
   stpReporting: {
     byClient: {
-      weekly:      { annualRate: 150.00, inclusion: 'STP Reporting — Summary by Client (Weekly)' },
-      fortnightly: { annualRate: 125.00, inclusion: 'STP Reporting — Summary by Client (Fortnightly)' },
-      monthly:     { annualRate: 75.00, inclusion: 'STP Reporting — Summary by Client (Monthly)' },
-      quarterly:   { annualRate: 50.00, inclusion: 'STP Reporting — Summary by Client (Quarterly)' },
-      annual:      { annualRate: 25.00, inclusion: 'STP Reporting — Summary by Client (Annual)' },
+      weekly:      { annualRate: 150.00, inclusion: 'STP Reporting — Summary provided by Client (Weekly)' },
+      fortnightly: { annualRate: 125.00, inclusion: 'STP Reporting — Summary provided by Client (Fortnightly)' },
+      monthly:     { annualRate: 75.00, inclusion: 'STP Reporting — Summary provided by Client (Monthly)' },
+      quarterly:   { annualRate: 50.00, inclusion: 'STP Reporting — Summary provided by Client (Quarterly)' },
+      annual:      { annualRate: 25.00, inclusion: 'STP Reporting — Summary provided by Client (Annual)' },
     },
     byFirm: {
-      weekly:      { annualRate: 300.00, inclusion: 'STP Reporting — Summary by Firm (Weekly)' },
-      fortnightly: { annualRate: 250.00, inclusion: 'STP Reporting — Summary by Firm (Fortnightly)' },
-      monthly:     { annualRate: 150.00, inclusion: 'STP Reporting — Summary by Firm (Monthly)' },
-      quarterly:   { annualRate: 100.00, inclusion: 'STP Reporting — Summary by Firm (Quarterly)' },
-      annual:      { annualRate: 50.00, inclusion: 'STP Reporting — Summary by Firm (Annual)' },
+      weekly:      { annualRate: 300.00, inclusion: 'STP Reporting — Firm to prepare workpaper (Weekly)' },
+      fortnightly: { annualRate: 250.00, inclusion: 'STP Reporting — Firm to prepare workpaper (Fortnightly)' },
+      monthly:     { annualRate: 150.00, inclusion: 'STP Reporting — Firm to prepare workpaper (Monthly)' },
+      quarterly:   { annualRate: 100.00, inclusion: 'STP Reporting — Firm to prepare workpaper (Quarterly)' },
+      annual:      { annualRate: 50.00, inclusion: 'STP Reporting — Firm to prepare workpaper (Annual)' },
     },
   },
 
@@ -206,8 +210,8 @@ export const serviceValuesTaxReturn = {
   // Bronze = NO
   // ===================
   lslConstruction: {
-    byClient: { annualRate: 150.00, inclusion: 'LSL Construction — Summary by Client' },
-    byFirm:   { annualRate: 250.00, inclusion: 'LSL Construction — Summary by Firm' },
+    byClient: { annualRate: 150.00, inclusion: 'LSL Construction — Summary provided by Client' },
+    byFirm:   { annualRate: 250.00, inclusion: 'LSL Construction — Firm to prepare workpaper' },
   },
 
   // ===================
@@ -215,8 +219,8 @@ export const serviceValuesTaxReturn = {
   // Bronze = NO
   // ===================
   taxPlanning: {
-    byClient: { annualRate: 300.00, inclusion: 'Tax Planning / Review — Summary by Client' },
-    byFirm:   { annualRate: 500.00, inclusion: 'Tax Planning / Review — Summary by Firm' },
+    byClient: { annualRate: 300.00, inclusion: 'Tax Planning / Review — Summary provided by Client' },
+    byFirm:   { annualRate: 500.00, inclusion: 'Tax Planning / Review — Firm to prepare workpaper' },
   },
 
   // ===================

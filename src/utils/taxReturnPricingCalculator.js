@@ -80,6 +80,11 @@ const buildLineItems = (responses) => {
     const n = int0(r.q1);
     if (n > 0) {
       push(`Individual Tax Returns (x${n})`, v.individualReturns.annualRate * n, { tiers: ALL_TIERS });
+      const wp = r.q1_workpaper;
+      if (wp === 'byClient' || wp === 'byFirm') {
+        const w = v.individualReturns.workpaper[wp];
+        push(`${w.inclusion} (x${n})`, w.annualRate * n, { tiers: ALL_TIERS });
+      }
     }
   }
 

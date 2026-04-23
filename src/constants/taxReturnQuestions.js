@@ -5,7 +5,7 @@
 //   - Items described in the CSV with a "Unit" (count) => number input field
 //   - Items described with a Frequency (weekly/fortnightly/monthly/quarterly/
 //     annual) => frequency radio buttons
-//   - "Summary by Client" / "Summary by Firm" => delivery radio with "No"
+//   - "Summary provided by Client" / "Firm to prepare workpaper" => delivery radio with "No"
 //     as the off state; child counts/frequency only appear once a delivery
 //     option is selected
 //
@@ -26,7 +26,21 @@ export const taxReturnQuestionData = [
     id: 'q1',
     sectionTitle: 'Tax Services',
     prompt: 'How many Individuals do they want tax returns lodged for?',
+    description: 'Individual Returns — Basic ATO portal and less than 3 deductible items',
     type: 'number',
+    countLabel: 'Number of individuals',
+    children: [
+      {
+        id: 'q1_workpaper',
+        prompt: 'How are the workpapers provided?',
+        type: 'radio',
+        options: [
+          { label: 'Summary provided by Client', value: 'byClient' },
+          { label: 'Firm to prepare workpaper',  value: 'byFirm' },
+        ],
+        showWhen: (r) => Number(r.q1) > 0,
+      },
+    ],
   },
 
   // ────────────────────────────────────────────────────────────────────
@@ -37,8 +51,8 @@ export const taxReturnQuestionData = [
     prompt: 'Do they have Investment income items — how are these prepared?',
     type: 'radio',
     options: [
-      { label: 'Summary by Client', value: 'byClient' },
-      { label: 'Summary by Firm',   value: 'byFirm' },
+      { label: 'Summary provided by Client', value: 'byClient' },
+      { label: 'Firm to prepare workpaper',   value: 'byFirm' },
       { label: 'No',                value: 'none' },
     ],
     children: [
@@ -77,8 +91,8 @@ export const taxReturnQuestionData = [
     prompt: 'Did they sell a capital asset for gain and require a schedule?',
     type: 'radio',
     options: [
-      { label: 'Summary by Client', value: 'byClient' },
-      { label: 'Summary by Firm',   value: 'byFirm' },
+      { label: 'Summary provided by Client', value: 'byClient' },
+      { label: 'Firm to prepare workpaper',   value: 'byFirm' },
       { label: 'No',                value: 'none' },
     ],
     children: [
@@ -111,8 +125,8 @@ export const taxReturnQuestionData = [
     prompt: 'Do they have a business to report?',
     type: 'radio',
     options: [
-      { label: 'Summary by Client', value: 'byClient' },
-      { label: 'Summary by Firm',   value: 'byFirm' },
+      { label: 'Summary provided by Client', value: 'byClient' },
+      { label: 'Firm to prepare workpaper',   value: 'byFirm' },
       { label: 'No',                value: 'none' },
     ],
     children: [
@@ -139,8 +153,8 @@ export const taxReturnQuestionData = [
     prompt: 'Do they have deductions to claim?',
     type: 'radio',
     options: [
-      { label: 'Summary by Client', value: 'byClient' },
-      { label: 'Summary by Firm',   value: 'byFirm' },
+      { label: 'Summary provided by Client', value: 'byClient' },
+      { label: 'Firm to prepare workpaper',   value: 'byFirm' },
       { label: 'No',                value: 'none' },
     ],
     children: [
@@ -173,8 +187,8 @@ export const taxReturnQuestionData = [
     prompt: 'BAS — do they want you to lodge BAS?',
     type: 'radio',
     options: [
-      { label: 'Summary by Client', value: 'byClient' },
-      { label: 'Summary by Firm',   value: 'byFirm' },
+      { label: 'Summary provided by Client', value: 'byClient' },
+      { label: 'Firm to prepare workpaper',   value: 'byFirm' },
       { label: 'No',                value: 'none' },
     ],
     children: [
@@ -199,8 +213,8 @@ export const taxReturnQuestionData = [
     prompt: 'TPAR — does the client require TPAR?',
     type: 'radio',
     options: [
-      { label: 'Summary by Client', value: 'byClient' },
-      { label: 'Summary by Firm',   value: 'byFirm' },
+      { label: 'Summary provided by Client', value: 'byClient' },
+      { label: 'Firm to prepare workpaper',   value: 'byFirm' },
       { label: 'No',                value: 'none' },
     ],
     children: [
@@ -222,8 +236,8 @@ export const taxReturnQuestionData = [
     prompt: 'Workers Compensation — do they want you to lodge Workers Compensation forms?',
     type: 'radio',
     options: [
-      { label: 'Summary by Client', value: 'byClient' },
-      { label: 'Summary by Firm',   value: 'byFirm' },
+      { label: 'Summary provided by Client', value: 'byClient' },
+      { label: 'Firm to prepare workpaper',   value: 'byFirm' },
       { label: 'No',                value: 'none' },
     ],
     children: [
@@ -246,8 +260,8 @@ export const taxReturnQuestionData = [
     prompt: 'Payroll Processing — Salary ONLY employees: how is this prepared?',
     type: 'radio',
     options: [
-      { label: 'Summary by Client', value: 'byClient' },
-      { label: 'Summary by Firm',   value: 'byFirm' },
+      { label: 'Summary provided by Client', value: 'byClient' },
+      { label: 'Firm to prepare workpaper',   value: 'byFirm' },
       { label: 'No',                value: 'none' },
     ],
     children: [
@@ -271,8 +285,8 @@ export const taxReturnQuestionData = [
     prompt: 'Payroll Processing — Timesheet ONLY employees: how is this prepared?',
     type: 'radio',
     options: [
-      { label: 'Summary by Client', value: 'byClient' },
-      { label: 'Summary by Firm',   value: 'byFirm' },
+      { label: 'Summary provided by Client', value: 'byClient' },
+      { label: 'Firm to prepare workpaper',   value: 'byFirm' },
       { label: 'No',                value: 'none' },
     ],
     children: [
@@ -300,8 +314,8 @@ export const taxReturnQuestionData = [
     prompt: 'Super Prep & Lodgement — do they want you to lodge Superannuation payments?',
     type: 'radio',
     options: [
-      { label: 'Summary by Client', value: 'byClient' },
-      { label: 'Summary by Firm',   value: 'byFirm' },
+      { label: 'Summary provided by Client', value: 'byClient' },
+      { label: 'Firm to prepare workpaper',   value: 'byFirm' },
       { label: 'No',                value: 'none' },
     ],
     children: [
@@ -329,8 +343,8 @@ export const taxReturnQuestionData = [
     prompt: 'STP Reporting — do they want you to lodge Single Touch Payroll?',
     type: 'radio',
     options: [
-      { label: 'Summary by Client', value: 'byClient' },
-      { label: 'Summary by Firm',   value: 'byFirm' },
+      { label: 'Summary provided by Client', value: 'byClient' },
+      { label: 'Firm to prepare workpaper',   value: 'byFirm' },
       { label: 'No',                value: 'none' },
     ],
     children: [
@@ -358,8 +372,8 @@ export const taxReturnQuestionData = [
     prompt: 'LSL Construction — do they want you to lodge Long Service Leave forms?',
     type: 'radio',
     options: [
-      { label: 'Summary by Client', value: 'byClient' },
-      { label: 'Summary by Firm',   value: 'byFirm' },
+      { label: 'Summary provided by Client', value: 'byClient' },
+      { label: 'Firm to prepare workpaper',   value: 'byFirm' },
       { label: 'No',                value: 'none' },
     ],
   },
@@ -373,8 +387,8 @@ export const taxReturnQuestionData = [
     prompt: 'Tax Planning — do they require Tax Planning / Review?',
     type: 'radio',
     options: [
-      { label: 'Summary by Client', value: 'byClient' },
-      { label: 'Summary by Firm',   value: 'byFirm' },
+      { label: 'Summary provided by Client', value: 'byClient' },
+      { label: 'Firm to prepare workpaper',   value: 'byFirm' },
       { label: 'No',                value: 'none' },
     ],
   },

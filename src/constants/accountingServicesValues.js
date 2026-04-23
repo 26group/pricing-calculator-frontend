@@ -30,24 +30,24 @@ export const serviceValuesAccounting = {
         providedByClient: {
           yearly: 150,
           monthly: 15,
-          inclusion: 'Rental Property — Summary by Client',
+          inclusion: 'Rental Property — Summary provided by Client',
         },
         preparedByFirm: {
           yearly: 300,
           monthly: 30,
-          inclusion: 'Rental Property — Summary by Firm',
+          inclusion: 'Rental Property — Firm to prepare workpaper',
         },
       },
       managedFunds: {
         providedByClient: {
           yearly: 50,
           monthly: 5,
-          inclusion: 'Managed Funds — Summary by Client',
+          inclusion: 'Managed Funds — Summary provided by Client',
         },
         preparedByFirm: {
           yearly: 100,
           monthly: 10,
-          inclusion: 'Managed Funds — Summary by Firm',
+          inclusion: 'Managed Funds — Firm to prepare workpaper',
         },
       },
       businessScheduleNoGst: {
@@ -68,120 +68,120 @@ export const serviceValuesAccounting = {
         providedByClient: {
           yearly: 50,
           monthly: 5,
-          inclusion: 'Dividends not reported to ATO — Summary by Client',
+          inclusion: 'Dividends not reported to ATO — Summary provided by Client',
         },
         preparedByFirm: {
           yearly: 100,
           monthly: 10,
-          inclusion: 'Dividends not reported to ATO — Summary by Firm',
+          inclusion: 'Dividends not reported to ATO — Firm to prepare workpaper',
         },
       },
       interestNotReportedToATO: {
         providedByClient: {
           yearly: 50,
           monthly: 5,
-          inclusion: 'Interest not reported to ATO — Summary by Client',
+          inclusion: 'Interest not reported to ATO — Summary provided by Client',
         },
         preparedByFirm: {
           yearly: 100,
           monthly: 10,
-          inclusion: 'Interest not reported to ATO — Summary by Firm',
+          inclusion: 'Interest not reported to ATO — Firm to prepare workpaper',
         },
       },
       cgtSharesAndEquities: {
         providedByClient: {
           yearly: 150,
           monthly: 15,
-          inclusion: 'CGT — Shares and equities — Summary by Client',
+          inclusion: 'CGT — Shares and equities — Summary provided by Client',
         },
         preparedByFirm: {
           yearly: 300,
           monthly: 30,
-          inclusion: 'CGT — Shares and equities — Summary by Firm',
+          inclusion: 'CGT — Shares and equities — Firm to prepare workpaper',
         },
       },
       cgtPropertySales: {
         providedByClient: {
           yearly: 550,
           monthly: 55,
-          inclusion: 'CGT — Property sales — Summary by Client',
+          inclusion: 'CGT — Property sales — Summary provided by Client',
         },
         preparedByFirm: {
           yearly: 1100,
           monthly: 110,
-          inclusion: 'CGT — Property sales — Summary by Firm',
+          inclusion: 'CGT — Property sales — Firm to prepare workpaper',
         },
       },
       balancingAdjustmentCalculation: {
         providedByClient: {
           yearly: 50,
           monthly: 5,
-          inclusion: 'Balancing adjustment — sale of business asset — Summary by Client',
+          inclusion: 'Balancing adjustment — sale of business asset — Summary provided by Client',
         },
         preparedByFirm: {
           yearly: 100,
           monthly: 10,
-          inclusion: 'Balancing adjustment — sale of business asset — Summary by Firm',
+          inclusion: 'Balancing adjustment — sale of business asset — Firm to prepare workpaper',
         },
       },
       deductionsMoreThan3Standard: {
         providedByClient: {
           yearly: 50,
           monthly: 5,
-          inclusion: 'Deductions — more than 3 standard expenses — Summary by Client',
+          inclusion: 'Deductions — more than 3 standard expenses — Summary provided by Client',
         },
         preparedByFirm: {
           yearly: 100,
           monthly: 10,
-          inclusion: 'Deductions — more than 3 standard expenses — Summary by Firm',
+          inclusion: 'Deductions — more than 3 standard expenses — Firm to prepare workpaper',
         },
       },
       motorVehicleLogBook: {
         providedByClient: {
           yearly: 50,
           monthly: 5,
-          inclusion: 'Motor Vehicle — log book method — Summary by Client',
+          inclusion: 'Motor Vehicle — log book method — Summary provided by Client',
         },
         preparedByFirm: {
           yearly: 100,
           monthly: 10,
-          inclusion: 'Motor Vehicle — log book method — Summary by Firm',
+          inclusion: 'Motor Vehicle — log book method — Firm to prepare workpaper',
         },
       },
       motorVehicleStatutoryRate: {
         providedByClient: {
           yearly: 50,
           monthly: 5,
-          inclusion: 'Motor Vehicle — statutory rate — Summary by Client',
+          inclusion: 'Motor Vehicle — statutory rate — Summary provided by Client',
         },
         preparedByFirm: {
           yearly: 100,
           monthly: 10,
-          inclusion: 'Motor Vehicle — statutory rate — Summary by Firm',
+          inclusion: 'Motor Vehicle — statutory rate — Firm to prepare workpaper',
         },
       },
       amendmentOriginalPreparedByFirm: {
         providedByClient: {
           yearly: 100,
           monthly: 10,
-          inclusion: 'Amendment — original return prepared by firm — Summary by Client',
+          inclusion: 'Amendment — original return prepared by firm — Summary provided by Client',
         },
         preparedByFirm: {
           yearly: 200,
           monthly: 20,
-          inclusion: 'Amendment — original return prepared by firm — Summary by Firm',
+          inclusion: 'Amendment — original return prepared by firm — Firm to prepare workpaper',
         },
       },
       amendmentOriginalNotPreparedByFirm: {
         providedByClient: {
           yearly: 200,
           monthly: 20,
-          inclusion: 'Amendment — original return NOT prepared by firm — Summary by Client',
+          inclusion: 'Amendment — original return NOT prepared by firm — Summary provided by Client',
         },
         preparedByFirm: {
           yearly: 400,
           monthly: 40,
-          inclusion: 'Amendment — original return NOT prepared by firm — Summary by Firm',
+          inclusion: 'Amendment — original return NOT prepared by firm — Firm to prepare workpaper',
         },
       },
       returnNotNecessary: {
