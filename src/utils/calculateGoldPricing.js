@@ -318,43 +318,19 @@ export const calculateGoldMonthlyPricing = (responses, pricingModifier = 200) =>
   }
 
   // ==================== SUPPORT SERVICES ====================
-  // Gold ALWAYS includes Principal/Owner support (hard-coded)
-  
-  // q24: Support level
+  // Gold: If support selected (q24 is not 'no'), hardcode to Email & Phone - CSM & Owner
   if (responses.q24 && responses.q24 !== 'no') {
-    // Email only — Team
-    if (responses.q24 === 'emailTeam') {
-      const teamSupport = serviceValuesAccounting.support.emailOnlyTeam?.[segment];
-      if (teamSupport) {
-        total += teamSupport.monthly;
-      }
+    // Client Service Manager support
+    const csmSupport = serviceValuesAccounting.support.clientServiceManager?.[segment];
+    if (csmSupport) {
+      total += csmSupport.monthly;
     }
-    // Email & Phone — Team & CSM (includes both Team and CSM)
-    else if (responses.q24 === 'emailPhoneTeamCsm') {
-      const teamSupport = serviceValuesAccounting.support.emailOnlyTeam?.[segment];
-      if (teamSupport) {
-        total += teamSupport.monthly;
-      }
-      const csmSupport = serviceValuesAccounting.support.clientServiceManager?.[segment];
-      if (csmSupport) {
-        total += csmSupport.monthly;
-      }
-    }
-    // Email & Phone — CSM & Owner (includes CSM and Owner)
-    else if (responses.q24 === 'emailPhoneCsmOwner') {
-      const csmSupport = serviceValuesAccounting.support.clientServiceManager?.[segment];
-      if (csmSupport) {
-        total += csmSupport.monthly;
-      }
-      const ownerSupport = serviceValuesAccounting.support.principalOwner?.[segment];
-      if (ownerSupport) {
-        total += ownerSupport.monthly;
-      }
+    // Principal/Owner support
+    const ownerSupport = serviceValuesAccounting.support.principalOwner?.[segment];
+    if (ownerSupport) {
+      total += ownerSupport.monthly;
     }
   }
-
-  // Note: Gold package support is already handled above based on q24 selection
-  // No additional hard-coded support additions for Gold
 
   // ==================== CORPORATE SECRETARIAL ====================
 
@@ -690,38 +666,17 @@ export const calculateSilverMonthlyPricing = (responses, pricingModifier = 200) 
   }
 
   // ==================== SUPPORT SERVICES ====================
-  // Silver: Support based on q24 selection
-  
-  // q24: Support level
+  // Silver: If support selected (q24 is not 'no'), hardcode to Email & Phone - Team & CSM
   if (responses.q24 && responses.q24 !== 'no') {
-    // Email only — Team
-    if (responses.q24 === 'emailTeam') {
-      const teamSupport = serviceValuesAccounting.support.emailOnlyTeam?.[segment];
-      if (teamSupport) {
-        total += teamSupport.monthly;
-      }
+    // Team support
+    const teamSupport = serviceValuesAccounting.support.emailOnlyTeam?.[segment];
+    if (teamSupport) {
+      total += teamSupport.monthly;
     }
-    // Email & Phone — Team & CSM (includes both Team and CSM)
-    else if (responses.q24 === 'emailPhoneTeamCsm') {
-      const teamSupport = serviceValuesAccounting.support.emailOnlyTeam?.[segment];
-      if (teamSupport) {
-        total += teamSupport.monthly;
-      }
-      const csmSupport = serviceValuesAccounting.support.clientServiceManager?.[segment];
-      if (csmSupport) {
-        total += csmSupport.monthly;
-      }
-    }
-    // Email & Phone — CSM & Owner (includes CSM and Owner)
-    else if (responses.q24 === 'emailPhoneCsmOwner') {
-      const csmSupport = serviceValuesAccounting.support.clientServiceManager?.[segment];
-      if (csmSupport) {
-        total += csmSupport.monthly;
-      }
-      const ownerSupport = serviceValuesAccounting.support.principalOwner?.[segment];
-      if (ownerSupport) {
-        total += ownerSupport.monthly;
-      }
+    // Client Service Manager support
+    const csmSupport = serviceValuesAccounting.support.clientServiceManager?.[segment];
+    if (csmSupport) {
+      total += csmSupport.monthly;
     }
   }
 

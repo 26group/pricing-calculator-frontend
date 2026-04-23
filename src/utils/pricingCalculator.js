@@ -122,6 +122,15 @@ export const calculateComplianceOnlyPrice = (responses, pricingModifier = 200) =
     }
   }
 
+  // ==================== SUPPORT SERVICES ====================
+  // Bronze: If support selected (q24 is not 'no'), hardcode to Email only - Team
+  if (responses.q24 && responses.q24 !== 'no' && segment) {
+    const teamSupport = serviceValuesAccounting.support.emailOnlyTeam?.[segment];
+    if (teamSupport) {
+      total += teamSupport.monthly;
+    }
+  }
+
   // ==================== PAYROLL SERVICES (Bronze: YES for Workers Comp, Processing, Super, STP, LSL; NO for Payroll Tax) ====================
 
   // q9: Workers compensation - YES in Bronze
