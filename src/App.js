@@ -310,7 +310,7 @@ function AppContent() {
 
   return (
     <>
-      {isLoggedIn && (
+      {isLoggedIn && !location.pathname.startsWith('/onboarding') && (
       <AppBar position="fixed" sx={{ boxShadow: 'none', backdropFilter: 'blur(20px)', backgroundColor: 'rgba(255, 255, 255, 0.9)', borderBottom: '1px solid #e0e0e0' }}>
         <Toolbar>
           <Link to="/clients" style={{ display: 'flex', alignItems: 'center', marginRight: '24px' }}>
