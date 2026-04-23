@@ -24,9 +24,9 @@ export const taxReturnQuestionData = [
     prompt: 'Do they have Investment income items — how are these prepared?',
     type: 'radio',
     options: [
-      { label: 'None', value: 'none' },
       { label: 'Summary by Client', value: 'byClient' },
       { label: 'Summary by Firm', value: 'byFirm' },
+      { label: 'None', value: 'none' },
     ],
     children: [
       {
@@ -65,9 +65,9 @@ export const taxReturnQuestionData = [
     prompt: 'Did they sell a capital asset for gain and require a schedule?',
     type: 'radio',
     options: [
-      { label: 'None', value: 'none' },
       { label: 'Summary by Client', value: 'byClient' },
       { label: 'Summary by Firm', value: 'byFirm' },
+      { label: 'None', value: 'none' },
     ],
     children: [
       {
@@ -100,9 +100,9 @@ export const taxReturnQuestionData = [
     prompt: 'Do they have a business to report?',
     type: 'radio',
     options: [
-      { label: 'None', value: 'none' },
       { label: 'Summary by Client', value: 'byClient' },
       { label: 'Summary by Firm', value: 'byFirm' },
+      { label: 'None', value: 'none' },
     ],
     children: [
       {
@@ -131,9 +131,9 @@ export const taxReturnQuestionData = [
     prompt: 'Do they have deductions to claim?',
     type: 'radio',
     options: [
-      { label: 'None', value: 'none' },
       { label: 'Summary by Client', value: 'byClient' },
       { label: 'Summary by Firm', value: 'byFirm' },
+      { label: 'None', value: 'none' },
     ],
     children: [
       {
@@ -166,9 +166,9 @@ export const taxReturnQuestionData = [
     prompt: 'BAS — do they want you to lodge BAS?',
     type: 'radio',
     options: [
-      { label: 'No', value: 'none' },
       { label: 'Summary by Client', value: 'byClient' },
       { label: 'Summary by Firm', value: 'byFirm' },
+      { label: 'No', value: 'none' },
     ],
     children: [
       {
@@ -188,9 +188,9 @@ export const taxReturnQuestionData = [
     prompt: 'TPAR — does the client require TPAR?',
     type: 'radio',
     options: [
-      { label: 'No', value: 'none' },
       { label: 'Summary by Client', value: 'byClient' },
       { label: 'Summary by Firm', value: 'byFirm' },
+      { label: 'No', value: 'none' },
     ],
   },
 
@@ -203,9 +203,9 @@ export const taxReturnQuestionData = [
     prompt: 'Workers Compensation — do they want you to lodge Workers Compensation forms?',
     type: 'radio',
     options: [
-      { label: 'No', value: 'none' },
       { label: 'Summary by Client', value: 'byClient' },
       { label: 'Summary by Firm', value: 'byFirm' },
+      { label: 'No', value: 'none' },
     ],
   },
   {
@@ -265,12 +265,12 @@ export const taxReturnQuestionData = [
     prompt: 'Super Prep & Lodgement — do they want you to lodge Superannuation payments?',
     type: 'radio',
     options: [
-      { label: 'No', value: 'none' },
       { label: 'Weekly', value: 'weekly' },
       { label: 'Fortnightly', value: 'fortnightly' },
       { label: 'Monthly', value: 'monthly' },
       { label: 'Quarterly', value: 'quarterly' },
       { label: 'Annual', value: 'annual' },
+      { label: 'No', value: 'none' },
     ],
     children: [
       {
@@ -290,9 +290,9 @@ export const taxReturnQuestionData = [
     prompt: 'STP Reporting — do they want you to lodge Single Touch Payroll?',
     type: 'radio',
     options: [
-      { label: 'No', value: 'none' },
       { label: 'Summary by Client', value: 'byClient' },
       { label: 'Summary by Firm', value: 'byFirm' },
+      { label: 'No', value: 'none' },
     ],
   },
   {
@@ -300,9 +300,9 @@ export const taxReturnQuestionData = [
     prompt: 'LSL Construction — do they want you to lodge Long Service Leave forms?',
     type: 'radio',
     options: [
-      { label: 'No', value: 'none' },
       { label: 'Summary by Client', value: 'byClient' },
       { label: 'Summary by Firm', value: 'byFirm' },
+      { label: 'No', value: 'none' },
     ],
   },
 
@@ -315,9 +315,9 @@ export const taxReturnQuestionData = [
     prompt: 'Tax Planning — do they require Tax Planning / Review?',
     type: 'radio',
     options: [
-      { label: 'No', value: 'none' },
       { label: 'Summary by Client', value: 'byClient' },
       { label: 'Summary by Firm', value: 'byFirm' },
+      { label: 'No', value: 'none' },
     ],
   },
   {
@@ -325,8 +325,8 @@ export const taxReturnQuestionData = [
     prompt: 'Tax Structuring Advice — do they require Tax Restructuring Review? (Once-off fee)',
     type: 'radio',
     options: [
-      { label: 'No', value: 'no' },
       { label: 'Yes', value: 'yes' },
+      { label: 'No', value: 'no' },
     ],
   },
 
@@ -339,8 +339,8 @@ export const taxReturnQuestionData = [
     prompt: 'Annual Tax Meeting — do they require Annual Tax Meetings?',
     type: 'radio',
     options: [
-      { label: 'No', value: 'no' },
       { label: 'Yes', value: 'yes' },
+      { label: 'No', value: 'no' },
     ],
   },
   {
@@ -348,8 +348,8 @@ export const taxReturnQuestionData = [
     prompt: 'Advice Meeting — do they require Advice Meetings?',
     type: 'radio',
     options: [
-      { label: 'No', value: 'no' },
       { label: 'Yes', value: 'yes' },
+      { label: 'No', value: 'no' },
     ],
   },
 
@@ -362,8 +362,8 @@ export const taxReturnQuestionData = [
     prompt: 'Xero Setup — do they need an accounting system set up? (Once-off fee)',
     type: 'radio',
     options: [
-      { label: 'No', value: 'no' },
       { label: 'Yes', value: 'yes' },
+      { label: 'No', value: 'no' },
     ],
   },
   {
