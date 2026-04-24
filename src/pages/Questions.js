@@ -1432,6 +1432,11 @@ export default function Questions() {
               </Typography>
             )}
             <Typography variant="subtitle1" sx={{ fontWeight: 700, color: 'text.primary', fontSize: '1rem' }}>{promptText}</Typography>
+            {question.description && (
+              <Typography variant="caption" display="block" sx={{ fontWeight: 'normal', mt: '-4px !important', mb: 0.5, fontSize: '0.95rem' }}>
+                {question.description}
+              </Typography>
+            )}
             {question.type === 'q7-custom' && (
               <Stack spacing={2}>
                 {/* Combined BAS and IAS Options in single button group */}

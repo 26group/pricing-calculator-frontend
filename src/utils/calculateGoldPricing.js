@@ -25,6 +25,10 @@ const getPricingMultiplier = (pricingModifier) => {
  * @param {number} pricingModifier - Optional pricing modifier from organisation (default 200)
  * @returns {number} Gold tier monthly cost
  */
+// Returns the per-individual-return workpaper monthly add-on based on q2a.
+const getIndividualWorkpaperMonthly = (q2a) =>
+  serviceValuesAccounting.taxServices.individualReturns.workpaper?.[q2a]?.monthly || 0;
+
 export const calculateGoldMonthlyPricing = (responses, pricingModifier = 200) => {
   let total = 0;
   const multiplier = getPricingMultiplier(pricingModifier);
@@ -55,6 +59,8 @@ export const calculateGoldMonthlyPricing = (responses, pricingModifier = 200) =>
       if (individualReturn) {
         total += individualReturn.monthly * individualCount;
       }
+      // q2a: Workpaper add-on per return (providedByClient / preparedByFirm)
+      total += getIndividualWorkpaperMonthly(responses.q2a) * individualCount;
     }
   }
 
@@ -122,20 +128,21 @@ export const calculateGoldMonthlyPricing = (responses, pricingModifier = 200) =>
   // q6: BAS
   if (responses.q6 && responses.q6 !== 'no') {
     const basService = serviceValuesAccounting.taxServices.bas[segment];
+    const basEntities = Math.max(1, parseInt(responses.q6_entities, 10) || 1);
     if (basService) {
       if (responses.q6 === 'quarterly') {
-        total += basService.quarterlyMonthly || basService.monthly;
+        total += (basService.quarterlyMonthly || basService.monthly) * basEntities;
       } else if (responses.q6 === 'monthly') {
-        total += basService.monthlyMonthly || basService.monthly;
+        total += (basService.monthlyMonthly || basService.monthly) * basEntities;
       }
     }
   }
-
   // q7: IAS
   if (responses.q7 === 'yes') {
     const iasService = serviceValuesAccounting.taxServices.ias[segment];
+    const iasEntities = Math.max(1, parseInt(responses.q7_entities, 10) || 1);
     if (iasService) {
-      total += iasService.monthly;
+      total += iasService.monthly * iasEntities;
     }
   }
 
@@ -236,6 +243,14 @@ export const calculateGoldMonthlyPricing = (responses, pricingModifier = 200) =>
     }
   }
 
+  // q13b: Payroll Reconciliation and STP Reporting
+  if (responses.q13b === 'yes') {
+    const reconcService = serviceValuesAccounting.payrollServices.payrollReconciliation?.[segment];
+    if (reconcService) {
+      total += reconcService.monthly;
+    }
+  }
+
   // q14: Long service leave
   if (responses.q14 === 'yes') {
     const lslService = serviceValuesAccounting.payrollServices.lslReporting?.[segment];
@@ -312,8 +327,13 @@ export const calculateGoldMonthlyPricing = (responses, pricingModifier = 200) =>
   if (responses.q23 && responses.q23 !== 'no') {
     const businessMeetings = serviceValuesAccounting.meetings.businessMeetings?.[segment];
     if (businessMeetings) {
-      // Gold always uses monthly rate when this service is selected
-      total += businessMeetings.monthlyMonthly || businessMeetings.monthly;
+      if (responses.q23 === 'biannually') {
+        total += businessMeetings.biannuallyMonthly || businessMeetings.monthly;
+      } else if (responses.q23 === 'quarterly') {
+        total += businessMeetings.quarterlyMonthly || businessMeetings.monthly;
+      } else {
+        total += businessMeetings.monthlyMonthly || businessMeetings.monthly;
+      }
     }
   }
 
@@ -403,6 +423,8 @@ export const calculateSilverMonthlyPricing = (responses, pricingModifier = 200) 
       if (individualReturn) {
         total += individualReturn.monthly * individualCount;
       }
+      // q2a: Workpaper add-on per return (providedByClient / preparedByFirm)
+      total += getIndividualWorkpaperMonthly(responses.q2a) * individualCount;
     }
   }
 
@@ -470,20 +492,21 @@ export const calculateSilverMonthlyPricing = (responses, pricingModifier = 200) 
   // q6: BAS
   if (responses.q6 && responses.q6 !== 'no') {
     const basService = serviceValuesAccounting.taxServices.bas[segment];
+    const basEntities = Math.max(1, parseInt(responses.q6_entities, 10) || 1);
     if (basService) {
       if (responses.q6 === 'quarterly') {
-        total += basService.quarterlyMonthly || basService.monthly;
+        total += (basService.quarterlyMonthly || basService.monthly) * basEntities;
       } else if (responses.q6 === 'monthly') {
-        total += basService.monthlyMonthly || basService.monthly;
+        total += (basService.monthlyMonthly || basService.monthly) * basEntities;
       }
     }
   }
-
   // q7: IAS
   if (responses.q7 === 'yes') {
     const iasService = serviceValuesAccounting.taxServices.ias[segment];
+    const iasEntities = Math.max(1, parseInt(responses.q7_entities, 10) || 1);
     if (iasService) {
-      total += iasService.monthly;
+      total += iasService.monthly * iasEntities;
     }
   }
 
@@ -584,6 +607,14 @@ export const calculateSilverMonthlyPricing = (responses, pricingModifier = 200) 
     }
   }
 
+  // q13b: Payroll Reconciliation and STP Reporting
+  if (responses.q13b === 'yes') {
+    const reconcService = serviceValuesAccounting.payrollServices.payrollReconciliation?.[segment];
+    if (reconcService) {
+      total += reconcService.monthly;
+    }
+  }
+
   // q14: Long service leave
   if (responses.q14 === 'yes') {
     const lslService = serviceValuesAccounting.payrollServices.lslReporting?.[segment];
@@ -660,8 +691,13 @@ export const calculateSilverMonthlyPricing = (responses, pricingModifier = 200) 
   if (responses.q23 && responses.q23 !== 'no') {
     const businessMeetings = serviceValuesAccounting.meetings.businessMeetings?.[segment];
     if (businessMeetings) {
-      // Silver always uses quarterly rate when this service is selected
-      total += businessMeetings.quarterlyMonthly || businessMeetings.monthly;
+      if (responses.q23 === 'biannually') {
+        total += businessMeetings.biannuallyMonthly || businessMeetings.monthly;
+      } else if (responses.q23 === 'monthly') {
+        total += businessMeetings.monthlyMonthly || businessMeetings.monthly;
+      } else {
+        total += businessMeetings.quarterlyMonthly || businessMeetings.monthly;
+      }
     }
   }
 
