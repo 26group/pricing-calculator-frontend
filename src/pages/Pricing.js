@@ -68,7 +68,7 @@ export default function Pricing() {
   // Check if tax services are included (based on q4, q5, q6, q16, q17)
   const hasTaxServices =
     (questionResponses.q4 && questionResponses.q4 !== 'no') ||
-    (questionResponses.q5 && questionResponses.q5 !== 'no') ||
+    (questionResponses.q5 && parseInt(questionResponses.q5, 10) > 0) ||
     (questionResponses.q6 && questionResponses.q6 !== 'no') ||
     (questionResponses.q16 && questionResponses.q16 !== 'no') ||
     (questionResponses.q17 && questionResponses.q17 !== 'no');

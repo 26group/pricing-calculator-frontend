@@ -122,11 +122,12 @@ export default function AccountingQuote() {
 
   // =================== CHECK SERVICE CATEGORIES ===================
 
-  // Q1: Tax Services - Individual returns, Business returns, FBT, BAS, IAS, TPAR
+  // Q1: Tax Services - Individual returns, Business returns, Non-Trading Returns, FBT, BAS, IAS, TPAR
   const hasTaxServices =
     (questionResponses.q2 && parseInt(questionResponses.q2, 10) > 0) || // Individual returns
     (questionResponses.q3 && parseInt(questionResponses.q3, 10) > 0) || // Business returns
-    (questionResponses.q5 === 'yes') || // FBT
+    (questionResponses.q3b && parseInt(questionResponses.q3b, 10) > 0) || // Non-Trading returns
+    (questionResponses.q5 && parseInt(questionResponses.q5, 10) > 0) || // FBT
     (questionResponses.q6 && questionResponses.q6 !== 'no') || // BAS
     (questionResponses.q7 === 'yes') || // IAS
     (questionResponses.q8 && parseInt(questionResponses.q8, 10) > 0); // TPAR
@@ -150,7 +151,7 @@ export default function AccountingQuote() {
 
   // Q4: Reporting - Financial Statements, Statutory, Management
   const hasReporting =
-    (questionResponses.q18 === 'yes') || // Financial Statements for Tax
+    (questionResponses.q18 && parseInt(questionResponses.q18, 10) > 0) || // Financial Statements for Tax
     (questionResponses.q19 === 'yes') || // Statutory Financial Statements
     (questionResponses.q20 && questionResponses.q20 !== 'no'); // Management Financial Statements
 
@@ -229,6 +230,11 @@ export default function AccountingQuote() {
   // Q8: Prior Year Lodgements
   const hasPriorYearLodgements =
     questionResponses.q27 && Object.values(questionResponses.q27).some(v => parseInt(v, 10) > 0);
+
+  // Q9: Disbursements - Accounting Software Disbursement (q28) or Other Disbursements (q29)
+  const hasDisbursements =
+    (questionResponses.q28 && questionResponses.q28 !== 'no' && questionResponses.q28 !== '') ||
+    (Array.isArray(questionResponses.q29) && questionResponses.q29.some((row) => (parseFloat(row && row.price) || 0) > 0));
 
   const handleOpenSaveDialog = () => {
     setSaveError('');
@@ -323,7 +329,8 @@ export default function AccountingQuote() {
     { feature: 'Tax Services', isCategory: true },
     { feature: 'Individual Tax Returns', bronze: questionResponses.q2 && parseInt(questionResponses.q2, 10) > 0 ? <CheckMark /> : <NotIncluded />, silver: questionResponses.q2 && parseInt(questionResponses.q2, 10) > 0 ? <CheckMark /> : <NotIncluded />, gold: questionResponses.q2 && parseInt(questionResponses.q2, 10) > 0 ? <CheckMark /> : <NotIncluded /> },
     { feature: 'Business Tax Returns', bronze: questionResponses.q3 && parseInt(questionResponses.q3, 10) > 0 ? <CheckMark /> : <NotIncluded />, silver: questionResponses.q3 && parseInt(questionResponses.q3, 10) > 0 ? <CheckMark /> : <NotIncluded />, gold: questionResponses.q3 && parseInt(questionResponses.q3, 10) > 0 ? <CheckMark /> : <NotIncluded /> },
-    { feature: 'FBT Returns', bronze: <NotIncluded />, silver: questionResponses.q5 === 'yes' ? <CheckMark /> : <NotIncluded />, gold: questionResponses.q5 === 'yes' ? <CheckMark /> : <NotIncluded /> },
+    { feature: 'Non Trading Business Tax Returns', bronze: questionResponses.q3b && parseInt(questionResponses.q3b, 10) > 0 ? <CheckMark /> : <NotIncluded />, silver: questionResponses.q3b && parseInt(questionResponses.q3b, 10) > 0 ? <CheckMark /> : <NotIncluded />, gold: questionResponses.q3b && parseInt(questionResponses.q3b, 10) > 0 ? <CheckMark /> : <NotIncluded /> },
+    { feature: 'FBT Returns', bronze: <NotIncluded />, silver: questionResponses.q5 && parseInt(questionResponses.q5, 10) > 0 ? <CheckMark /> : <NotIncluded />, gold: questionResponses.q5 && parseInt(questionResponses.q5, 10) > 0 ? <CheckMark /> : <NotIncluded /> },
     { feature: 'BAS', bronze: questionResponses.q6 && questionResponses.q6 !== 'no' ? <CheckMark /> : <NotIncluded />, silver: questionResponses.q6 && questionResponses.q6 !== 'no' ? <CheckMark /> : <NotIncluded />, gold: questionResponses.q6 && questionResponses.q6 !== 'no' ? <CheckMark /> : <NotIncluded /> },
     { feature: 'IAS', bronze: questionResponses.q7 === 'yes' ? <CheckMark /> : <NotIncluded />, silver: questionResponses.q7 === 'yes' ? <CheckMark /> : <NotIncluded />, gold: questionResponses.q7 === 'yes' ? <CheckMark /> : <NotIncluded /> },
     { feature: 'TPAR', bronze: questionResponses.q8 && parseInt(questionResponses.q8, 10) > 0 ? <CheckMark /> : <NotIncluded />, silver: questionResponses.q8 && parseInt(questionResponses.q8, 10) > 0 ? <CheckMark /> : <NotIncluded />, gold: questionResponses.q8 && parseInt(questionResponses.q8, 10) > 0 ? <CheckMark /> : <NotIncluded /> },
@@ -338,7 +345,7 @@ export default function AccountingQuote() {
     { feature: 'Tax Planning / Review', bronze: <NotIncluded />, silver: questionResponses.q15 === 'yes' ? <CheckMark /> : <NotIncluded />, gold: questionResponses.q15 === 'yes' ? <CheckMark /> : <NotIncluded /> },
     { feature: 'Xero Training', bronze: questionResponses.q17b === 'yes' ? <CheckMark /> : <NotIncluded />, silver: questionResponses.q17a === 'yes' || questionResponses.q17b === 'yes' ? <CheckMark /> : <NotIncluded />, gold: questionResponses.q17a === 'yes' || questionResponses.q17b === 'yes' ? <CheckMark /> : <NotIncluded /> },
     { feature: 'Financial Reporting', isCategory: true },
-    { feature: 'Financial Statements for Tax Returns', bronze: questionResponses.q18 === 'yes' ? <CheckMark /> : <NotIncluded />, silver: questionResponses.q18 === 'yes' ? <CheckMark /> : <NotIncluded />, gold: questionResponses.q18 === 'yes' ? <CheckMark /> : <NotIncluded /> },
+    { feature: 'Financial Statements for Tax Returns', bronze: questionResponses.q18 && parseInt(questionResponses.q18, 10) > 0 ? <CheckMark /> : <NotIncluded />, silver: questionResponses.q18 && parseInt(questionResponses.q18, 10) > 0 ? <CheckMark /> : <NotIncluded />, gold: questionResponses.q18 && parseInt(questionResponses.q18, 10) > 0 ? <CheckMark /> : <NotIncluded /> },
     { feature: 'Management Financial Statements', bronze: <NotIncluded />, silver: questionResponses.q20 && questionResponses.q20 !== 'no' ? <Typography variant="body2">Quarterly</Typography> : <NotIncluded />, gold: questionResponses.q20 && questionResponses.q20 !== 'no' ? <Typography variant="body2">Monthly</Typography> : <NotIncluded /> },
     { feature: 'Meetings', isCategory: true },
     { feature: 'Review The Numbers Meetings', bronze: <NotIncluded />, silver: questionResponses.q21 && questionResponses.q21 !== 'no' ? <Typography variant="body2">Quarterly</Typography> : <NotIncluded />, gold: questionResponses.q21 && questionResponses.q21 !== 'no' ? <Typography variant="body2">Monthly</Typography> : <NotIncluded /> },
@@ -350,6 +357,9 @@ export default function AccountingQuote() {
     { feature: 'Principal / Owner', bronze: <NotIncluded />, silver: <NotIncluded />, gold: questionResponses.q24 && questionResponses.q24 !== 'no' ? <CheckMark /> : <NotIncluded /> },
     { feature: 'Corporate Secretarial & ATO Plans', isCategory: true },
     { feature: 'Corporate Secretarial', bronze: hasAsicAnnualReturn ? <CheckMark /> : <NotIncluded />, silver: hasAsicAnnualReturn ? <CheckMark /> : <NotIncluded />, gold: hasAsicAnnualReturn ? <CheckMark /> : <NotIncluded /> },
+    { feature: 'Disbursements', isCategory: true },
+    { feature: 'Accounting Software Disbursement', bronze: questionResponses.q28 && questionResponses.q28 !== 'no' && questionResponses.q28 !== '' ? <CheckMark /> : <NotIncluded />, silver: questionResponses.q28 && questionResponses.q28 !== 'no' && questionResponses.q28 !== '' ? <CheckMark /> : <NotIncluded />, gold: questionResponses.q28 && questionResponses.q28 !== 'no' && questionResponses.q28 !== '' ? <CheckMark /> : <NotIncluded /> },
+    { feature: 'Other Disbursements', bronze: Array.isArray(questionResponses.q29) && questionResponses.q29.some((row) => (parseFloat(row && row.price) || 0) > 0) ? <CheckMark /> : <NotIncluded />, silver: Array.isArray(questionResponses.q29) && questionResponses.q29.some((row) => (parseFloat(row && row.price) || 0) > 0) ? <CheckMark /> : <NotIncluded />, gold: Array.isArray(questionResponses.q29) && questionResponses.q29.some((row) => (parseFloat(row && row.price) || 0) > 0) ? <CheckMark /> : <NotIncluded /> },
   ];
 
   return (

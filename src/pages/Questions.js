@@ -5,17 +5,27 @@ import {
   Typography,
   Paper,
   Stack,
+  Box,
+  Divider,
   FormControl,
   FormControlLabel,
   TextField,
   Checkbox,
   Button,
+  IconButton,
+  Slider,
   ToggleButton,
   ToggleButtonGroup,
   Chip,
 } from '@mui/material';
 import CloudDoneIcon from '@mui/icons-material/CloudDone';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import TuneIcon from '@mui/icons-material/Tune';
+import BusinessCenterOutlinedIcon from '@mui/icons-material/BusinessCenterOutlined';
+import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import AddIcon from '@mui/icons-material/Add';
 import { useNavigate, Navigate } from 'react-router-dom';
 
 import { useDispatch, useSelector } from 'react-redux';
@@ -758,7 +768,10 @@ export default function Questions() {
   const [requireQ1Message, setRequireQ1Message] = useState(false);
   
   // Get pricing modifier from organisation (already have organisation from above)
-  const pricingModifier = organisation?.pricingModifier ?? DEFAULT_PRICING_MODIFIER;
+  const basePricingModifier = organisation?.pricingModifier ?? DEFAULT_PRICING_MODIFIER;
+  // Apply per-quote price adjustment from slider (q30): -100% to +100%
+  const priceAdjustmentPercent = Math.max(-100, Math.min(100, Number(responses.q30) || 0));
+  const pricingModifier = basePricingModifier * (1 + priceAdjustmentPercent / 100);
   
   const [focusedQuestion, setFocusedQuestion] = useState(null);
   const [saveStatus, setSaveStatus] = useState('idle'); // 'idle' | 'saving' | 'saved' | 'error'
@@ -1371,7 +1384,9 @@ export default function Questions() {
           'MEETINGS': '6',
           'SUPPORT SERVICES': '7',
           'CORPORATE SECRETARIAL & ATO PLANS': '8',
-          'PRIOR YEAR LODGEMENTS': '9',
+          'DISBURSEMENTS': '9',
+          'PRICE ADJUSTMENT': '10',
+          'PRIOR YEAR LODGEMENTS': '11',
         };
         const sectionNum = sectionNumbers[category] || '';
         const letterIndex = categoryCounters[category] - 1;
@@ -1431,7 +1446,9 @@ export default function Questions() {
                 {question.subheading}
               </Typography>
             )}
-            <Typography variant="subtitle1" sx={{ fontWeight: 700, color: 'text.primary', fontSize: '1rem' }}>{promptText}</Typography>
+            {promptText && (
+              <Typography variant="subtitle1" sx={{ fontWeight: 700, color: 'text.primary', fontSize: '1rem' }}>{promptText}</Typography>
+            )}
             {question.description && (
               <Typography variant="caption" display="block" sx={{ fontWeight: 'normal', mt: '-4px !important', mb: 0.5, fontSize: '0.95rem' }}>
                 {question.description}
@@ -1745,7 +1762,7 @@ export default function Questions() {
                     handleNumberChange(question.id)(e);
                   }}
                   onFocus={() => setFocusedQuestion(question.id)}
-                  label="Enter number"
+                  label={question.placeholder || 'Enter number'}
                   size="small"
                   disabled={question.id !== 'q1' && !responses.q1}
                   variant="outlined"
@@ -1781,6 +1798,125 @@ export default function Questions() {
                 />
               </div>
             )}
+            {question.type === 'dynamicList' && (() => {
+              const rows = Array.isArray(responses[question.id]) ? responses[question.id] : [];
+              const updateRows = (newRows) => {
+                setResponses({ ...responses, [question.id]: newRows });
+              };
+              const handleAdd = () => {
+                setFocusedQuestion(question.id);
+                updateRows([...rows, { description: '', price: '' }]);
+              };
+              const handleRemove = (index) => {
+                setFocusedQuestion(question.id);
+                updateRows(rows.filter((_, i) => i !== index));
+              };
+              const handleChange = (index, field, value) => {
+                setFocusedQuestion(question.id);
+                const next = rows.map((row, i) => (i === index ? { ...row, [field]: value } : row));
+                updateRows(next);
+              };
+              const disabled = !responses.q1;
+              return (
+                <Stack spacing={1.5}>
+                  {rows.map((row, index) => (
+                    <Stack key={index} direction="row" spacing={1} alignItems="center">
+                      <TextField
+                        label={question.descriptionPlaceholder || 'Enter description'}
+                        value={row.description || ''}
+                        onChange={(e) => handleChange(index, 'description', e.target.value)}
+                        onFocus={() => setFocusedQuestion(question.id)}
+                        size="small"
+                        disabled={disabled}
+                        variant="outlined"
+                        sx={{ flex: 1, maxWidth: 320 }}
+                      />
+                      <TextField
+                        type="number"
+                        inputProps={{ min: 0 }}
+                        label={question.pricePlaceholder || 'Enter price'}
+                        value={row.price || ''}
+                        onChange={(e) => handleChange(index, 'price', e.target.value)}
+                        onFocus={() => setFocusedQuestion(question.id)}
+                        size="small"
+                        disabled={disabled}
+                        variant="outlined"
+                        sx={{ width: 150 }}
+                      />
+                      <IconButton
+                        aria-label="remove"
+                        size="small"
+                        onClick={() => handleRemove(index)}
+                        disabled={disabled}
+                      >
+                        <DeleteOutlineIcon fontSize="small" />
+                      </IconButton>
+                    </Stack>
+                  ))}
+                  <div>
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      startIcon={<AddIcon />}
+                      onClick={handleAdd}
+                      disabled={disabled}
+                      sx={{ textTransform: 'none', fontWeight: 600 }}
+                    >
+                      {question.addButtonLabel || 'Add row'}
+                    </Button>
+                  </div>
+                </Stack>
+              );
+            })()}
+            {question.type === 'slider' && (() => {
+              const min = typeof question.min === 'number' ? question.min : -100;
+              const max = typeof question.max === 'number' ? question.max : 100;
+              const step = typeof question.step === 'number' ? question.step : 1;
+              const defaultValue = typeof question.defaultValue === 'number' ? question.defaultValue : 0;
+              const unit = question.unit || '';
+              const raw = responses[question.id];
+              const value = typeof raw === 'number'
+                ? raw
+                : (raw === '' || raw === undefined || raw === null ? defaultValue : Number(raw));
+              const disabled = question.id !== 'q1' && !responses.q1;
+              return (
+                <Stack spacing={1} sx={{ maxWidth: 500, pt: 1 }}>
+                  <Stack direction="row" alignItems="center" spacing={2}>
+                    <Typography variant="body2" sx={{ minWidth: 40, color: '#666' }}>{min}{unit}</Typography>
+                    <Slider
+                      value={value}
+                      min={min}
+                      max={max}
+                      step={step}
+                      marks={[
+                        { value: min, label: '' },
+                        { value: defaultValue, label: '' },
+                        { value: max, label: '' },
+                      ]}
+                      valueLabelDisplay="auto"
+                      valueLabelFormat={(v) => `${v > 0 ? '+' : ''}${v}${unit}`}
+                      onChange={(_, newValue) => {
+                        setFocusedQuestion(question.id);
+                        setResponses({ ...responses, [question.id]: newValue });
+                      }}
+                      disabled={disabled}
+                      sx={{
+                        color: '#002060',
+                        '& .MuiSlider-thumb': {
+                          '&:hover, &.Mui-focusVisible': {
+                            boxShadow: '0 0 0 8px rgba(0, 32, 96, 0.12)',
+                          },
+                        },
+                      }}
+                    />
+                    <Typography variant="body2" sx={{ minWidth: 40, color: '#666', textAlign: 'right' }}>{max}{unit}</Typography>
+                  </Stack>
+                  <Typography variant="body2" sx={{ textAlign: 'center', fontWeight: 600, color: '#002060' }}>
+                    {value > 0 ? '+' : ''}{value}{unit}
+                  </Typography>
+                </Stack>
+              );
+            })()}
             {(question.type === 'inputGroup' || question.type === 'extrasGroup') && (
               <Stack spacing={1.5}>
                 {question.options.map((option) => {
@@ -1987,6 +2123,44 @@ export default function Questions() {
           <Typography variant="body2" sx={{ color: '#666' }}>
             Answer a few quick questions to calculate accounting pricing for your potential client
           </Typography>
+
+          <Paper
+            elevation={0}
+            sx={{
+              mt: 2,
+              p: { xs: 2, sm: 2.5 },
+              borderRadius: '4px',
+              backgroundColor: 'rgba(0, 32, 96, 0.03)',
+            }}
+          >
+            <Stack spacing={1.5}>
+              <Stack direction="row" spacing={1.25} alignItems="flex-start">
+                <TuneIcon sx={{ color: '#002060', fontSize: 20, mt: '2px' }} />
+                <Typography variant="body2" sx={{ color: '#333', lineHeight: 1.55 }}>
+                  Pricing combines the industry benchmark <strong>Average Hourly Rate</strong> with set fees per service. Change the Average Hourly Rate — every price recalculates instantly.
+                </Typography>
+              </Stack>
+              <Stack direction="row" spacing={1.25} alignItems="flex-start">
+                <BusinessCenterOutlinedIcon sx={{ color: '#002060', fontSize: 20, mt: '2px' }} />
+                <Typography variant="body2" sx={{ color: '#333', lineHeight: 1.55 }}>
+                  Built for general practice, using benchmark rates across all firm types.
+                </Typography>
+              </Stack>
+              <Stack direction="row" spacing={1.25} alignItems="flex-start">
+                <ReceiptLongIcon sx={{ color: '#002060', fontSize: 20, mt: '2px' }} />
+                <Typography variant="body2" sx={{ color: '#002060', fontWeight: 600 }}>
+                  All pricing is GST exclusive
+                </Typography>
+              </Stack>
+              <Divider sx={{ borderColor: 'rgba(0, 32, 96, 0.1)' }} />
+              <Stack direction="row" spacing={1.25} alignItems="flex-start">
+                <InfoOutlinedIcon sx={{ color: '#999', fontSize: 18, mt: '2px' }} />
+                <Typography variant="caption" sx={{ color: '#666', fontSize: '0.75rem', lineHeight: 1.5 }}>
+                  <strong>Disclaimer:</strong> The prices generated by this calculator are indicative only and intended as a guide. Actual fees should be tailored to the scope, complexity, and risk profile of each engagement, as well as your firm's cost base, positioning, and client mix. TwentySix Group accepts no liability for pricing decisions made solely on the output of this tool.
+                </Typography>
+              </Stack>
+            </Stack>
+          </Paper>
         </Stack>
         {requireQ1Message && (
           <div style={{
@@ -2040,7 +2214,9 @@ export default function Questions() {
             'MEETINGS': { number: 'Q6', title: 'Meetings' },
             'SUPPORT SERVICES': { number: 'Q7', title: 'Support Services' },
             'CORPORATE SECRETARIAL & ATO PLANS': { number: 'Q8', title: 'Corporate Secretarial & ATO Plans' },
-            'PRIOR YEAR LODGEMENTS': { number: 'Q9', title: 'Prior Year Lodgements' },
+            'DISBURSEMENTS': { number: 'Q9', title: 'Disbursements' },
+            'PRICE ADJUSTMENT': { number: 'Q10', title: 'Price Adjustment' },
+            'PRIOR YEAR LODGEMENTS': { number: 'Q11', title: 'Prior Year Lodgements' },
           };
           
           let lastCategory = null;

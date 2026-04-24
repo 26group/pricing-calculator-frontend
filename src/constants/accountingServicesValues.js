@@ -228,6 +228,30 @@ export const serviceValuesAccounting = {
       },
     },
 
+    // Q1b-ii: Non Trading Business Tax Returns
+    nonTradingReturns: {
+      micro: {
+        yearly: 600,
+        monthly: 50,
+        inclusion: 'Non Trading Business Returns — Micro',
+      },
+      small: {
+        yearly: 600,
+        monthly: 50,
+        inclusion: 'Non Trading Business Returns — Small',
+      },
+      medium: {
+        yearly: 900,
+        monthly: 75,
+        inclusion: 'Non Trading Business Returns — Medium',
+      },
+      large: {
+        yearly: 1200,
+        monthly: 100,
+        inclusion: 'Non Trading Business Returns — Large',
+      },
+    },
+
     // Q1c: SMSF
     smsf: {
       micro: {

@@ -663,8 +663,18 @@ export const accountingQuestionData = [
   // 2b: Business Tax Returns
   {
     id: 'q3',
-    prompt: '2b. How many Business Entities do they want tax returns lodged for? Enter number of returns if multiple entities.',
+    prompt: 'How many Trading Business Entities do they want tax returns lodged for?',
     subheading: 'Business Tax Returns',
+    type: 'number',
+    category: 'TAX SERVICES',
+  },
+
+  // 2b-ii: Non Trading Business Tax Returns
+  {
+    id: 'q3b',
+    prompt: 'How many NON Trading Entities do they want tax returns lodged for?',
+    subheading: 'Non Trading Business Tax Returns',
+    placeholder: 'Enter number',
     type: 'number',
     category: 'TAX SERVICES',
   },
@@ -672,14 +682,11 @@ export const accountingQuestionData = [
   // 2d: FBT Returns
   {
     id: 'q5',
-    prompt: '2d. Do they require an FBT return to be lodged?',
+    prompt: '2d. How many FBT returns do they require to be lodged?',
     subheading: 'FBT Returns',
-    type: 'radio',
+    placeholder: 'Enter number',
+    type: 'number',
     category: 'TAX SERVICES',
-    options: [
-      { label: 'Yes', value: 'yes' },
-      { label: 'No', value: 'no' },
-    ],
   },
 
   // 2e: BAS
@@ -932,14 +939,11 @@ export const accountingQuestionData = [
   // 5a: Financial Statements for Tax Returns
   {
     id: 'q18',
-    prompt: '5a. Do they require Financial Statements for Tax Returns preparation?',
+    prompt: '5a. How many Financial Statements for Tax Returns do they require?',
     subheading: 'Financial Statements for Tax Returns',
-    type: 'radio',
+    placeholder: 'Enter number',
+    type: 'number',
     category: 'REPORTING',
-    options: [
-      { label: 'Yes', value: 'yes' },
-      { label: 'No', value: 'no' },
-    ],
   },
 
   // 5b: Statutory Financial Statements (Large only)
@@ -1050,8 +1054,24 @@ export const accountingQuestionData = [
     ],
     children: [
       {
+        id: 'q25b',
+        prompt: 'How many ASIC Annual Returns?',
+        placeholder: 'Enter number',
+        type: 'number',
+        showWhen: (responses) => {
+          if (Array.isArray(responses.q25)) {
+            return responses.q25.includes('annualReturns');
+          }
+          if (typeof responses.q25 === 'object' && responses.q25 !== null) {
+            return responses.q25.annualReturns;
+          }
+          return responses.q25 === 'annualReturns';
+        },
+      },
+      {
         id: 'q25a',
         prompt: 'How many ASIC Form Lodgements?',
+        placeholder: 'Enter number',
         type: 'number',
         showWhen: (responses) => {
           if (Array.isArray(responses.q25)) {
@@ -1080,9 +1100,63 @@ export const accountingQuestionData = [
     ],
   },
 
-  // =================== 9: PRIOR YEAR LODGEMENTS ===================
+  // =================== 9: DISBURSEMENTS ===================
 
-  // 9: Prior Year Lodgements (Once-off)
+  // 9a: Accounting Software Disbursement
+  {
+    id: 'q28',
+    prompt: 'Do you disburse Accountign Software',
+    subheading: 'Accounting Software Disbursement',
+    type: 'radio',
+    category: 'DISBURSEMENTS',
+    options: [
+      { label: 'Xero', value: 'xero' },
+      { label: 'MYOB', value: 'myob' },
+      { label: 'QBO', value: 'qbo' },
+      { label: 'No', value: 'no' },
+    ],
+    children: [
+      {
+        id: 'q28_price',
+        prompt: '',
+        placeholder: 'Enter price',
+        type: 'number',
+        showWhen: (responses) => responses.q28 && responses.q28 !== 'no' && responses.q28 !== '',
+      },
+    ],
+  },
+
+  // 9b: Other Disbursements
+  {
+    id: 'q29',
+    prompt: 'List other disbursements',
+    subheading: 'Other Disbursements',
+    type: 'dynamicList',
+    category: 'DISBURSEMENTS',
+    addButtonLabel: 'Add disbursement',
+    descriptionPlaceholder: 'Enter description',
+    pricePlaceholder: 'Enter price',
+  },
+
+  // =================== 10: PRICE ADJUSTMENT ===================
+
+  // 10a: Price Adjustment slider
+  {
+    id: 'q30',
+    prompt: 'Adjust the price to allow for complexity or extra effort that comes with some clients.',
+    subheading: 'Price Adjustment',
+    type: 'slider',
+    category: 'PRICE ADJUSTMENT',
+    min: -100,
+    max: 100,
+    step: 1,
+    defaultValue: 0,
+    unit: '%',
+  },
+
+  // =================== 10: PRIOR YEAR LODGEMENTS ===================
+
+  // 10: Prior Year Lodgements (Once-off)
   {
     id: 'q27',
     prompt: '9. Do they require prior year lodgements? Enter # of returns.',
