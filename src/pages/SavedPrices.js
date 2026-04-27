@@ -145,18 +145,20 @@ export default function SavedPrices() {
         serviceType: priceData.serviceType,
       }));
       
-      // Determine service type - use the serviceType field from database first
+      // Determine service type - use the same resolution as the list label so
+      // legacy proposals (where serviceType defaulted to 'accounting' on the
+      // server) still route correctly when bookkeeping-specific responses exist.
       let isBookkeeping = priceData.serviceType === 'bookkeeping';
-      
-      // Fallback for old data that doesn't have serviceType field
-      if (!priceData.serviceType) {
+
+      if (!isBookkeeping) {
         const qResp = priceData.questionResponses;
-        // Check for bookkeeping-specific questions
         if (qResp?.q2b) {
           isBookkeeping = true;
         } else if (qResp?.q4 !== undefined) {
           isBookkeeping = false;
         } else if (qResp?.serviceType === 'bookkeeping') {
+          isBookkeeping = true;
+        } else if (qResp?.q1 === 'bookkeeping') {
           isBookkeeping = true;
         }
       }

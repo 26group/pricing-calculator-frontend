@@ -377,6 +377,15 @@ export const calculateBookkeepingMonthlyPrice = (responses, pricingModifier = 10
   }
 
   // ========================================
+  // Q24: PAYROLL TAX RETURN - rate × units / 12
+  // ========================================
+  if (responses.q24 === 'yes') {
+    const payrollTaxReturn = values.complianceServices.payrollTaxReturn;
+    const lodgementCount = responses.q24a ? parseInt(responses.q24a, 10) || 1 : 1;
+    total += payrollTaxReturn.rate * lodgementCount / 12;
+  }
+
+  // ========================================
   // Q20: SUPPORT
   // ========================================
   if (responses.q20) {
@@ -406,8 +415,42 @@ export const calculateBookkeepingMonthlyPrice = (responses, pricingModifier = 10
     }
   }
 
+  // ========================================
+  // Q26: Ongoing Accounting Software Support and Training (monthly sessions)
+  // ========================================
+  if (responses.q26 === 'yes' && responses.q26a && typeof responses.q26a === 'object') {
+    const ast = values.accountingSoftwareSetupTraining;
+    const sessions30 = parseInt(responses.q26a.sessions30min, 10) || 0;
+    const sessions60 = parseInt(responses.q26a.sessions60min, 10) || 0;
+    total += ast.ongoing30min.ratePerSession * sessions30;
+    total += ast.ongoing60min.ratePerSession * sessions60;
+  }
+
+  // ========================================
+  // Q27: POS Integration (monthly) - multi-select
+  // ========================================
+  if (responses.q27 && typeof responses.q27 === 'object') {
+    const ast = values.accountingSoftwareSetupTraining;
+    if (responses.q27.importReview) total += ast.posImportReview.monthly;
+    if (responses.q27.monthlyReconciliation) total += ast.posReconciliation.monthly;
+    if (responses.q27.monthlyDownloadRework) total += ast.posDownloadRework.monthly;
+  }
+
   // Q22: Rescue/Cleanup - once-off, handled separately
-  // Q23: Additional Services - once-off, handled separately
+
+  // Q28: Accounting Software Disbursement - pass-through monthly fee
+  if (responses.q28 && responses.q28 !== 'no' && responses.q28 !== '') {
+    const disbursementFee = parseFloat(responses.q28_price) || 0;
+    if (disbursementFee > 0) total += disbursementFee;
+  }
+
+  // Q29: Other Disbursements - pass-through monthly fees
+  if (Array.isArray(responses.q29)) {
+    responses.q29.forEach((row) => {
+      const fee = parseFloat(row && row.price) || 0;
+      if (fee > 0) total += fee;
+    });
+  }
 
   // Apply pricing modifier and round to 2 decimal places
   return Math.round(total * multiplier * 100) / 100;
@@ -445,24 +488,29 @@ export const calculateBookkeepingOnceOffFee = (responses, pricingModifier = 100)
     }
   }
 
-  // Q23: Additional Once-Off Services
-  if (responses.q23 && typeof responses.q23 === 'object') {
-    const additional = values.additionalServices;
+  // Q25: Accounting Software Setup (once-off)
+  if (responses.q25 === 'yes') {
+    const ast = values.accountingSoftwareSetupTraining;
+    total += ast.setup.onceOff;
+  }
 
-    // Accounting Software Setup - $1000
-    if (responses.q23.accountingSoftwareSetup) {
-      total += additional.accountingSoftwareSetup.onceOff;
+  // Q25b: Accounting Software Training Sessions (once-off)
+  if (responses.q25b && responses.q25b !== 'no') {
+    const ast = values.accountingSoftwareSetupTraining;
+    const count = parseInt(responses.q25c, 10) || 0;
+    if (responses.q25b === 'basic') {
+      total += ast.basicSession.ratePerSession * count;
+    } else if (responses.q25b === 'intermediate') {
+      total += ast.intermediateSession.ratePerSession * count;
+    } else if (responses.q25b === 'advanced') {
+      total += ast.advancedSession.ratePerSession * count;
     }
+  }
 
-    // 1 × Online Training - $99
-    if (responses.q23.onlineTraining1Session) {
-      total += additional.onlineTraining1Session.onceOff;
-    }
-
-    // 3 × Online Training - $250
-    if (responses.q23.onlineTraining3Sessions) {
-      total += additional.onlineTraining3Sessions.onceOff;
-    }
+  // Q26a: Monthly Software Training Support ($80 × 12 once-off)
+  if (responses.q26 === 'yes' && responses.q26a && responses.q26a.monthlySupport) {
+    const ast = values.accountingSoftwareSetupTraining;
+    total += ast.monthlyTrainingSupport.ratePerMonth * ast.monthlyTrainingSupport.months;
   }
 
   // Apply pricing modifier and round to 2 decimal places
@@ -514,33 +562,42 @@ export const getBookkeepingOnceOffBreakdown = (responses, pricingModifier = 100)
     }
   }
 
-  // Q23: Additional Once-Off Services
-  if (responses.q23 && typeof responses.q23 === 'object') {
-    const additional = values.additionalServices;
+  // Q25: Accounting Software Setup (once-off)
+  if (responses.q25 === 'yes') {
+    const ast = values.accountingSoftwareSetupTraining;
+    const amount = Math.round(ast.setup.onceOff * multiplier * 100) / 100;
+    items.push({ label: 'Accounting Software Setup', amount });
+  }
 
-    if (responses.q23.accountingSoftwareSetup) {
-      const amount = Math.round(additional.accountingSoftwareSetup.onceOff * multiplier * 100) / 100;
-      items.push({
-        label: 'Accounting Software Setup (Additional)',
-        amount,
-      });
+  // Q25b: Accounting Software Training Sessions (once-off)
+  if (responses.q25b && responses.q25b !== 'no') {
+    const ast = values.accountingSoftwareSetupTraining;
+    const count = parseInt(responses.q25c, 10) || 0;
+    if (count > 0) {
+      let rate = 0;
+      let label = '';
+      if (responses.q25b === 'basic') {
+        rate = ast.basicSession.ratePerSession;
+        label = `Online Basic Training Sessions (${count} × 30 min)`;
+      } else if (responses.q25b === 'intermediate') {
+        rate = ast.intermediateSession.ratePerSession;
+        label = `Online Intermediate Training Sessions (${count} × 45 min)`;
+      } else if (responses.q25b === 'advanced') {
+        rate = ast.advancedSession.ratePerSession;
+        label = `Online Advanced Training Sessions (${count} × 60 min)`;
+      }
+      if (rate > 0) {
+        const amount = Math.round(rate * count * multiplier * 100) / 100;
+        items.push({ label, amount });
+      }
     }
+  }
 
-    if (responses.q23.onlineTraining1Session) {
-      const amount = Math.round(additional.onlineTraining1Session.onceOff * multiplier * 100) / 100;
-      items.push({
-        label: '1 × Online Training Session',
-        amount,
-      });
-    }
-
-    if (responses.q23.onlineTraining3Sessions) {
-      const amount = Math.round(additional.onlineTraining3Sessions.onceOff * multiplier * 100) / 100;
-      items.push({
-        label: '3 × Online Training Sessions',
-        amount,
-      });
-    }
+  // Q26a: Monthly Software Training Support ($80 × 12 once-off)
+  if (responses.q26 === 'yes' && responses.q26a && responses.q26a.monthlySupport) {
+    const ast = values.accountingSoftwareSetupTraining;
+    const amount = Math.round(ast.monthlyTrainingSupport.ratePerMonth * ast.monthlyTrainingSupport.months * multiplier * 100) / 100;
+    items.push({ label: 'Monthly Software Training Support (12 months)', amount });
   }
 
   return items;
@@ -721,6 +778,13 @@ export const calculateBookkeepingBronzePrice = (responses, pricingModifier = 100
     // IAS - NO (excluded from Bronze)
   }
 
+  // Q24: Payroll Tax Return - YES (included in Bronze)
+  if (responses.q24 === 'yes') {
+    const payrollTaxReturn = values.complianceServices.payrollTaxReturn;
+    const lodgementCount = responses.q24a ? parseInt(responses.q24a, 10) || 1 : 1;
+    total += payrollTaxReturn.rate * lodgementCount / 12;
+  }
+
   // Q20: Support - Email only (YES) - hard-coded for Bronze
   total += values.support.emailOnly.monthly;
 
@@ -730,6 +794,37 @@ export const calculateBookkeepingBronzePrice = (responses, pricingModifier = 100
     total += eofy.microSmall.rate;
   }
   // Medium & Large excluded from Bronze
+
+  // Q26: Ongoing Accounting Software Support and Training (monthly sessions)
+  if (responses.q26 === 'yes' && responses.q26a && typeof responses.q26a === 'object') {
+    const ast = values.accountingSoftwareSetupTraining;
+    const sessions30 = parseInt(responses.q26a.sessions30min, 10) || 0;
+    const sessions60 = parseInt(responses.q26a.sessions60min, 10) || 0;
+    total += ast.ongoing30min.ratePerSession * sessions30;
+    total += ast.ongoing60min.ratePerSession * sessions60;
+  }
+
+  // Q27: POS Integration (monthly) - multi-select
+  if (responses.q27 && typeof responses.q27 === 'object') {
+    const ast = values.accountingSoftwareSetupTraining;
+    if (responses.q27.importReview) total += ast.posImportReview.monthly;
+    if (responses.q27.monthlyReconciliation) total += ast.posReconciliation.monthly;
+    if (responses.q27.monthlyDownloadRework) total += ast.posDownloadRework.monthly;
+  }
+
+  // Q28: Accounting Software Disbursement - pass-through monthly fee
+  if (responses.q28 && responses.q28 !== 'no' && responses.q28 !== '') {
+    const disbursementFee = parseFloat(responses.q28_price) || 0;
+    if (disbursementFee > 0) total += disbursementFee;
+  }
+
+  // Q29: Other Disbursements - pass-through monthly fees
+  if (Array.isArray(responses.q29)) {
+    responses.q29.forEach((row) => {
+      const fee = parseFloat(row && row.price) || 0;
+      if (fee > 0) total += fee;
+    });
+  }
 
   return Math.round(total * multiplier * 100) / 100;
 };
@@ -991,6 +1086,13 @@ export const calculateBookkeepingSilverPrice = (responses, pricingModifier = 100
     }
   }
 
+  // Q24: Payroll Tax Return - rate × units / 12
+  if (responses.q24 === 'yes') {
+    const payrollTaxReturn = values.complianceServices.payrollTaxReturn;
+    const lodgementCount = responses.q24a ? parseInt(responses.q24a, 10) || 1 : 1;
+    total += payrollTaxReturn.rate * lodgementCount / 12;
+  }
+
   // Q20: Support - Silver ALWAYS includes CSM (hard-coded)
   // Team/Email support based on selection
   if (responses.q20 === 'emailOnly') {
@@ -1008,6 +1110,37 @@ export const calculateBookkeepingSilverPrice = (responses, pricingModifier = 100
     } else if (responses.q21 === 'mediumLarge') {
       total += eofy.mediumLarge.rate;
     }
+  }
+
+  // Q26: Ongoing Accounting Software Support and Training (monthly sessions)
+  if (responses.q26 === 'yes' && responses.q26a && typeof responses.q26a === 'object') {
+    const ast = values.accountingSoftwareSetupTraining;
+    const sessions30 = parseInt(responses.q26a.sessions30min, 10) || 0;
+    const sessions60 = parseInt(responses.q26a.sessions60min, 10) || 0;
+    total += ast.ongoing30min.ratePerSession * sessions30;
+    total += ast.ongoing60min.ratePerSession * sessions60;
+  }
+
+  // Q27: POS Integration (monthly) - multi-select
+  if (responses.q27 && typeof responses.q27 === 'object') {
+    const ast = values.accountingSoftwareSetupTraining;
+    if (responses.q27.importReview) total += ast.posImportReview.monthly;
+    if (responses.q27.monthlyReconciliation) total += ast.posReconciliation.monthly;
+    if (responses.q27.monthlyDownloadRework) total += ast.posDownloadRework.monthly;
+  }
+
+  // Q28: Accounting Software Disbursement - pass-through monthly fee
+  if (responses.q28 && responses.q28 !== 'no' && responses.q28 !== '') {
+    const disbursementFee = parseFloat(responses.q28_price) || 0;
+    if (disbursementFee > 0) total += disbursementFee;
+  }
+
+  // Q29: Other Disbursements - pass-through monthly fees
+  if (Array.isArray(responses.q29)) {
+    responses.q29.forEach((row) => {
+      const fee = parseFloat(row && row.price) || 0;
+      if (fee > 0) total += fee;
+    });
   }
 
   return Math.round(total * multiplier * 100) / 100;
@@ -1265,6 +1398,13 @@ export const calculateBookkeepingGoldPrice = (responses, pricingModifier = 100) 
     }
   }
 
+  // Q24: Payroll Tax Return - rate × units / 12
+  if (responses.q24 === 'yes') {
+    const payrollTaxReturn = values.complianceServices.payrollTaxReturn;
+    const lodgementCount = responses.q24a ? parseInt(responses.q24a, 10) || 1 : 1;
+    total += payrollTaxReturn.rate * lodgementCount / 12;
+  }
+
   // Q20: Support - Gold ALWAYS includes CSM AND Principal/Owner (hard-coded)
   // Team/Email support based on selection
   if (responses.q20 === 'emailOnly') {
@@ -1284,6 +1424,37 @@ export const calculateBookkeepingGoldPrice = (responses, pricingModifier = 100) 
     } else if (responses.q21 === 'mediumLarge') {
       total += eofy.mediumLarge.rate;
     }
+  }
+
+  // Q26: Ongoing Accounting Software Support and Training (monthly sessions)
+  if (responses.q26 === 'yes' && responses.q26a && typeof responses.q26a === 'object') {
+    const ast = values.accountingSoftwareSetupTraining;
+    const sessions30 = parseInt(responses.q26a.sessions30min, 10) || 0;
+    const sessions60 = parseInt(responses.q26a.sessions60min, 10) || 0;
+    total += ast.ongoing30min.ratePerSession * sessions30;
+    total += ast.ongoing60min.ratePerSession * sessions60;
+  }
+
+  // Q27: POS Integration (monthly) - multi-select
+  if (responses.q27 && typeof responses.q27 === 'object') {
+    const ast = values.accountingSoftwareSetupTraining;
+    if (responses.q27.importReview) total += ast.posImportReview.monthly;
+    if (responses.q27.monthlyReconciliation) total += ast.posReconciliation.monthly;
+    if (responses.q27.monthlyDownloadRework) total += ast.posDownloadRework.monthly;
+  }
+
+  // Q28: Accounting Software Disbursement - pass-through monthly fee
+  if (responses.q28 && responses.q28 !== 'no' && responses.q28 !== '') {
+    const disbursementFee = parseFloat(responses.q28_price) || 0;
+    if (disbursementFee > 0) total += disbursementFee;
+  }
+
+  // Q29: Other Disbursements - pass-through monthly fees
+  if (Array.isArray(responses.q29)) {
+    responses.q29.forEach((row) => {
+      const fee = parseFloat(row && row.price) || 0;
+      if (fee > 0) total += fee;
+    });
   }
 
   return Math.round(total * multiplier * 100) / 100;

@@ -203,45 +203,6 @@ export const bookkeepingQuestionData = [
   },
 
   // ===================
-  // SECTION: COMPLIANCE LODGEMENTS
-  // ===================
-  {
-    id: 'q12',
-    sectionTitle: 'Compliance Lodgements',
-    prompt: 'Does the client require TPAR (Taxable Payments Annual Report)?',
-    type: 'radio',
-    options: [
-      { label: 'Yes', value: 'yes' },
-      { label: 'No', value: 'no' },
-    ],
-    children: [
-      {
-        id: 'q12a',
-        prompt: 'How many TPAR reports?',
-        type: 'number',
-        showWhen: (responses) => responses.q12 === 'yes',
-      },
-    ],
-  },
-  {
-    id: 'q13',
-    prompt: 'Does the client require LSL Construction Reporting?',
-    type: 'radio',
-    options: [
-      { label: 'Yes', value: 'yes' },
-      { label: 'No', value: 'no' },
-    ],
-    children: [
-      {
-        id: 'q13a',
-        prompt: 'How many LSL lodgements?',
-        type: 'number',
-        showWhen: (responses) => responses.q13 === 'yes',
-      },
-    ],
-  },
-
-  // ===================
   // SECTION: ACCOUNTS RECEIVABLE
   // ===================
   {
@@ -333,11 +294,63 @@ export const bookkeepingQuestionData = [
     options: [
       { label: 'BAS Quarterly', value: 'basQuarterly' },
       { label: 'BAS Monthly', value: 'basMonthly' },
-      { label: 'IAS', value: 'ias' },
+      { label: 'IAS Lodgement = 8 monthly returns', value: 'ias' },
       { label: 'None', value: 'none' },
     ],
     clearOnValue: 'none',
     mutuallyExclusive: ['basQuarterly', 'basMonthly'],
+  },
+  {
+    id: 'q12',
+    prompt: 'Does the client require TPAR (Taxable Payments Annual Report)?',
+    type: 'radio',
+    options: [
+      { label: 'Yes', value: 'yes' },
+      { label: 'No', value: 'no' },
+    ],
+    children: [
+      {
+        id: 'q12a',
+        prompt: 'How many TPAR reports?',
+        type: 'number',
+        showWhen: (responses) => responses.q12 === 'yes',
+      },
+    ],
+  },
+  {
+    id: 'q13',
+    prompt: 'Does the client require LSL Construction Reporting?',
+    type: 'radio',
+    options: [
+      { label: 'Yes', value: 'yes' },
+      { label: 'No', value: 'no' },
+    ],
+    children: [
+      {
+        id: 'q13a',
+        prompt: 'How many LSL lodgements?',
+        type: 'number',
+        showWhen: (responses) => responses.q13 === 'yes',
+      },
+    ],
+  },
+
+  {
+    id: 'q24',
+    prompt: 'Does the client require Payroll Tax Return?',
+    type: 'radio',
+    options: [
+      { label: 'Yes', value: 'yes' },
+      { label: 'No', value: 'no' },
+    ],
+    children: [
+      {
+        id: 'q24a',
+        prompt: 'How many lodgements?',
+        type: 'number',
+        showWhen: (responses) => responses.q24 === 'yes',
+      },
+    ],
   },
 
   // ===================
@@ -347,6 +360,7 @@ export const bookkeepingQuestionData = [
     id: 'q20',
     sectionTitle: 'Support',
     prompt: 'What level of support do you offer the client?',
+    description: 'For bookkeepers on your own, use this to stop the phone calls from low end clients. This will allow you to truly serve your better quality clients who value your expertise!',
     type: 'radio',
     options: [
       { label: 'Email Only (Unlimited)', value: 'emailOnly' },
@@ -371,6 +385,122 @@ export const bookkeepingQuestionData = [
   },
 
   // ===================
+  // SECTION: ACCOUNTING SOFTWARE SETUP AND TRAINING
+  // ===================
+  {
+    id: 'q25',
+    sectionTitle: 'Accounting Software Setup and Training',
+    prompt: 'Does the client require Accounting Software setup (once-off)?',
+    type: 'radio',
+    options: [
+      { label: 'Yes', value: 'yes' },
+      { label: 'No', value: 'no' },
+    ],
+  },
+  {
+    id: 'q25b',
+    prompt: 'Does the client require Accounting Software training (once-off)?',
+    type: 'radio',
+    options: [
+      { label: 'Basic 30 min', value: 'basic' },
+      { label: 'Intermediate 45 min', value: 'intermediate' },
+      { label: 'Advanced 60 min', value: 'advanced' },
+      { label: 'No', value: 'no' },
+    ],
+    children: [
+      {
+        id: 'q25c',
+        prompt: 'How many training sessions?',
+        type: 'number',
+        showWhen: (responses) => responses.q25b && responses.q25b !== 'no',
+      },
+    ],
+  },
+  {
+    id: 'q26',
+    prompt: 'Would they like ongoing Accounting Software Support and Training?',
+    description: 'Training for every day use of the software based on the size of the business as such allowing for the complexity and volume that comes with bigger businesses.',
+    type: 'radio',
+    options: [
+      { label: 'Yes', value: 'yes' },
+      { label: 'No', value: 'no' },
+    ],
+    children: [
+      {
+        id: 'q26a',
+        prompt: 'Enter number of ongoing sessions',
+        type: 'inputGroup',
+        showWhen: (responses) => responses.q26 === 'yes',
+        options: [
+          { label: '# Online Training Sessions (30 min per month)', value: 'sessions30min', control: 'number' },
+          { label: '# Online Training Sessions (60 min per month)', value: 'sessions60min', control: 'number' },
+          { label: 'Monthly Software Training Support', value: 'monthlySupport', control: 'checkbox' },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'q27',
+    prompt: 'Does your client require you to integrate Point of Sale data?',
+    type: 'multiRadio',
+    clearOnValue: 'no',
+    options: [
+      { label: 'Import and review for accuracy', value: 'importReview' },
+      { label: 'Monthly reconciliation between POS and accounting software', value: 'monthlyReconciliation' },
+      { label: 'Monthly download from POS and rework to upload', value: 'monthlyDownloadRework' },
+      { label: 'No', value: 'no' },
+    ],
+  },
+
+  // ===================
+  // SECTION: DISBURSEMENTS
+  // ===================
+  {
+    id: 'q28',
+    sectionTitle: 'Disbursements',
+    prompt: 'Do you disburse Accounting Software?',
+    type: 'radio',
+    options: [
+      { label: 'Xero', value: 'xero' },
+      { label: 'MYOB', value: 'myob' },
+      { label: 'QBO', value: 'qbo' },
+      { label: 'No', value: 'no' },
+    ],
+    children: [
+      {
+        id: 'q28_price',
+        prompt: '',
+        placeholder: 'Enter price',
+        type: 'number',
+        showWhen: (responses) => responses.q28 && responses.q28 !== 'no' && responses.q28 !== '',
+      },
+    ],
+  },
+  {
+    id: 'q29',
+    prompt: 'List other disbursements',
+    type: 'dynamicList',
+    addButtonLabel: 'Add disbursement',
+    descriptionPlaceholder: 'Enter description',
+    pricePlaceholder: 'Enter price',
+  },
+
+  // ===================
+  // SECTION: PRICE ADJUSTMENT
+  // ===================
+  {
+    id: 'q30',
+    sectionTitle: 'Price Adjustment',
+    prompt: 'Adjust the price to allow for complexity or extra effort that comes with some clients.',
+    type: 'slider',
+    min: -10,
+    max: 20,
+    step: 1,
+    defaultValue: 0,
+    unit: '%',
+  },
+
+  // ===================
   // SECTION: RESCUE / CLEANUP
   // ===================
   {
@@ -391,21 +521,6 @@ export const bookkeepingQuestionData = [
       },
     ],
   },
-
-  // ===================
-  // SECTION: ADDITIONAL SERVICES
-  // ===================
-  {
-    id: 'q23',
-    sectionTitle: 'Additional Services',
-    prompt: 'Select any additional once-off services required',
-    type: 'checkbox',
-    options: [
-      { label: 'Accounting Software Setup', value: 'accountingSoftwareSetup' },
-      { label: '1 × Online Training (30 min)', value: 'onlineTraining1Session' },
-      { label: '3 × Online Training (30 min each)', value: 'onlineTraining3Sessions' },
-    ],
-  },
 ];
 
 // Export section titles for grouping in the UI
@@ -414,14 +529,15 @@ export const bookkeepingSections = [
   'Setup Services',
   'Payroll Services',
   'Bookkeeping - Transactions & Payables',
-  'Compliance Lodgements',
   'Accounts Receivable',
   'Reporting',
   'Compliance Services',
   'Support',
   'End of Financial Year',
+  'Accounting Software Setup and Training',
+  'Disbursements',
+  'Price Adjustment',
   'Rescue / Cleanup',
-  'Additional Services',
 ];
 
 export default bookkeepingQuestionData;
