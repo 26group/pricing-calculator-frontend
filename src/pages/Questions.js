@@ -825,12 +825,28 @@ export default function Questions() {
     }
   }, [activePriceId, pricingModifier]);
 
-  // Debounced auto-save when responses change
+  // Debounced auto-save when responses change.
+  // On unmount or when deps change, flush the pending save immediately so that
+  // navigating away (e.g. clicking Continue) does not discard unsaved answers.
+  const pendingResponsesRef = useRef(null);
   useEffect(() => {
     if (!activePriceId) return;
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
-    saveTimerRef.current = setTimeout(() => autoSave(responses), 1500);
-    return () => { if (saveTimerRef.current) clearTimeout(saveTimerRef.current); };
+    pendingResponsesRef.current = responses;
+    saveTimerRef.current = setTimeout(() => {
+      autoSave(responses);
+      pendingResponsesRef.current = null;
+    }, 1500);
+    return () => {
+      if (saveTimerRef.current) {
+        clearTimeout(saveTimerRef.current);
+        // Flush the pending save so unsaved changes aren't lost on navigation
+        if (pendingResponsesRef.current) {
+          autoSave(pendingResponsesRef.current);
+          pendingResponsesRef.current = null;
+        }
+      }
+    };
   }, [responses, activePriceId, autoSave]);
   
   // Fetch organisation data to ensure pricingModifier is available

@@ -194,12 +194,26 @@ export default function BookkeepingQuestions() {
     }
   }, [activePriceId, bookkeepingPricingModifier]);
 
-  // Debounced auto-save when responses change
+  // Debounced auto-save when responses change.
+  // Flush pending save on unmount so navigating away doesn't discard answers.
+  const pendingResponsesRef = useRef(null);
   useEffect(() => {
     if (!activePriceId) return;
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
-    saveTimerRef.current = setTimeout(() => autoSave(responses), 1500);
-    return () => { if (saveTimerRef.current) clearTimeout(saveTimerRef.current); };
+    pendingResponsesRef.current = responses;
+    saveTimerRef.current = setTimeout(() => {
+      autoSave(responses);
+      pendingResponsesRef.current = null;
+    }, 1500);
+    return () => {
+      if (saveTimerRef.current) {
+        clearTimeout(saveTimerRef.current);
+        if (pendingResponsesRef.current) {
+          autoSave(pendingResponsesRef.current);
+          pendingResponsesRef.current = null;
+        }
+      }
+    };
   }, [responses, activePriceId, autoSave]);
 
   const dispatch = useDispatch();

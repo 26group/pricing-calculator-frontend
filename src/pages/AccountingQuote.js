@@ -84,8 +84,17 @@ export default function AccountingQuote() {
     try {
       setAutoSaveStatus('saving');
       const revenueSegmentValue = questionResponses?.q1 || undefined;
+      // Strip non-question keys from responses before saving as questionResponses
+      const nonQuestionKeys = ['questionsPricing', 'serviceCatalogPricing', 'serviceSelections', 'questionsOnceOffFee', 'serviceCatalogOnceOffFee', 'clientName', 'activePriceId'];
+      const filteredQuestionResponses = {};
+      Object.entries(questionResponses || {}).forEach(([key, value]) => {
+        if (!nonQuestionKeys.includes(key)) {
+          filteredQuestionResponses[key] = value;
+        }
+      });
       await updatePrice(activePriceId, {
-        priceType: 'accounting',
+        serviceType: 'accounting',
+        questionResponses: filteredQuestionResponses,
         questionsPricing,
         questionsOnceOffFee,
         serviceCatalogPricing,

@@ -98,7 +98,7 @@ export default function BookkeepingQuote() {
     try {
       const revenueSegmentValue = bookkeepingResponses?.q1 || '';
       const priceData = {
-        priceType: 'bookkeeping',
+        serviceType: 'bookkeeping',
         questionResponses: bookkeepingResponses,
         revenueSegment: revenueSegmentValue,
         questionsPricing: silverMonthly,

@@ -44,26 +44,15 @@ const getServiceTypeLabel = (price) => {
   // Use the dedicated serviceType field if available
   if (price?.serviceType === 'bookkeeping') return 'Bookkeeping';
   if (price?.serviceType === 'accounting') return 'Accounting';
-  
-  // Fallback: check questionResponses for old data
-  const questionResponses = price?.questionResponses || price;
-  
-  // If we have q2b (bookkeeping specific), it's bookkeeping
-  if (questionResponses?.q2b) return 'Bookkeeping';
-  
-  // Check if they answered the first accounting-specific question (q4)
-  if (questionResponses?.q4 !== undefined) return 'Accounting';
-  
-  // Fallback: check the old serviceType field in questionResponses if it exists
-  const serviceType = questionResponses?.serviceType;
-  if (serviceType === 'bookkeeping') return 'Bookkeeping';
-  if (serviceType === 'accounting' || serviceType === 'taxAccounting') return 'Accounting';
-  
-  // If q1 is a service type value (old data), use it
-  if (questionResponses?.q1 === 'bookkeeping') return 'Bookkeeping';
-  if (questionResponses?.q1 === 'accounting' || questionResponses?.q1 === 'taxAccounting') return 'Accounting';
-  
-  return 'Unknown';
+
+  // Legacy fallback: only old records lacking serviceType reach this branch.
+  // Check the embedded serviceType inside questionResponses.
+  const questionResponses = price?.questionResponses;
+  const legacyServiceType = questionResponses?.serviceType;
+  if (legacyServiceType === 'bookkeeping') return 'Bookkeeping';
+  if (legacyServiceType === 'accounting' || legacyServiceType === 'taxAccounting') return 'Accounting';
+
+  return 'Accounting';
 };
 
 export default function SavedPrices() {
@@ -145,23 +134,10 @@ export default function SavedPrices() {
         serviceType: priceData.serviceType,
       }));
       
-      // Determine service type - use the same resolution as the list label so
-      // legacy proposals (where serviceType defaulted to 'accounting' on the
-      // server) still route correctly when bookkeeping-specific responses exist.
-      let isBookkeeping = priceData.serviceType === 'bookkeeping';
-
-      if (!isBookkeeping) {
-        const qResp = priceData.questionResponses;
-        if (qResp?.q2b) {
-          isBookkeeping = true;
-        } else if (qResp?.q4 !== undefined) {
-          isBookkeeping = false;
-        } else if (qResp?.serviceType === 'bookkeeping') {
-          isBookkeeping = true;
-        } else if (qResp?.q1 === 'bookkeeping') {
-          isBookkeeping = true;
-        }
-      }
+      // Trust the dedicated serviceType field on the price record. It has
+      // a default of 'accounting' on the server, so legacy records without
+      // an explicit value still route correctly.
+      const isBookkeeping = priceData.serviceType === 'bookkeeping';
       
       if (isBookkeeping) {
         navigate('/bookkeeping-questions');
