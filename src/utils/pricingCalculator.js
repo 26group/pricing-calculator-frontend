@@ -15,10 +15,6 @@ const getPricingMultiplier = (pricingModifier) => {
   return pricingModifier / BASE_PRICING_MODIFIER;
 };
 
-// Returns the per-individual-return workpaper monthly add-on based on q2a.
-const getIndividualWorkpaperMonthly = (q2a) =>
-  serviceValuesAccounting.taxServices.individualReturns.workpaper?.[q2a]?.monthly || 0;
-
 /**
  * Calculates Bronze package pricing
  * Bronze includes: Tax Services (no SMSF/FBT), Payroll (no Payroll Tax), 
@@ -54,30 +50,32 @@ export const calculateComplianceOnlyPrice = (responses, pricingModifier = 200) =
       if (individualReturn) {
         total += individualReturn.monthly * individualCount;
       }
-      // q2a: Workpaper add-on per return (providedByClient / preparedByFirm)
-      total += getIndividualWorkpaperMonthly(responses.q2a) * individualCount;
     }
   }
 
-  // q2a/q2b: Individual return extras (based on q2a selection)
-  if (responses.q2a && responses.q2b && typeof responses.q2b === 'object') {
-    const summaryType = responses.q2a;
+  // q2b: Individual return extras (per-item summary toggle)
+  if (responses.q2b && typeof responses.q2b === 'object') {
     const extras = serviceValuesAccounting.taxServices.individualReturnExtras;
-    
+
     Object.entries(responses.q2b).forEach(([extraKey, value]) => {
       if (extraKey === 'none' || extraKey === 'returnNotNecessary' || !value) return;
-      
+
       const extraPricing = extras[extraKey];
-      // Check for summary type first, then fall back to 'all' for flat-rate items
-      const pricingTier = extraPricing?.[summaryType] || extraPricing?.all;
-      if (pricingTier) {
-        if (typeof value === 'boolean' && value === true) {
-          total += pricingTier.monthly;
-        } else {
-          const quantity = parseInt(value, 10);
-          if (!isNaN(quantity) && quantity > 0) {
-            total += pricingTier.monthly * quantity;
-          }
+      if (!extraPricing) return;
+
+      const isSummaryShape = typeof value === 'object' && value !== null && 'count' in value;
+      const rawCount = isSummaryShape ? value.count : value;
+      const summaryType = isSummaryShape ? value.summary : null;
+
+      const pricingTier = extraPricing.all || (summaryType && extraPricing[summaryType]);
+      if (!pricingTier) return;
+
+      if (typeof rawCount === 'boolean' && rawCount === true) {
+        total += pricingTier.monthly;
+      } else {
+        const quantity = parseInt(rawCount, 10);
+        if (!isNaN(quantity) && quantity > 0) {
+          total += pricingTier.monthly * quantity;
         }
       }
     });
@@ -142,8 +140,8 @@ export const calculateComplianceOnlyPrice = (responses, pricingModifier = 200) =
   }
 
   // ==================== SUPPORT SERVICES ====================
-  // Bronze: If support selected (q24 is not 'no'), hardcode to Email only - Team
-  if (responses.q24 && responses.q24 !== 'no' && segment) {
+  // Bronze: only add Team support price when the selected option includes Team
+  if ((responses.q24 === 'emailTeam' || responses.q24 === 'emailPhoneTeamCsm') && segment) {
     const teamSupport = serviceValuesAccounting.support.emailOnlyTeam?.[segment];
     if (teamSupport) {
       total += teamSupport.monthly;
@@ -284,17 +282,6 @@ export const calculateComplianceOnlyPrice = (responses, pricingModifier = 200) =
     }
   }
 
-  // ==================== SUPPORT SERVICES (Bronze: YES for Team/Email only) ====================
-
-  // q24: Support - Bronze only includes Team/Email support
-  if (responses.q24 && responses.q24 !== '' && responses.q24 !== 'no' && segment) {
-    // Bronze always uses Team/Email support rate regardless of what user selected
-    const teamSupport = serviceValuesAccounting.support.emailOnlyTeam?.[segment];
-    if (teamSupport) {
-      total += teamSupport.monthly;
-    }
-  }
-
   // ==================== CORPORATE SECRETARIAL (Bronze: YES) ====================
 
   // q25: ASIC company secretarial work - YES in Bronze
@@ -405,33 +392,33 @@ export const calculateTotalMonthlyPrice = (responses, pricingModifier = 200) => 
       if (individualReturn) {
         total += individualReturn.monthly * individualCount;
       }
-      // q2a: Workpaper add-on per return (providedByClient / preparedByFirm)
-      total += getIndividualWorkpaperMonthly(responses.q2a) * individualCount;
     }
   }
 
-  // q2a/q2b: Individual return extras (based on q2a selection)
-  if (responses.q2a && responses.q2b && typeof responses.q2b === 'object') {
-    const summaryType = responses.q2a; // 'providedByClient' or 'preparedByFirm'
+  // q2b: Individual return extras (per-item summary toggle)
+  if (responses.q2b && typeof responses.q2b === 'object') {
     const extras = serviceValuesAccounting.taxServices.individualReturnExtras;
-    
+
     Object.entries(responses.q2b).forEach(([extraKey, value]) => {
       // Skip 'none' button, empty values, and returnNotNecessary (handled in once-off fees)
       if (extraKey === 'none' || extraKey === 'returnNotNecessary' || !value) return;
-      
+
       const extraPricing = extras[extraKey];
-      // Check for summary type first, then fall back to 'all' for flat-rate items
-      const pricingTier = extraPricing?.[summaryType] || extraPricing?.all;
-      if (pricingTier) {
-        // For checkbox (deductionsMoreThan3Standard), value is true/false
-        if (typeof value === 'boolean' && value === true) {
-          total += pricingTier.monthly;
-        } else {
-          // For number inputs, multiply by quantity
-          const quantity = parseInt(value, 10);
-          if (!isNaN(quantity) && quantity > 0) {
-            total += pricingTier.monthly * quantity;
-          }
+      if (!extraPricing) return;
+
+      const isSummaryShape = typeof value === 'object' && value !== null && 'count' in value;
+      const rawCount = isSummaryShape ? value.count : value;
+      const summaryType = isSummaryShape ? value.summary : null;
+
+      const pricingTier = extraPricing.all || (summaryType && extraPricing[summaryType]);
+      if (!pricingTier) return;
+
+      if (typeof rawCount === 'boolean' && rawCount === true) {
+        total += pricingTier.monthly;
+      } else {
+        const quantity = parseInt(rawCount, 10);
+        if (!isNaN(quantity) && quantity > 0) {
+          total += pricingTier.monthly * quantity;
         }
       }
     });

@@ -36,8 +36,14 @@ export const bookkeepingQuestionData = [
     children: [
       {
         id: 'q2a',
-        prompt: 'Enter system name',
-        type: 'text',
+        prompt: 'Which accounting system?',
+        type: 'radio',
+        options: [
+          { label: 'Xero', value: 'xero' },
+          { label: 'MYOB', value: 'myob' },
+          { label: 'QBO', value: 'qbo' },
+          { label: 'No', value: 'no' },
+        ],
         showWhen: (responses) => responses.q2 === 'yes',
       },
     ],
@@ -366,6 +372,7 @@ export const bookkeepingQuestionData = [
       { label: 'Email Only (Unlimited)', value: 'emailOnly' },
       { label: 'Email & Phone - Team & CSM', value: 'emailPhoneTeamCsm' },
       { label: 'Email & Phone - CSM & Owner/Partner', value: 'emailPhoneCsmOwner' },
+      { label: 'No support', value: 'no' },
     ],
   },
 
@@ -492,6 +499,7 @@ export const bookkeepingQuestionData = [
     id: 'q30',
     sectionTitle: 'Price Adjustment',
     prompt: 'Adjust the price to allow for complexity or extra effort that comes with some clients.',
+    description: 'Apply a positive adjustment (up to +20%) when a client needs extra care, is complex, or is difficult to work with, and a negative adjustment (down to -10%) for very simple clients or where the calculated price feels too high.',
     type: 'slider',
     min: -10,
     max: 20,

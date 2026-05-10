@@ -785,8 +785,10 @@ export const calculateBookkeepingBronzePrice = (responses, pricingModifier = 100
     total += payrollTaxReturn.rate * lodgementCount / 12;
   }
 
-  // Q20: Support - Email only (YES) - hard-coded for Bronze
-  total += values.support.emailOnly.monthly;
+  // Q20: Support - Bronze adds Team/Email price only when selection includes Team
+  if (responses.q20 === 'emailOnly' || responses.q20 === 'emailPhoneTeamCsm') {
+    total += values.support.emailOnly.monthly;
+  }
 
   // Q21: EOFY - Micro & Small only (YES), Medium & Large (NO)
   if (responses.q21 === 'microSmall') {
@@ -1093,13 +1095,10 @@ export const calculateBookkeepingSilverPrice = (responses, pricingModifier = 100
     total += payrollTaxReturn.rate * lodgementCount / 12;
   }
 
-  // Q20: Support - Silver ALWAYS includes CSM (hard-coded)
-  // Team/Email support based on selection
-  if (responses.q20 === 'emailOnly') {
-    total += values.support.emailOnly.monthly;
+  // Q20: Support - Silver adds CSM price only when selection includes CSM
+  if (responses.q20 === 'emailPhoneTeamCsm' || responses.q20 === 'emailPhoneCsmOwner') {
+    total += values.support.emailPhoneTeamCsm.monthly;
   }
-  // Always add CSM for Silver
-  total += values.support.emailPhoneTeamCsm.monthly;
 
   // Q21: EOFY
   if (responses.q21 && responses.q21 !== 'no') {
@@ -1405,15 +1404,10 @@ export const calculateBookkeepingGoldPrice = (responses, pricingModifier = 100) 
     total += payrollTaxReturn.rate * lodgementCount / 12;
   }
 
-  // Q20: Support - Gold ALWAYS includes CSM AND Principal/Owner (hard-coded)
-  // Team/Email support based on selection
-  if (responses.q20 === 'emailOnly') {
-    total += values.support.emailOnly.monthly;
+  // Q20: Support - Gold adds Owner/Partner price only when selection includes Owner
+  if (responses.q20 === 'emailPhoneCsmOwner') {
+    total += values.support.emailPhoneCsmOwner.monthly;
   }
-  // Always add CSM for Gold
-  total += values.support.emailPhoneTeamCsm.monthly;
-  // Always add Principal/Owner for Gold
-  total += values.support.emailPhoneCsmOwner.monthly;
 
   // Q21: EOFY
   if (responses.q21 && responses.q21 !== 'no') {

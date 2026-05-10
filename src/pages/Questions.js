@@ -723,6 +723,8 @@ const buildInitialState = () => {
       acc[question.id] = question.options.reduce((groupState, option) => {
         if (option.control === 'checkbox') {
           groupState[option.value] = false;
+        } else if (option.summary) {
+          groupState[option.value] = { count: '', summary: 'providedByClient' };
         } else {
           groupState[option.value] = '';
         }
@@ -769,8 +771,8 @@ export default function Questions() {
   
   // Get pricing modifier from organisation (already have organisation from above)
   const basePricingModifier = organisation?.pricingModifier ?? DEFAULT_PRICING_MODIFIER;
-  // Apply per-quote price adjustment from slider (q30): -100% to +100%
-  const priceAdjustmentPercent = Math.max(-100, Math.min(100, Number(responses.q30) || 0));
+  // Apply per-quote price adjustment from slider (q30): -10% to +20%
+  const priceAdjustmentPercent = Math.max(-10, Math.min(20, Number(responses.q30) || 0));
   const pricingModifier = basePricingModifier * (1 + priceAdjustmentPercent / 100);
   
   const [focusedQuestion, setFocusedQuestion] = useState(null);
@@ -1322,7 +1324,6 @@ export default function Questions() {
       if (questionId === 'q2') {
         const numValue = parseInt(value, 10);
         if (!value || numValue === 0 || isNaN(numValue)) {
-          newState.q2a = '';
           newState.q2b = {};
         }
       }
@@ -1332,15 +1333,41 @@ export default function Questions() {
   };
 
   const handleInputGroupChange = (questionId, optionValue) => (event) => {
-    setResponses((prev) => ({
-      ...prev,
-      [questionId]: {
-        ...prev[questionId],
-        [optionValue]: event.target.value,
-        // Deselect "No" option if a value is entered into any input field
-        ...(event.target.value && prev[questionId].none ? { none: false } : {}),
-      },
-    }));
+    const newValue = event.target.value;
+    setResponses((prev) => {
+      const existing = prev[questionId]?.[optionValue];
+      const isSummaryShape = existing && typeof existing === 'object' && 'count' in existing;
+      const updated = isSummaryShape
+        ? { ...existing, count: newValue }
+        : newValue;
+      return {
+        ...prev,
+        [questionId]: {
+          ...prev[questionId],
+          [optionValue]: updated,
+          // Deselect "No" option if a value is entered into any input field
+          ...(newValue && prev[questionId].none ? { none: false } : {}),
+        },
+      };
+    });
+  };
+
+  const handleInputGroupSummaryChange = (questionId, optionValue) => (_event, newSummary) => {
+    if (!newSummary) return;
+    setResponses((prev) => {
+      const existing = prev[questionId]?.[optionValue];
+      const isSummaryShape = existing && typeof existing === 'object' && 'count' in existing;
+      const updated = isSummaryShape
+        ? { ...existing, summary: newSummary }
+        : { count: existing || '', summary: newSummary };
+      return {
+        ...prev,
+        [questionId]: {
+          ...prev[questionId],
+          [optionValue]: updated,
+        },
+      };
+    });
   };
 
   const handleInputGroupCheckboxChange = (questionId, optionValue) => (event) => {
@@ -1895,20 +1922,21 @@ export default function Questions() {
                 ? raw
                 : (raw === '' || raw === undefined || raw === null ? defaultValue : Number(raw));
               const disabled = question.id !== 'q1' && !responses.q1;
+              const tickInterval = typeof question.tickInterval === 'number' ? question.tickInterval : 5;
+              const marks = [];
+              const startTick = Math.ceil(min / tickInterval) * tickInterval;
+              for (let m = startTick; m <= max; m += tickInterval) {
+                marks.push({ value: m, label: `${m > 0 ? '+' : ''}${m}${unit}` });
+              }
               return (
-                <Stack spacing={1} sx={{ maxWidth: 500, pt: 1 }}>
+                <Stack spacing={1} sx={{ maxWidth: 500, pt: 1, pb: 3 }}>
                   <Stack direction="row" alignItems="center" spacing={2}>
-                    <Typography variant="body2" sx={{ minWidth: 40, color: '#666' }}>{min}{unit}</Typography>
                     <Slider
                       value={value}
                       min={min}
                       max={max}
                       step={step}
-                      marks={[
-                        { value: min, label: '' },
-                        { value: defaultValue, label: '' },
-                        { value: max, label: '' },
-                      ]}
+                      marks={marks}
                       valueLabelDisplay="auto"
                       valueLabelFormat={(v) => `${v > 0 ? '+' : ''}${v}${unit}`}
                       onChange={(_, newValue) => {
@@ -1918,6 +1946,18 @@ export default function Questions() {
                       disabled={disabled}
                       sx={{
                         color: '#002060',
+                        '& .MuiSlider-mark': {
+                          backgroundColor: '#bdbdbd',
+                          height: 8,
+                          width: 2,
+                        },
+                        '& .MuiSlider-markActive': {
+                          backgroundColor: '#002060',
+                        },
+                        '& .MuiSlider-markLabel': {
+                          fontSize: '0.7rem',
+                          color: '#888',
+                        },
                         '& .MuiSlider-thumb': {
                           '&:hover, &.Mui-focusVisible': {
                             boxShadow: '0 0 0 8px rgba(0, 32, 96, 0.12)',
@@ -1925,11 +1965,7 @@ export default function Questions() {
                         },
                       }}
                     />
-                    <Typography variant="body2" sx={{ minWidth: 40, color: '#666', textAlign: 'right' }}>{max}{unit}</Typography>
                   </Stack>
-                  <Typography variant="body2" sx={{ textAlign: 'center', fontWeight: 600, color: '#002060' }}>
-                    {value > 0 ? '+' : ''}{value}{unit}
-                  </Typography>
                 </Stack>
               );
             })()}
@@ -2033,13 +2069,19 @@ export default function Questions() {
                     <div 
                       key={option.value}
                       onClick={question.id !== 'q1' && !responses.q1 ? () => setRequireQ1Message(true) : undefined}
-                      style={{ display: 'block', width: '100%', maxWidth: '400px' }}
+                      style={{ display: 'block', width: '100%', maxWidth: option.summary ? '720px' : '400px' }}
                     >
+                      <Stack direction={{ xs: 'column', sm: option.summary ? 'row' : 'column' }} spacing={1} alignItems={{ xs: 'stretch', sm: option.summary ? 'center' : 'stretch' }}>
                       <TextField
                         type="number"
                         inputProps={{ min: 0 }}
                         label={option.label}
-                        value={responses[question.id][option.value]}
+                        value={
+                          (() => {
+                            const v = responses[question.id][option.value];
+                            return v && typeof v === 'object' && 'count' in v ? v.count : v;
+                          })()
+                        }
                         onChange={(e) => {
                           setFocusedQuestion(question.id);
                           handleInputGroupChange(question.id, option.value)(e);
@@ -2050,6 +2092,8 @@ export default function Questions() {
                         variant="outlined"
                         sx={{
                           width: '100%',
+                          flex: option.summary ? 1 : undefined,
+                          minWidth: option.summary ? 140 : undefined,
                           pointerEvents: question.id !== 'q1' && !responses.q1 ? 'none' : 'auto',
                           '& .MuiOutlinedInput-root': {
                             backgroundColor: '#ffffff',
@@ -2078,6 +2122,42 @@ export default function Questions() {
                           },
                         }}
                       />
+                      {option.summary && (() => {
+                        const v = responses[question.id][option.value];
+                        const summaryValue = v && typeof v === 'object' && 'summary' in v ? v.summary : 'providedByClient';
+                        const isDisabled = question.id !== 'q1' && !responses.q1;
+                        return (
+                          <ToggleButtonGroup
+                            value={summaryValue}
+                            exclusive
+                            orientation="horizontal"
+                            size="small"
+                            disabled={isDisabled}
+                            onChange={handleInputGroupSummaryChange(question.id, option.value)}
+                            sx={{
+                              flexShrink: 0,
+                              '& .MuiToggleButton-root': {
+                                textTransform: 'none',
+                                fontSize: '0.75rem',
+                                px: 1.25,
+                                py: 0.5,
+                                whiteSpace: 'nowrap',
+                                color: '#666',
+                                borderColor: '#d0d0d0',
+                                '&.Mui-selected': {
+                                  backgroundColor: '#002060',
+                                  color: '#fff',
+                                  '&:hover': { backgroundColor: '#001a47' },
+                                },
+                              },
+                            }}
+                          >
+                            <ToggleButton value="providedByClient">Summary by Client</ToggleButton>
+                            <ToggleButton value="preparedByFirm">Firm to prepare</ToggleButton>
+                          </ToggleButtonGroup>
+                        );
+                      })()}
+                      </Stack>
                     </div>
                   )
                   );

@@ -25,10 +25,6 @@ const getPricingMultiplier = (pricingModifier) => {
  * @param {number} pricingModifier - Optional pricing modifier from organisation (default 200)
  * @returns {number} Gold tier monthly cost
  */
-// Returns the per-individual-return workpaper monthly add-on based on q2a.
-const getIndividualWorkpaperMonthly = (q2a) =>
-  serviceValuesAccounting.taxServices.individualReturns.workpaper?.[q2a]?.monthly || 0;
-
 export const calculateGoldMonthlyPricing = (responses, pricingModifier = 200) => {
   let total = 0;
   const multiplier = getPricingMultiplier(pricingModifier);
@@ -59,32 +55,33 @@ export const calculateGoldMonthlyPricing = (responses, pricingModifier = 200) =>
       if (individualReturn) {
         total += individualReturn.monthly * individualCount;
       }
-      // q2a: Workpaper add-on per return (providedByClient / preparedByFirm)
-      total += getIndividualWorkpaperMonthly(responses.q2a) * individualCount;
     }
   }
 
-  // q2a/q2b: Individual return extras
-  if (responses.q2a && responses.q2b && typeof responses.q2b === 'object') {
-    const summaryType = responses.q2a;
+  // q2b: Individual return extras (per-item summary toggle)
+  if (responses.q2b && typeof responses.q2b === 'object') {
     const extras = serviceValuesAccounting.taxServices.individualReturnExtras;
-    
+
     Object.entries(responses.q2b).forEach(([extraKey, value]) => {
       if (extraKey === 'none' || extraKey === 'returnNotNecessary' || !value) return;
-      
+
       const extraPricing = extras[extraKey];
-      if (extraPricing) {
-        // Business schedules use 'all' key instead of providedByClient/preparedByFirm
-        const pricingTier = extraPricing.all || extraPricing[summaryType];
-        if (pricingTier) {
-          if (typeof value === 'boolean' && value === true) {
-            total += pricingTier.monthly;
-          } else {
-            const quantity = parseInt(value, 10);
-            if (!isNaN(quantity) && quantity > 0) {
-              total += pricingTier.monthly * quantity;
-            }
-          }
+      if (!extraPricing) return;
+
+      const isSummaryShape = typeof value === 'object' && value !== null && 'count' in value;
+      const rawCount = isSummaryShape ? value.count : value;
+      const summaryType = isSummaryShape ? value.summary : null;
+
+      // Business schedules use 'all' key instead of providedByClient/preparedByFirm
+      const pricingTier = extraPricing.all || (summaryType && extraPricing[summaryType]);
+      if (!pricingTier) return;
+
+      if (typeof rawCount === 'boolean' && rawCount === true) {
+        total += pricingTier.monthly;
+      } else {
+        const quantity = parseInt(rawCount, 10);
+        if (!isNaN(quantity) && quantity > 0) {
+          total += pricingTier.monthly * quantity;
         }
       }
     });
@@ -355,14 +352,8 @@ export const calculateGoldMonthlyPricing = (responses, pricingModifier = 200) =>
   }
 
   // ==================== SUPPORT SERVICES ====================
-  // Gold: If support selected (q24 is not 'no'), hardcode to Email & Phone - CSM & Owner
-  if (responses.q24 && responses.q24 !== 'no') {
-    // Client Service Manager support
-    const csmSupport = serviceValuesAccounting.support.clientServiceManager?.[segment];
-    if (csmSupport) {
-      total += csmSupport.monthly;
-    }
-    // Principal/Owner support
+  // Gold: only add Owner support price when the selected option includes Owner
+  if (responses.q24 === 'emailPhoneCsmOwner') {
     const ownerSupport = serviceValuesAccounting.support.principalOwner?.[segment];
     if (ownerSupport) {
       total += ownerSupport.monthly;
@@ -459,32 +450,33 @@ export const calculateSilverMonthlyPricing = (responses, pricingModifier = 200) 
       if (individualReturn) {
         total += individualReturn.monthly * individualCount;
       }
-      // q2a: Workpaper add-on per return (providedByClient / preparedByFirm)
-      total += getIndividualWorkpaperMonthly(responses.q2a) * individualCount;
     }
   }
 
-  // q2a/q2b: Individual return extras
-  if (responses.q2a && responses.q2b && typeof responses.q2b === 'object') {
-    const summaryType = responses.q2a;
+  // q2b: Individual return extras (per-item summary toggle)
+  if (responses.q2b && typeof responses.q2b === 'object') {
     const extras = serviceValuesAccounting.taxServices.individualReturnExtras;
-    
+
     Object.entries(responses.q2b).forEach(([extraKey, value]) => {
       if (extraKey === 'none' || extraKey === 'returnNotNecessary' || !value) return;
-      
+
       const extraPricing = extras[extraKey];
-      if (extraPricing) {
-        // Business schedules use 'all' key instead of providedByClient/preparedByFirm
-        const pricingTier = extraPricing.all || extraPricing[summaryType];
-        if (pricingTier) {
-          if (typeof value === 'boolean' && value === true) {
-            total += pricingTier.monthly;
-          } else {
-            const quantity = parseInt(value, 10);
-            if (!isNaN(quantity) && quantity > 0) {
-              total += pricingTier.monthly * quantity;
-            }
-          }
+      if (!extraPricing) return;
+
+      const isSummaryShape = typeof value === 'object' && value !== null && 'count' in value;
+      const rawCount = isSummaryShape ? value.count : value;
+      const summaryType = isSummaryShape ? value.summary : null;
+
+      // Business schedules use 'all' key instead of providedByClient/preparedByFirm
+      const pricingTier = extraPricing.all || (summaryType && extraPricing[summaryType]);
+      if (!pricingTier) return;
+
+      if (typeof rawCount === 'boolean' && rawCount === true) {
+        total += pricingTier.monthly;
+      } else {
+        const quantity = parseInt(rawCount, 10);
+        if (!isNaN(quantity) && quantity > 0) {
+          total += pricingTier.monthly * quantity;
         }
       }
     });
@@ -755,14 +747,8 @@ export const calculateSilverMonthlyPricing = (responses, pricingModifier = 200) 
   }
 
   // ==================== SUPPORT SERVICES ====================
-  // Silver: If support selected (q24 is not 'no'), hardcode to Email & Phone - Team & CSM
-  if (responses.q24 && responses.q24 !== 'no') {
-    // Team support
-    const teamSupport = serviceValuesAccounting.support.emailOnlyTeam?.[segment];
-    if (teamSupport) {
-      total += teamSupport.monthly;
-    }
-    // Client Service Manager support
+  // Silver: only add CSM support price when the selected option includes CSM
+  if (responses.q24 === 'emailPhoneTeamCsm' || responses.q24 === 'emailPhoneCsmOwner') {
     const csmSupport = serviceValuesAccounting.support.clientServiceManager?.[segment];
     if (csmSupport) {
       total += csmSupport.monthly;
