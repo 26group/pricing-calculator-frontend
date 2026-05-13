@@ -15,12 +15,26 @@ export const serviceValuesAccounting = {
   // ===================
   taxServices: {
     // Q1a: Individual Tax Returns
-    // Base individual return: $250/year = $25/month (same for all tiers)
+    // Base individual return: $20/month (same for all tiers)
     individualReturns: {
       all: {
-        yearly: 250,
-        monthly: 25,
+        yearly: 240,
+        monthly: 20,
         inclusion: 'Individual Returns — ALL',
+      },
+      // Workpaper add-on (per individual return) — same price across all
+      // revenue segments.
+      workpaper: {
+        providedByClient: {
+          yearly: 12,
+          monthly: 1,
+          inclusion: 'Individual Returns — Summary provided by Client',
+        },
+        preparedByFirm: {
+          yearly: 60,
+          monthly: 5,
+          inclusion: 'Individual Returns — Firm to prepare workpaper',
+        },
       },
     },
 
@@ -211,6 +225,30 @@ export const serviceValuesAccounting = {
         yearly: 3000,
         monthly: 300,
         inclusion: 'Business Returns — Large',
+      },
+    },
+
+    // Q1b-ii: Non Trading Business Tax Returns
+    nonTradingReturns: {
+      micro: {
+        yearly: 600,
+        monthly: 50,
+        inclusion: 'Non Trading Business Returns — Micro',
+      },
+      small: {
+        yearly: 600,
+        monthly: 50,
+        inclusion: 'Non Trading Business Returns — Small',
+      },
+      medium: {
+        yearly: 900,
+        monthly: 75,
+        inclusion: 'Non Trading Business Returns — Medium',
+      },
+      large: {
+        yearly: 1200,
+        monthly: 100,
+        inclusion: 'Non Trading Business Returns — Large',
       },
     },
 
@@ -477,6 +515,30 @@ export const serviceValuesAccounting = {
         fortnightlyMonthly: 162.5,
         monthlyMonthly: 75,
         inclusion: 'STP Reporting — Large',
+      },
+    },
+
+    // Payroll Reconciliation and STP Reporting
+    payrollReconciliation: {
+      micro: {
+        yearly: 200,
+        monthly: 16.67,
+        inclusion: 'Payroll Reconciliation and STP Reporting — Micro',
+      },
+      small: {
+        yearly: 300,
+        monthly: 25,
+        inclusion: 'Payroll Reconciliation and STP Reporting — Small',
+      },
+      medium: {
+        yearly: 500,
+        monthly: 41.67,
+        inclusion: 'Payroll Reconciliation and STP Reporting — Medium',
+      },
+      large: {
+        yearly: 1000,
+        monthly: 83.33,
+        inclusion: 'Payroll Reconciliation and STP Reporting — Large',
       },
     },
 
@@ -757,6 +819,7 @@ export const serviceValuesAccounting = {
       micro: {
         perMeeting: 250,
         monthly: 125, // quarterly default
+        biannuallyMonthly: 41.67,
         quarterlyMonthly: 125,
         monthlyMonthly: 375,
         inclusion: 'Business Meeting — Micro',
@@ -764,6 +827,7 @@ export const serviceValuesAccounting = {
       small: {
         perMeeting: 350,
         monthly: 175,
+        biannuallyMonthly: 58.33,
         quarterlyMonthly: 175,
         monthlyMonthly: 525,
         inclusion: 'Business Meeting — Small',
@@ -771,6 +835,7 @@ export const serviceValuesAccounting = {
       medium: {
         perMeeting: 600,
         monthly: 900, // monthly default for medium
+        biannuallyMonthly: 100,
         quarterlyMonthly: 300,
         monthlyMonthly: 900,
         inclusion: 'Business Meeting — Medium',
@@ -778,6 +843,7 @@ export const serviceValuesAccounting = {
       large: {
         perMeeting: 1000,
         monthly: 1500, // monthly default for large
+        biannuallyMonthly: 166.67,
         quarterlyMonthly: 500,
         monthlyMonthly: 1500,
         inclusion: 'Business Meeting — Large',

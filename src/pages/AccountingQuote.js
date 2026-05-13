@@ -84,8 +84,17 @@ export default function AccountingQuote() {
     try {
       setAutoSaveStatus('saving');
       const revenueSegmentValue = questionResponses?.q1 || undefined;
+      // Strip non-question keys from responses before saving as questionResponses
+      const nonQuestionKeys = ['questionsPricing', 'serviceCatalogPricing', 'serviceSelections', 'questionsOnceOffFee', 'serviceCatalogOnceOffFee', 'clientName', 'activePriceId'];
+      const filteredQuestionResponses = {};
+      Object.entries(questionResponses || {}).forEach(([key, value]) => {
+        if (!nonQuestionKeys.includes(key)) {
+          filteredQuestionResponses[key] = value;
+        }
+      });
       await updatePrice(activePriceId, {
-        priceType: 'accounting',
+        serviceType: 'accounting',
+        questionResponses: filteredQuestionResponses,
         questionsPricing,
         questionsOnceOffFee,
         serviceCatalogPricing,
@@ -122,11 +131,12 @@ export default function AccountingQuote() {
 
   // =================== CHECK SERVICE CATEGORIES ===================
 
-  // Q1: Tax Services - Individual returns, Business returns, FBT, BAS, IAS, TPAR
+  // Q1: Tax Services - Individual returns, Business returns, Non-Trading Returns, FBT, BAS, IAS, TPAR
   const hasTaxServices =
     (questionResponses.q2 && parseInt(questionResponses.q2, 10) > 0) || // Individual returns
     (questionResponses.q3 && parseInt(questionResponses.q3, 10) > 0) || // Business returns
-    (questionResponses.q5 === 'yes') || // FBT
+    (questionResponses.q3b && parseInt(questionResponses.q3b, 10) > 0) || // Non-Trading returns
+    (questionResponses.q5 && parseInt(questionResponses.q5, 10) > 0) || // FBT
     (questionResponses.q6 && questionResponses.q6 !== 'no') || // BAS
     (questionResponses.q7 === 'yes') || // IAS
     (questionResponses.q8 && parseInt(questionResponses.q8, 10) > 0); // TPAR
@@ -150,7 +160,7 @@ export default function AccountingQuote() {
 
   // Q4: Reporting - Financial Statements, Statutory, Management
   const hasReporting =
-    (questionResponses.q18 === 'yes') || // Financial Statements for Tax
+    (questionResponses.q18 && parseInt(questionResponses.q18, 10) > 0) || // Financial Statements for Tax
     (questionResponses.q19 === 'yes') || // Statutory Financial Statements
     (questionResponses.q20 && questionResponses.q20 !== 'no'); // Management Financial Statements
 
@@ -214,13 +224,26 @@ export default function AccountingQuote() {
 
   // Q7: Corporate Secretarial & ATO Plans
   const hasCorporateSecretarial =
-    (questionResponses.q25 === 'yes') || // ASIC Annual Return
+    (Array.isArray(questionResponses.q25) && questionResponses.q25.includes('annualReturns')) || // ASIC Annual Return (array)
+    (typeof questionResponses.q25 === 'object' && questionResponses.q25?.annualReturns) || // ASIC Annual Return (object)
+    (questionResponses.q25 === 'annualReturns') || // ASIC Annual Return (string)
     (questionResponses.q25a && parseInt(questionResponses.q25a, 10) > 0) || // ASIC Form Lodgements
     (questionResponses.q26 && questionResponses.q26 !== 'none'); // ATO Payment Plans
+
+  // Helper to check if ASIC Annual Return is selected
+  const hasAsicAnnualReturn =
+    (Array.isArray(questionResponses.q25) && questionResponses.q25.includes('annualReturns')) ||
+    (typeof questionResponses.q25 === 'object' && questionResponses.q25?.annualReturns) ||
+    (questionResponses.q25 === 'annualReturns');
 
   // Q8: Prior Year Lodgements
   const hasPriorYearLodgements =
     questionResponses.q27 && Object.values(questionResponses.q27).some(v => parseInt(v, 10) > 0);
+
+  // Q9: Disbursements - Accounting Software Disbursement (q28) or Other Disbursements (q29)
+  const hasDisbursements =
+    (questionResponses.q28 && questionResponses.q28 !== 'no' && questionResponses.q28 !== '') ||
+    (Array.isArray(questionResponses.q29) && questionResponses.q29.some((row) => (parseFloat(row && row.price) || 0) > 0));
 
   const handleOpenSaveDialog = () => {
     setSaveError('');
@@ -315,7 +338,8 @@ export default function AccountingQuote() {
     { feature: 'Tax Services', isCategory: true },
     { feature: 'Individual Tax Returns', bronze: questionResponses.q2 && parseInt(questionResponses.q2, 10) > 0 ? <CheckMark /> : <NotIncluded />, silver: questionResponses.q2 && parseInt(questionResponses.q2, 10) > 0 ? <CheckMark /> : <NotIncluded />, gold: questionResponses.q2 && parseInt(questionResponses.q2, 10) > 0 ? <CheckMark /> : <NotIncluded /> },
     { feature: 'Business Tax Returns', bronze: questionResponses.q3 && parseInt(questionResponses.q3, 10) > 0 ? <CheckMark /> : <NotIncluded />, silver: questionResponses.q3 && parseInt(questionResponses.q3, 10) > 0 ? <CheckMark /> : <NotIncluded />, gold: questionResponses.q3 && parseInt(questionResponses.q3, 10) > 0 ? <CheckMark /> : <NotIncluded /> },
-    { feature: 'FBT Returns', bronze: <NotIncluded />, silver: questionResponses.q5 === 'yes' ? <CheckMark /> : <NotIncluded />, gold: questionResponses.q5 === 'yes' ? <CheckMark /> : <NotIncluded /> },
+    { feature: 'Non Trading Business Tax Returns', bronze: questionResponses.q3b && parseInt(questionResponses.q3b, 10) > 0 ? <CheckMark /> : <NotIncluded />, silver: questionResponses.q3b && parseInt(questionResponses.q3b, 10) > 0 ? <CheckMark /> : <NotIncluded />, gold: questionResponses.q3b && parseInt(questionResponses.q3b, 10) > 0 ? <CheckMark /> : <NotIncluded /> },
+    { feature: 'FBT Returns', bronze: <NotIncluded />, silver: questionResponses.q5 && parseInt(questionResponses.q5, 10) > 0 ? <CheckMark /> : <NotIncluded />, gold: questionResponses.q5 && parseInt(questionResponses.q5, 10) > 0 ? <CheckMark /> : <NotIncluded /> },
     { feature: 'BAS', bronze: questionResponses.q6 && questionResponses.q6 !== 'no' ? <CheckMark /> : <NotIncluded />, silver: questionResponses.q6 && questionResponses.q6 !== 'no' ? <CheckMark /> : <NotIncluded />, gold: questionResponses.q6 && questionResponses.q6 !== 'no' ? <CheckMark /> : <NotIncluded /> },
     { feature: 'IAS', bronze: questionResponses.q7 === 'yes' ? <CheckMark /> : <NotIncluded />, silver: questionResponses.q7 === 'yes' ? <CheckMark /> : <NotIncluded />, gold: questionResponses.q7 === 'yes' ? <CheckMark /> : <NotIncluded /> },
     { feature: 'TPAR', bronze: questionResponses.q8 && parseInt(questionResponses.q8, 10) > 0 ? <CheckMark /> : <NotIncluded />, silver: questionResponses.q8 && parseInt(questionResponses.q8, 10) > 0 ? <CheckMark /> : <NotIncluded />, gold: questionResponses.q8 && parseInt(questionResponses.q8, 10) > 0 ? <CheckMark /> : <NotIncluded /> },
@@ -327,21 +351,24 @@ export default function AccountingQuote() {
     { feature: 'STP Reporting', bronze: questionResponses.q13 && questionResponses.q13 !== 'no' ? <CheckMark /> : <NotIncluded />, silver: questionResponses.q13 && questionResponses.q13 !== 'no' ? <CheckMark /> : <NotIncluded />, gold: questionResponses.q13 && questionResponses.q13 !== 'no' ? <CheckMark /> : <NotIncluded /> },
     { feature: 'LSL Construction Reporting', bronze: questionResponses.q14 === 'yes' ? <CheckMark /> : <NotIncluded />, silver: questionResponses.q14 === 'yes' ? <CheckMark /> : <NotIncluded />, gold: questionResponses.q14 === 'yes' ? <CheckMark /> : <NotIncluded /> },
     { feature: 'Advisory Services', isCategory: true },
-    { feature: 'Tax Planning / Review', bronze: <NotIncluded />, silver: questionResponses.q15 === 'yes' ? <CheckMark /> : <NotIncluded />, gold: questionResponses.q15 === 'yes' ? <CheckMark /> : <NotIncluded /> },
+    { feature: 'Tax Planning Review', bronze: <NotIncluded />, silver: questionResponses.q15 === 'yes' ? <CheckMark /> : <NotIncluded />, gold: questionResponses.q15 === 'yes' ? <CheckMark /> : <NotIncluded /> },
     { feature: 'Xero Training', bronze: questionResponses.q17b === 'yes' ? <CheckMark /> : <NotIncluded />, silver: questionResponses.q17a === 'yes' || questionResponses.q17b === 'yes' ? <CheckMark /> : <NotIncluded />, gold: questionResponses.q17a === 'yes' || questionResponses.q17b === 'yes' ? <CheckMark /> : <NotIncluded /> },
     { feature: 'Financial Reporting', isCategory: true },
-    { feature: 'Financial Statements for Tax Returns', bronze: questionResponses.q18 === 'yes' ? <CheckMark /> : <NotIncluded />, silver: questionResponses.q18 === 'yes' ? <CheckMark /> : <NotIncluded />, gold: questionResponses.q18 === 'yes' ? <CheckMark /> : <NotIncluded /> },
+    { feature: 'Financial Statements for Tax Returns', bronze: questionResponses.q18 && parseInt(questionResponses.q18, 10) > 0 ? <CheckMark /> : <NotIncluded />, silver: questionResponses.q18 && parseInt(questionResponses.q18, 10) > 0 ? <CheckMark /> : <NotIncluded />, gold: questionResponses.q18 && parseInt(questionResponses.q18, 10) > 0 ? <CheckMark /> : <NotIncluded /> },
     { feature: 'Management Financial Statements', bronze: <NotIncluded />, silver: questionResponses.q20 && questionResponses.q20 !== 'no' ? <Typography variant="body2">Quarterly</Typography> : <NotIncluded />, gold: questionResponses.q20 && questionResponses.q20 !== 'no' ? <Typography variant="body2">Monthly</Typography> : <NotIncluded /> },
     { feature: 'Meetings', isCategory: true },
     { feature: 'Review The Numbers Meetings', bronze: <NotIncluded />, silver: questionResponses.q21 && questionResponses.q21 !== 'no' ? <Typography variant="body2">Quarterly</Typography> : <NotIncluded />, gold: questionResponses.q21 && questionResponses.q21 !== 'no' ? <Typography variant="body2">Monthly</Typography> : <NotIncluded /> },
     { feature: 'Annual Tax Meetings', bronze: questionResponses.q22 === 'yes' ? <CheckMark /> : <NotIncluded />, silver: questionResponses.q22 === 'yes' ? <CheckMark /> : <NotIncluded />, gold: questionResponses.q22 === 'yes' ? <CheckMark /> : <NotIncluded /> },
     { feature: 'Business Meetings', bronze: <NotIncluded />, silver: questionResponses.q23 && questionResponses.q23 !== 'no' ? <Typography variant="body2">Quarterly</Typography> : <NotIncluded />, gold: questionResponses.q23 && questionResponses.q23 !== 'no' ? <Typography variant="body2">Monthly</Typography> : <NotIncluded /> },
     { feature: 'Support Services', isCategory: true },
-    { feature: 'Team / Email Support', bronze: questionResponses.q24 && questionResponses.q24 !== 'no' ? <CheckMark /> : <NotIncluded />, silver: questionResponses.q24 && questionResponses.q24 !== 'no' ? <CheckMark /> : <NotIncluded />, gold: questionResponses.q24 && questionResponses.q24 !== 'no' ? <CheckMark /> : <NotIncluded /> },
-    { feature: 'Client Service Manager', bronze: <NotIncluded />, silver: questionResponses.q24 && questionResponses.q24 !== 'no' ? <CheckMark /> : <NotIncluded />, gold: questionResponses.q24 && questionResponses.q24 !== 'no' ? <CheckMark /> : <NotIncluded /> },
-    { feature: 'Principal / Owner', bronze: <NotIncluded />, silver: <NotIncluded />, gold: questionResponses.q24 && questionResponses.q24 !== 'no' ? <CheckMark /> : <NotIncluded /> },
+    { feature: 'Team / Email Support', bronze: (questionResponses.q24 === 'emailTeam' || questionResponses.q24 === 'emailPhoneTeamCsm') ? <CheckMark /> : <NotIncluded />, silver: (questionResponses.q24 === 'emailTeam' || questionResponses.q24 === 'emailPhoneTeamCsm') ? <CheckMark /> : <NotIncluded />, gold: (questionResponses.q24 === 'emailTeam' || questionResponses.q24 === 'emailPhoneTeamCsm') ? <CheckMark /> : <NotIncluded /> },
+    { feature: 'Client Service Manager', bronze: <NotIncluded />, silver: (questionResponses.q24 === 'emailPhoneTeamCsm' || questionResponses.q24 === 'emailPhoneCsmOwner') ? <CheckMark /> : <NotIncluded />, gold: (questionResponses.q24 === 'emailPhoneTeamCsm' || questionResponses.q24 === 'emailPhoneCsmOwner') ? <CheckMark /> : <NotIncluded /> },
+    { feature: 'Principal / Owner', bronze: <NotIncluded />, silver: <NotIncluded />, gold: questionResponses.q24 === 'emailPhoneCsmOwner' ? <CheckMark /> : <NotIncluded /> },
     { feature: 'Corporate Secretarial & ATO Plans', isCategory: true },
-    { feature: 'Corporate Secretarial', bronze: questionResponses.q25 === 'yes' ? <CheckMark /> : <NotIncluded />, silver: questionResponses.q25 === 'yes' ? <CheckMark /> : <NotIncluded />, gold: questionResponses.q25 === 'yes' ? <CheckMark /> : <NotIncluded /> },
+    { feature: 'Corporate Secretarial', bronze: hasAsicAnnualReturn ? <CheckMark /> : <NotIncluded />, silver: hasAsicAnnualReturn ? <CheckMark /> : <NotIncluded />, gold: hasAsicAnnualReturn ? <CheckMark /> : <NotIncluded /> },
+    { feature: 'Disbursements', isCategory: true },
+    { feature: 'Accounting Software Disbursement', bronze: questionResponses.q28 && questionResponses.q28 !== 'no' && questionResponses.q28 !== '' ? <CheckMark /> : <NotIncluded />, silver: questionResponses.q28 && questionResponses.q28 !== 'no' && questionResponses.q28 !== '' ? <CheckMark /> : <NotIncluded />, gold: questionResponses.q28 && questionResponses.q28 !== 'no' && questionResponses.q28 !== '' ? <CheckMark /> : <NotIncluded /> },
+    { feature: 'Other Disbursements', bronze: Array.isArray(questionResponses.q29) && questionResponses.q29.some((row) => (parseFloat(row && row.price) || 0) > 0) ? <CheckMark /> : <NotIncluded />, silver: Array.isArray(questionResponses.q29) && questionResponses.q29.some((row) => (parseFloat(row && row.price) || 0) > 0) ? <CheckMark /> : <NotIncluded />, gold: Array.isArray(questionResponses.q29) && questionResponses.q29.some((row) => (parseFloat(row && row.price) || 0) > 0) ? <CheckMark /> : <NotIncluded /> },
   ];
 
   return (

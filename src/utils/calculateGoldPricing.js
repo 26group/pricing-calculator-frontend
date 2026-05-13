@@ -58,23 +58,30 @@ export const calculateGoldMonthlyPricing = (responses, pricingModifier = 200) =>
     }
   }
 
-  // q2a/q2b: Individual return extras
-  if (responses.q2a && responses.q2b && typeof responses.q2b === 'object') {
-    const summaryType = responses.q2a;
+  // q2b: Individual return extras (per-item summary toggle)
+  if (responses.q2b && typeof responses.q2b === 'object') {
     const extras = serviceValuesAccounting.taxServices.individualReturnExtras;
-    
+
     Object.entries(responses.q2b).forEach(([extraKey, value]) => {
       if (extraKey === 'none' || extraKey === 'returnNotNecessary' || !value) return;
-      
+
       const extraPricing = extras[extraKey];
-      if (extraPricing && extraPricing[summaryType]) {
-        if (typeof value === 'boolean' && value === true) {
-          total += extraPricing[summaryType].monthly;
-        } else {
-          const quantity = parseInt(value, 10);
-          if (!isNaN(quantity) && quantity > 0) {
-            total += extraPricing[summaryType].monthly * quantity;
-          }
+      if (!extraPricing) return;
+
+      const isSummaryShape = typeof value === 'object' && value !== null && 'count' in value;
+      const rawCount = isSummaryShape ? value.count : value;
+      const summaryType = isSummaryShape ? value.summary : null;
+
+      // Business schedules use 'all' key instead of providedByClient/preparedByFirm
+      const pricingTier = extraPricing.all || (summaryType && extraPricing[summaryType]);
+      if (!pricingTier) return;
+
+      if (typeof rawCount === 'boolean' && rawCount === true) {
+        total += pricingTier.monthly;
+      } else {
+        const quantity = parseInt(rawCount, 10);
+        if (!isNaN(quantity) && quantity > 0) {
+          total += pricingTier.monthly * quantity;
         }
       }
     });
@@ -87,6 +94,17 @@ export const calculateGoldMonthlyPricing = (responses, pricingModifier = 200) =>
       const businessReturn = serviceValuesAccounting.taxServices.businessReturns[segment];
       if (businessReturn) {
         total += businessReturn.monthly * businessCount;
+      }
+    }
+  }
+
+  // q3b: Number of NON trading business entities
+  if (responses.q3b && responses.q3b !== '') {
+    const nonTradingCount = parseInt(responses.q3b, 10);
+    if (!isNaN(nonTradingCount) && nonTradingCount > 0) {
+      const nonTradingReturn = serviceValuesAccounting.taxServices.nonTradingReturns?.[segment];
+      if (nonTradingReturn) {
+        total += nonTradingReturn.monthly * nonTradingCount;
       }
     }
   }
@@ -108,30 +126,34 @@ export const calculateGoldMonthlyPricing = (responses, pricingModifier = 200) =>
   }
 
   // q5: FBT return
-  if (responses.q5 === 'yes') {
-    const fbtService = serviceValuesAccounting.taxServices.fbtReturns?.[segment];
-    if (fbtService) {
-      total += fbtService.monthly;
+  if (responses.q5 && responses.q5 !== '') {
+    const fbtCount = parseInt(responses.q5, 10);
+    if (!isNaN(fbtCount) && fbtCount > 0) {
+      const fbtService = serviceValuesAccounting.taxServices.fbtReturns?.[segment];
+      if (fbtService) {
+        total += fbtService.monthly * fbtCount;
+      }
     }
   }
 
   // q6: BAS
   if (responses.q6 && responses.q6 !== 'no') {
     const basService = serviceValuesAccounting.taxServices.bas[segment];
+    const basEntities = Math.max(1, parseInt(responses.q6_entities, 10) || 1);
     if (basService) {
       if (responses.q6 === 'quarterly') {
-        total += basService.quarterlyMonthly || basService.monthly;
+        total += (basService.quarterlyMonthly || basService.monthly) * basEntities;
       } else if (responses.q6 === 'monthly') {
-        total += basService.monthlyMonthly || basService.monthly;
+        total += (basService.monthlyMonthly || basService.monthly) * basEntities;
       }
     }
   }
-
   // q7: IAS
   if (responses.q7 === 'yes') {
     const iasService = serviceValuesAccounting.taxServices.ias[segment];
+    const iasEntities = Math.max(1, parseInt(responses.q7_entities, 10) || 1);
     if (iasService) {
-      total += iasService.monthly;
+      total += iasService.monthly * iasEntities;
     }
   }
 
@@ -232,6 +254,14 @@ export const calculateGoldMonthlyPricing = (responses, pricingModifier = 200) =>
     }
   }
 
+  // q13b: Payroll Reconciliation and STP Reporting
+  if (responses.q13b === 'yes') {
+    const reconcService = serviceValuesAccounting.payrollServices.payrollReconciliation?.[segment];
+    if (reconcService) {
+      total += reconcService.monthly;
+    }
+  }
+
   // q14: Long service leave
   if (responses.q14 === 'yes') {
     const lslService = serviceValuesAccounting.payrollServices.lslReporting?.[segment];
@@ -261,10 +291,13 @@ export const calculateGoldMonthlyPricing = (responses, pricingModifier = 200) =>
   // ==================== REPORTING ====================
 
   // q18: Financial statements for tax
-  if (responses.q18 === 'yes') {
-    const fsService = serviceValuesAccounting.reporting.financialStatementsTax?.[segment];
-    if (fsService) {
-      total += fsService.monthly;
+  if (responses.q18 && responses.q18 !== '') {
+    const fsCount = parseInt(responses.q18, 10);
+    if (!isNaN(fsCount) && fsCount > 0) {
+      const fsService = serviceValuesAccounting.reporting.financialStatementsTax?.[segment];
+      if (fsService) {
+        total += fsService.monthly * fsCount;
+      }
     }
   }
 
@@ -308,32 +341,23 @@ export const calculateGoldMonthlyPricing = (responses, pricingModifier = 200) =>
   if (responses.q23 && responses.q23 !== 'no') {
     const businessMeetings = serviceValuesAccounting.meetings.businessMeetings?.[segment];
     if (businessMeetings) {
-      // Gold always uses monthly rate when this service is selected
-      total += businessMeetings.monthlyMonthly || businessMeetings.monthly;
+      if (responses.q23 === 'biannually') {
+        total += businessMeetings.biannuallyMonthly || businessMeetings.monthly;
+      } else if (responses.q23 === 'quarterly') {
+        total += businessMeetings.quarterlyMonthly || businessMeetings.monthly;
+      } else {
+        total += businessMeetings.monthlyMonthly || businessMeetings.monthly;
+      }
     }
   }
 
   // ==================== SUPPORT SERVICES ====================
-  // Gold ALWAYS includes Principal/Owner support (hard-coded)
-  
-  // q24: Team/Email support (if selected)
-  if (responses.q24 === 'yes') {
-    const teamSupport = serviceValuesAccounting.support.emailOnlyTeam?.[segment];
-    if (teamSupport) {
-      total += teamSupport.monthly;
+  // Gold: only add Owner support price when the selected option includes Owner
+  if (responses.q24 === 'emailPhoneCsmOwner') {
+    const ownerSupport = serviceValuesAccounting.support.principalOwner?.[segment];
+    if (ownerSupport) {
+      total += ownerSupport.monthly;
     }
-  }
-
-  // Gold ALWAYS includes Client Service Manager (hard-coded for Gold)
-  const csmSupport = serviceValuesAccounting.support.clientServiceManager?.[segment];
-  if (csmSupport) {
-    total += csmSupport.monthly;
-  }
-
-  // Gold ALWAYS includes Principal/Owner support (hard-coded for Gold)
-  const ownerSupport = serviceValuesAccounting.support.principalOwner?.[segment];
-  if (ownerSupport) {
-    total += ownerSupport.monthly;
   }
 
   // ==================== CORPORATE SECRETARIAL ====================
@@ -343,25 +367,44 @@ export const calculateGoldMonthlyPricing = (responses, pricingModifier = 200) =>
     if (Array.isArray(responses.q25)) {
       if (responses.q25.includes('annualReturns')) {
         const asicService = serviceValuesAccounting.corporateSecretarial.asicAnnualReturn;
+        const asicCount = Math.max(1, parseInt(responses.q25b, 10) || 1);
         if (asicService) {
-          total += asicService.monthly;
+          total += asicService.monthly * asicCount;
         }
       }
     } else if (typeof responses.q25 === 'object' && responses.q25 !== null) {
       if (responses.q25.annualReturns) {
         const asicService = serviceValuesAccounting.corporateSecretarial.asicAnnualReturn;
+        const asicCount = Math.max(1, parseInt(responses.q25b, 10) || 1);
         if (asicService) {
-          total += asicService.monthly;
+          total += asicService.monthly * asicCount;
         }
       }
     } else if (responses.q25 !== '' && responses.q25 !== 'no') {
       if (responses.q25 === 'annualReturns' || responses.q25 === 'yes') {
         const asicService = serviceValuesAccounting.corporateSecretarial.asicAnnualReturn;
+        const asicCount = Math.max(1, parseInt(responses.q25b, 10) || 1);
         if (asicService) {
-          total += asicService.monthly;
+          total += asicService.monthly * asicCount;
         }
       }
     }
+  }
+
+  // q28: Accounting Software Disbursement - pass-through monthly fee
+  if (responses.q28 && responses.q28 !== 'no' && responses.q28 !== '') {
+    const disbursementFee = parseFloat(responses.q28_price) || 0;
+    if (disbursementFee > 0) {
+      total += disbursementFee;
+    }
+  }
+
+  // q29: Other Disbursements - pass-through monthly fees (array of {description, price})
+  if (Array.isArray(responses.q29)) {
+    responses.q29.forEach((row) => {
+      const fee = parseFloat(row && row.price) || 0;
+      if (fee > 0) total += fee;
+    });
   }
 
   // Apply pricing modifier
@@ -410,23 +453,30 @@ export const calculateSilverMonthlyPricing = (responses, pricingModifier = 200) 
     }
   }
 
-  // q2a/q2b: Individual return extras
-  if (responses.q2a && responses.q2b && typeof responses.q2b === 'object') {
-    const summaryType = responses.q2a;
+  // q2b: Individual return extras (per-item summary toggle)
+  if (responses.q2b && typeof responses.q2b === 'object') {
     const extras = serviceValuesAccounting.taxServices.individualReturnExtras;
-    
+
     Object.entries(responses.q2b).forEach(([extraKey, value]) => {
       if (extraKey === 'none' || extraKey === 'returnNotNecessary' || !value) return;
-      
+
       const extraPricing = extras[extraKey];
-      if (extraPricing && extraPricing[summaryType]) {
-        if (typeof value === 'boolean' && value === true) {
-          total += extraPricing[summaryType].monthly;
-        } else {
-          const quantity = parseInt(value, 10);
-          if (!isNaN(quantity) && quantity > 0) {
-            total += extraPricing[summaryType].monthly * quantity;
-          }
+      if (!extraPricing) return;
+
+      const isSummaryShape = typeof value === 'object' && value !== null && 'count' in value;
+      const rawCount = isSummaryShape ? value.count : value;
+      const summaryType = isSummaryShape ? value.summary : null;
+
+      // Business schedules use 'all' key instead of providedByClient/preparedByFirm
+      const pricingTier = extraPricing.all || (summaryType && extraPricing[summaryType]);
+      if (!pricingTier) return;
+
+      if (typeof rawCount === 'boolean' && rawCount === true) {
+        total += pricingTier.monthly;
+      } else {
+        const quantity = parseInt(rawCount, 10);
+        if (!isNaN(quantity) && quantity > 0) {
+          total += pricingTier.monthly * quantity;
         }
       }
     });
@@ -439,6 +489,17 @@ export const calculateSilverMonthlyPricing = (responses, pricingModifier = 200) 
       const businessReturn = serviceValuesAccounting.taxServices.businessReturns[segment];
       if (businessReturn) {
         total += businessReturn.monthly * businessCount;
+      }
+    }
+  }
+
+  // q3b: Number of NON trading business entities
+  if (responses.q3b && responses.q3b !== '') {
+    const nonTradingCount = parseInt(responses.q3b, 10);
+    if (!isNaN(nonTradingCount) && nonTradingCount > 0) {
+      const nonTradingReturn = serviceValuesAccounting.taxServices.nonTradingReturns?.[segment];
+      if (nonTradingReturn) {
+        total += nonTradingReturn.monthly * nonTradingCount;
       }
     }
   }
@@ -460,30 +521,34 @@ export const calculateSilverMonthlyPricing = (responses, pricingModifier = 200) 
   }
 
   // q5: FBT return
-  if (responses.q5 === 'yes') {
-    const fbtService = serviceValuesAccounting.taxServices.fbtReturns?.[segment];
-    if (fbtService) {
-      total += fbtService.monthly;
+  if (responses.q5 && responses.q5 !== '') {
+    const fbtCount = parseInt(responses.q5, 10);
+    if (!isNaN(fbtCount) && fbtCount > 0) {
+      const fbtService = serviceValuesAccounting.taxServices.fbtReturns?.[segment];
+      if (fbtService) {
+        total += fbtService.monthly * fbtCount;
+      }
     }
   }
 
   // q6: BAS
   if (responses.q6 && responses.q6 !== 'no') {
     const basService = serviceValuesAccounting.taxServices.bas[segment];
+    const basEntities = Math.max(1, parseInt(responses.q6_entities, 10) || 1);
     if (basService) {
       if (responses.q6 === 'quarterly') {
-        total += basService.quarterlyMonthly || basService.monthly;
+        total += (basService.quarterlyMonthly || basService.monthly) * basEntities;
       } else if (responses.q6 === 'monthly') {
-        total += basService.monthlyMonthly || basService.monthly;
+        total += (basService.monthlyMonthly || basService.monthly) * basEntities;
       }
     }
   }
-
   // q7: IAS
   if (responses.q7 === 'yes') {
     const iasService = serviceValuesAccounting.taxServices.ias[segment];
+    const iasEntities = Math.max(1, parseInt(responses.q7_entities, 10) || 1);
     if (iasService) {
-      total += iasService.monthly;
+      total += iasService.monthly * iasEntities;
     }
   }
 
@@ -584,6 +649,14 @@ export const calculateSilverMonthlyPricing = (responses, pricingModifier = 200) 
     }
   }
 
+  // q13b: Payroll Reconciliation and STP Reporting
+  if (responses.q13b === 'yes') {
+    const reconcService = serviceValuesAccounting.payrollServices.payrollReconciliation?.[segment];
+    if (reconcService) {
+      total += reconcService.monthly;
+    }
+  }
+
   // q14: Long service leave
   if (responses.q14 === 'yes') {
     const lslService = serviceValuesAccounting.payrollServices.lslReporting?.[segment];
@@ -613,10 +686,13 @@ export const calculateSilverMonthlyPricing = (responses, pricingModifier = 200) 
   // ==================== REPORTING ====================
 
   // q18: Financial statements for tax
-  if (responses.q18 === 'yes') {
-    const fsService = serviceValuesAccounting.reporting.financialStatementsTax?.[segment];
-    if (fsService) {
-      total += fsService.monthly;
+  if (responses.q18 && responses.q18 !== '') {
+    const fsCount = parseInt(responses.q18, 10);
+    if (!isNaN(fsCount) && fsCount > 0) {
+      const fsService = serviceValuesAccounting.reporting.financialStatementsTax?.[segment];
+      if (fsService) {
+        total += fsService.monthly * fsCount;
+      }
     }
   }
 
@@ -660,33 +736,22 @@ export const calculateSilverMonthlyPricing = (responses, pricingModifier = 200) 
   if (responses.q23 && responses.q23 !== 'no') {
     const businessMeetings = serviceValuesAccounting.meetings.businessMeetings?.[segment];
     if (businessMeetings) {
-      // Silver always uses quarterly rate when this service is selected
-      total += businessMeetings.quarterlyMonthly || businessMeetings.monthly;
+      if (responses.q23 === 'biannually') {
+        total += businessMeetings.biannuallyMonthly || businessMeetings.monthly;
+      } else if (responses.q23 === 'monthly') {
+        total += businessMeetings.monthlyMonthly || businessMeetings.monthly;
+      } else {
+        total += businessMeetings.quarterlyMonthly || businessMeetings.monthly;
+      }
     }
   }
 
   // ==================== SUPPORT SERVICES ====================
-  // Silver ALWAYS includes Client Service Manager (hard-coded)
-  
-  // q24: Team/Email support (if selected)
-  if (responses.q24 === 'yes') {
-    const teamSupport = serviceValuesAccounting.support.emailOnlyTeam?.[segment];
-    if (teamSupport) {
-      total += teamSupport.monthly;
-    }
-  }
-
-  // Silver ALWAYS includes Client Service Manager (hard-coded for Silver)
-  const csmSupport = serviceValuesAccounting.support.clientServiceManager?.[segment];
-  if (csmSupport) {
-    total += csmSupport.monthly;
-  }
-
-  // q24b: Principal/Owner support (if selected by user)
-  if (responses.q24b === 'yes') {
-    const ownerSupport = serviceValuesAccounting.support.principalOwner?.[segment];
-    if (ownerSupport) {
-      total += ownerSupport.monthly;
+  // Silver: only add CSM support price when the selected option includes CSM
+  if (responses.q24 === 'emailPhoneTeamCsm' || responses.q24 === 'emailPhoneCsmOwner') {
+    const csmSupport = serviceValuesAccounting.support.clientServiceManager?.[segment];
+    if (csmSupport) {
+      total += csmSupport.monthly;
     }
   }
 
@@ -697,25 +762,44 @@ export const calculateSilverMonthlyPricing = (responses, pricingModifier = 200) 
     if (Array.isArray(responses.q25)) {
       if (responses.q25.includes('annualReturns')) {
         const asicService = serviceValuesAccounting.corporateSecretarial.asicAnnualReturn;
+        const asicCount = Math.max(1, parseInt(responses.q25b, 10) || 1);
         if (asicService) {
-          total += asicService.monthly;
+          total += asicService.monthly * asicCount;
         }
       }
     } else if (typeof responses.q25 === 'object' && responses.q25 !== null) {
       if (responses.q25.annualReturns) {
         const asicService = serviceValuesAccounting.corporateSecretarial.asicAnnualReturn;
+        const asicCount = Math.max(1, parseInt(responses.q25b, 10) || 1);
         if (asicService) {
-          total += asicService.monthly;
+          total += asicService.monthly * asicCount;
         }
       }
     } else if (responses.q25 !== '' && responses.q25 !== 'no') {
       if (responses.q25 === 'annualReturns' || responses.q25 === 'yes') {
         const asicService = serviceValuesAccounting.corporateSecretarial.asicAnnualReturn;
+        const asicCount = Math.max(1, parseInt(responses.q25b, 10) || 1);
         if (asicService) {
-          total += asicService.monthly;
+          total += asicService.monthly * asicCount;
         }
       }
     }
+  }
+
+  // q28: Accounting Software Disbursement - pass-through monthly fee
+  if (responses.q28 && responses.q28 !== 'no' && responses.q28 !== '') {
+    const disbursementFee = parseFloat(responses.q28_price) || 0;
+    if (disbursementFee > 0) {
+      total += disbursementFee;
+    }
+  }
+
+  // q29: Other Disbursements - pass-through monthly fees (array of {description, price})
+  if (Array.isArray(responses.q29)) {
+    responses.q29.forEach((row) => {
+      const fee = parseFloat(row && row.price) || 0;
+      if (fee > 0) total += fee;
+    });
   }
 
   // Apply pricing modifier

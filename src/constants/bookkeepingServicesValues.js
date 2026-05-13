@@ -298,6 +298,10 @@ export const serviceValuesBookkeeping = {
       rate: 64.00,
       inclusion: 'IAS Lodgement',
     },
+    payrollTaxReturn: {
+      rate: 17.50,
+      inclusion: 'Payroll Tax Return',
+    },
   },
 
   // ===================
@@ -339,6 +343,56 @@ export const serviceValuesBookkeeping = {
     // Calculated as: Total monthly package × # months = once-off fee
     description: 'Rescue/cleanup work is quoted as total monthly package × number of months',
     inclusion: 'Rescue / Cleanup Work',
+  },
+
+  // ===================
+  // ACCOUNTING SOFTWARE SETUP AND TRAINING
+  // ===================
+  accountingSoftwareSetupTraining: {
+    // Q25: Once-off setup and training
+    setup: {
+      onceOff: 1000.00,
+      inclusion: 'Accounting Software Setup',
+    },
+    basicSession: {
+      ratePerSession: 75.00,
+      inclusion: 'Online Basic Training Session (30 min)',
+    },
+    intermediateSession: {
+      ratePerSession: 100.00,
+      inclusion: 'Online Intermediate Training Session (45 min) - includes Debtors, Creditors & Basic Payroll',
+    },
+    advancedSession: {
+      ratePerSession: 150.00,
+      inclusion: 'Online Advanced Training Session (60 min)',
+    },
+    // Q26: Ongoing monthly training
+    ongoing30min: {
+      ratePerSession: 99.00,
+      inclusion: 'Ongoing Online Training (30 min) - Monthly',
+    },
+    ongoing60min: {
+      ratePerSession: 150.00,
+      inclusion: 'Ongoing Online Training (60 min) - Monthly',
+    },
+    monthlyTrainingSupport: {
+      ratePerMonth: 80.00,
+      months: 12,
+      inclusion: 'Monthly Software Training Support (12 months once-off)',
+    },
+    // Q27: POS integration (monthly)
+    posImportReview: {
+      monthly: 200.00,
+      inclusion: 'POS Import and Review for Accuracy',
+    },
+    posReconciliation: {
+      monthly: 300.00,
+      inclusion: 'POS Monthly Reconciliation',
+    },
+    posDownloadRework: {
+      monthly: 400.00,
+      inclusion: 'POS Monthly Download and Rework',
+    },
   },
 
   // ===================

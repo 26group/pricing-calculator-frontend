@@ -45,26 +45,26 @@ const getServiceTypeLabel = (price) => {
   if (price?.serviceType === 'bookkeeping') return 'Bookkeeping';
   if (price?.serviceType === 'accounting') return 'Accounting';
   if (price?.serviceType === 'tax-return') return 'Tax Return';
-  
+
   // Fallback: check questionResponses for old data
   const questionResponses = price?.questionResponses || price;
-  
+
   // If we have q2b (bookkeeping specific), it's bookkeeping
   if (questionResponses?.q2b) return 'Bookkeeping';
-  
+
   // Check if they answered the first accounting-specific question (q4)
   if (questionResponses?.q4 !== undefined) return 'Accounting';
-  
+
   // Fallback: check the old serviceType field in questionResponses if it exists
   const serviceType = questionResponses?.serviceType;
   if (serviceType === 'bookkeeping') return 'Bookkeeping';
   if (serviceType === 'accounting' || serviceType === 'taxAccounting') return 'Accounting';
-  
+
   // If q1 is a service type value (old data), use it
   if (questionResponses?.q1 === 'bookkeeping') return 'Bookkeeping';
   if (questionResponses?.q1 === 'accounting' || questionResponses?.q1 === 'taxAccounting') return 'Accounting';
-  
-  return 'Unknown';
+
+  return 'Accounting';
 };
 
 export default function SavedPrices() {

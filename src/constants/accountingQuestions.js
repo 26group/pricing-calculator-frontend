@@ -626,35 +626,23 @@ export const accountingQuestionData = [
     category: 'TAX SERVICES',
     children: [
       {
-        id: 'q2a',
-        prompt: 'How will the information be provided?',
-        type: 'radio',
-        options: [
-          { label: 'Summary provided by Client', value: 'providedByClient' },
-          { label: 'Summary prepared by Firm', value: 'preparedByFirm' },
-        ],
-        showWhen: (responses) => responses.q2 && parseInt(responses.q2, 10) > 0,
-      },
-      {
         id: 'q2b',
         prompt: 'Will they have additional Items? Add the number per item in the fields below:',
         type: 'extrasGroup',
-        showWhen: (responses) => responses.q2 && parseInt(responses.q2, 10) > 0 && responses.q2a,
+        showWhen: (responses) => responses.q2 && parseInt(responses.q2, 10) > 0,
         options: [
-          { label: 'Rental Property', value: 'rentalProperty', control: 'number' },
-          { label: 'Managed Funds', value: 'managedFunds', control: 'number' },
-          { label: 'Business Schedule - no GST', value: 'businessScheduleNoGst', control: 'number' },
-          { label: 'Business Schedule - with GST', value: 'businessScheduleWithGst', control: 'number' },
-          { label: 'Dividends not reported to ATO', value: 'dividendsNotReportedToATO', control: 'number' },
-          { label: 'Interest not reported to ATO', value: 'interestNotReportedToATO', control: 'number' },
-          { label: 'CGT — Shares and equities', value: 'cgtSharesAndEquities', control: 'number' },
-          { label: 'CGT — Property sales', value: 'cgtPropertySales', control: 'number' },
-          { label: 'Balancing adjustment — sale of business asset', value: 'balancingAdjustmentCalculation', control: 'number' },
-          { label: 'Deductions — more than 3 standard expenses', value: 'deductionsMoreThan3Standard', control: 'number' },
-          { label: 'Motor Vehicle — log book method', value: 'motorVehicleLogBook', control: 'number' },
-          { label: 'Motor Vehicle — Cents per kilometre method', value: 'motorVehicleStatutoryRate', control: 'number' },
-          { label: 'Amendment — original return prepared by firm', value: 'amendmentOriginalPreparedByFirm', control: 'number' },
-          { label: 'Amendment — original return NOT prepared by firm', value: 'amendmentOriginalNotPreparedByFirm', control: 'number' },
+          { label: 'Rental Property', value: 'rentalProperty', control: 'number', summary: true },
+          { label: 'Managed Funds', value: 'managedFunds', control: 'number', summary: true },
+          { label: 'Dividends not reported to ATO', value: 'dividendsNotReportedToATO', control: 'number', summary: true },
+          { label: 'Interest not reported to ATO', value: 'interestNotReportedToATO', control: 'number', summary: true },
+          { label: 'CGT — Shares and equities', value: 'cgtSharesAndEquities', control: 'number', summary: true },
+          { label: 'CGT — Property sales', value: 'cgtPropertySales', control: 'number', summary: true },
+          { label: 'Balancing adjustment — sale of business asset', value: 'balancingAdjustmentCalculation', control: 'number', summary: true },
+          { label: 'Deductions — more than 3 standard expenses', value: 'deductionsMoreThan3Standard', control: 'number', summary: true },
+          { label: 'Motor Vehicle — log book method', value: 'motorVehicleLogBook', control: 'number', summary: true },
+          { label: 'Motor Vehicle — Cents per kilometre method', value: 'motorVehicleStatutoryRate', control: 'number', summary: true },
+          { label: 'Amendment — original return prepared by firm', value: 'amendmentOriginalPreparedByFirm', control: 'number', summary: true },
+          { label: 'Amendment — original return NOT prepared by firm', value: 'amendmentOriginalNotPreparedByFirm', control: 'number', summary: true },
           { label: 'Return not necessary (once-off)', value: 'returnNotNecessary', control: 'number' },
           { label: 'None of the above', value: 'none', control: 'button' },
         ],
@@ -665,8 +653,18 @@ export const accountingQuestionData = [
   // 2b: Business Tax Returns
   {
     id: 'q3',
-    prompt: '2b. How many Business Entities do they want tax returns lodged for? Enter number of returns if multiple entities.',
+    prompt: 'How many Trading Business Entities do they want tax returns lodged for?',
     subheading: 'Business Tax Returns',
+    type: 'number',
+    category: 'TAX SERVICES',
+  },
+
+  // 2b-ii: Non Trading Business Tax Returns
+  {
+    id: 'q3b',
+    prompt: 'How many NON Trading Entities do they want tax returns lodged for?',
+    subheading: 'Non Trading Business Tax Returns',
+    placeholder: 'Enter number',
     type: 'number',
     category: 'TAX SERVICES',
   },
@@ -674,14 +672,11 @@ export const accountingQuestionData = [
   // 2d: FBT Returns
   {
     id: 'q5',
-    prompt: '2d. Do they require an FBT return to be lodged?',
+    prompt: '2d. How many FBT returns do they require to be lodged?',
     subheading: 'FBT Returns',
-    type: 'radio',
+    placeholder: 'Enter number',
+    type: 'number',
     category: 'TAX SERVICES',
-    options: [
-      { label: 'Yes', value: 'yes' },
-      { label: 'No', value: 'no' },
-    ],
   },
 
   // 2e: BAS
@@ -696,18 +691,36 @@ export const accountingQuestionData = [
       { label: 'Monthly', value: 'monthly' },
       { label: 'No', value: 'no' },
     ],
+    children: [
+      {
+        id: 'q6_entities',
+        prompt: 'How many entities?',
+        type: 'number',
+        placeholder: 'Enter number',
+        showWhen: (responses) => responses.q6 && responses.q6 !== 'no',
+      },
+    ],
   },
 
   // 2f: IAS
   {
     id: 'q7',
-    prompt: '2f. Do they want you to lodge IAS monthly reporting?',
+    prompt: '2f. Do they want you to lodge IAS? 8 monthly returns',
     subheading: 'IAS (per return)',
     type: 'radio',
     category: 'TAX SERVICES',
     options: [
       { label: 'Yes', value: 'yes' },
       { label: 'No', value: 'no' },
+    ],
+    children: [
+      {
+        id: 'q7_entities',
+        prompt: 'How many entities?',
+        type: 'number',
+        placeholder: 'Enter number',
+        showWhen: (responses) => responses.q7 === 'yes',
+      },
     ],
   },
 
@@ -739,8 +752,8 @@ export const accountingQuestionData = [
   // 3b: Payroll Processing
   {
     id: 'q10',
-    prompt: '3b. Do they run payroll? Enter # SALARIED and TIMESHEET employees.',
-    subheading: 'Payroll Processing',
+    prompt: '3b. Do they want you to process payroll?',
+    subheading: 'Payroll Processing (per employee per pay run)',
     type: 'radio',
     category: 'PAYROLL SERVICES',
     options: [
@@ -818,7 +831,18 @@ export const accountingQuestionData = [
     ],
   },
 
-  // 3f: LSL Construction Reporting
+  // 3e2: Payroll Reconciliation and STP Reporting
+  {
+    id: 'q13b',
+    prompt: 'Do they want you to do an end-of-year wage reconciliation and STP finalisation?',
+    subheading: 'Payroll Reconciliation and STP Reporting',
+    type: 'radio',
+    category: 'PAYROLL SERVICES',
+    options: [
+      { label: 'Yes', value: 'yes' },
+      { label: 'No', value: 'no' },
+    ],
+  },
   {
     id: 'q14',
     prompt: '3f. Do they want you to lodge Long Service Leave forms for them?',
@@ -836,8 +860,9 @@ export const accountingQuestionData = [
   // 4a: Tax Planning / Review
   {
     id: 'q15',
-    prompt: '4a. Do they require Tax Planning / Review?',
-    subheading: 'Tax Planning / Review',
+    prompt: 'Do they require Tax Planning?',
+    subheading: 'Tax Planning Review',
+    description: 'Preparation of year end tax position and basic recommendation of tax minimisation activities',
     type: 'radio',
     category: 'ADVISORY SERVICES',
     options: [
@@ -851,6 +876,7 @@ export const accountingQuestionData = [
     id: 'q16',
     prompt: '4b. Do they require Tax Restructuring Review? (Once-off fee)',
     subheading: 'Tax Structuring Advice',
+    description: 'Review only — does not include implementation of advice or new entities etc.',
     type: 'radio',
     category: 'ADVISORY SERVICES',
     options: [
@@ -862,8 +888,8 @@ export const accountingQuestionData = [
   // 4c: Xero Setup (Once-off)
   {
     id: 'q17',
-    prompt: '4c. Do they have an accounting system? If not, would they like you to set one up? (Once-off fee)',
-    subheading: 'Xero Setup',
+    prompt: 'Do they have an accounting system? If not, would they like you to set one up? (Once-off fee)',
+    subheading: 'Accounting System Setup',
     type: 'radio',
     category: 'ADVISORY SERVICES',
     options: [
@@ -873,8 +899,8 @@ export const accountingQuestionData = [
     children: [
       {
         id: 'q17a',
-        prompt: '4d. Would they like Xero Training? (follows Xero Setup) Training for basic of Xero (reconiling, payable, reciveibale and Payroll)',
-        subheading: 'Xero Training',
+        prompt: 'Would they like Accounting Software Training? (follows Accounting Software Setup) Training for basic of Accounting Software (reconiling, payable, reciveibale and Payroll)',
+        subheading: 'Accounting Software Training',
         type: 'radio',
         options: [
           { label: 'Yes', value: 'yes' },
@@ -888,8 +914,9 @@ export const accountingQuestionData = [
   // 4e: Ongoing Xero Training (standalone)
   {
     id: 'q17b',
-    prompt: '4e. Would they like ongoing Xero Training?',
-    subheading: 'Xero Training',
+    prompt: 'Would they like ongoing Accounting Software Training?',
+    subheading: 'Accounting Software Training',
+    description: 'Training for every day use of the software based on the size of the business as such allowing for the complexity and volume that comes with bigger businesses.',
     type: 'radio',
     category: 'ADVISORY SERVICES',
     options: [
@@ -903,14 +930,11 @@ export const accountingQuestionData = [
   // 5a: Financial Statements for Tax Returns
   {
     id: 'q18',
-    prompt: '5a. Do they require Financial Statements for Tax Returns preparation?',
+    prompt: '5a. How many Financial Statements for Tax Returns do they require?',
     subheading: 'Financial Statements for Tax Returns',
-    type: 'radio',
+    placeholder: 'Enter number',
+    type: 'number',
     category: 'REPORTING',
-    options: [
-      { label: 'Yes', value: 'yes' },
-      { label: 'No', value: 'no' },
-    ],
   },
 
   // 5b: Statutory Financial Statements (Large only)
@@ -960,8 +984,9 @@ export const accountingQuestionData = [
   // 6b: Annual Tax Meetings
   {
     id: 'q22',
-    prompt: '6b. Do they require Annual Tax Meetings?',
-    subheading: 'Annual Tax Meetings',
+    prompt: 'Do they require Annual Tax return Meetings?',
+    subheading: 'Annual Tax Return Meetings',
+    description: 'Meeting to review the Annual tax financials and income tax returns',
     type: 'radio',
     category: 'MEETINGS',
     options: [
@@ -975,11 +1000,13 @@ export const accountingQuestionData = [
     id: 'q23',
     prompt: '6c. Do they require Business Meetings?',
     subheading: 'Business Meetings',
+    description: 'Meetings to provide general business advice — RECOMMENDATION: use these with high demand clients instead of taking multiple calls & emails.',
     type: 'radio',
     category: 'MEETINGS',
     options: [
       { label: 'Monthly', value: 'monthly' },
       { label: 'Quarterly', value: 'quarterly' },
+      { label: 'Biannually', value: 'biannually' },
       { label: 'No', value: 'no' },
     ],
   },
@@ -1018,8 +1045,24 @@ export const accountingQuestionData = [
     ],
     children: [
       {
+        id: 'q25b',
+        prompt: 'How many ASIC Annual Returns?',
+        placeholder: 'Enter number',
+        type: 'number',
+        showWhen: (responses) => {
+          if (Array.isArray(responses.q25)) {
+            return responses.q25.includes('annualReturns');
+          }
+          if (typeof responses.q25 === 'object' && responses.q25 !== null) {
+            return responses.q25.annualReturns;
+          }
+          return responses.q25 === 'annualReturns';
+        },
+      },
+      {
         id: 'q25a',
         prompt: 'How many ASIC Form Lodgements?',
+        placeholder: 'Enter number',
         type: 'number',
         showWhen: (responses) => {
           if (Array.isArray(responses.q25)) {
@@ -1048,9 +1091,64 @@ export const accountingQuestionData = [
     ],
   },
 
-  // =================== 9: PRIOR YEAR LODGEMENTS ===================
+  // =================== 9: DISBURSEMENTS ===================
 
-  // 9: Prior Year Lodgements (Once-off)
+  // 9a: Accounting Software Disbursement
+  {
+    id: 'q28',
+    prompt: 'Do you disburse Accountign Software',
+    subheading: 'Accounting Software Disbursement',
+    type: 'radio',
+    category: 'DISBURSEMENTS',
+    options: [
+      { label: 'Xero', value: 'xero' },
+      { label: 'MYOB', value: 'myob' },
+      { label: 'QBO', value: 'qbo' },
+      { label: 'No', value: 'no' },
+    ],
+    children: [
+      {
+        id: 'q28_price',
+        prompt: '',
+        placeholder: 'Enter price',
+        type: 'number',
+        showWhen: (responses) => responses.q28 && responses.q28 !== 'no' && responses.q28 !== '',
+      },
+    ],
+  },
+
+  // 9b: Other Disbursements
+  {
+    id: 'q29',
+    prompt: 'List other disbursements',
+    subheading: 'Other Disbursements',
+    type: 'dynamicList',
+    category: 'DISBURSEMENTS',
+    addButtonLabel: 'Add disbursement',
+    descriptionPlaceholder: 'Enter description',
+    pricePlaceholder: 'Enter price',
+  },
+
+  // =================== 10: PRICE ADJUSTMENT ===================
+
+  // 10a: Price Adjustment slider
+  {
+    id: 'q30',
+    prompt: 'Adjust the price to allow for complexity or extra effort that comes with some clients.',
+    description: 'Apply a positive adjustment (up to +20%) when a client needs extra care, is complex, or is difficult to work with, and a negative adjustment (down to -10%) for very simple clients or where the calculated price feels too high.',
+    subheading: 'Price Adjustment',
+    type: 'slider',
+    category: 'PRICE ADJUSTMENT',
+    min: -10,
+    max: 20,
+    step: 1,
+    defaultValue: 0,
+    unit: '%',
+  },
+
+  // =================== 10: PRIOR YEAR LODGEMENTS ===================
+
+  // 10: Prior Year Lodgements (Once-off)
   {
     id: 'q27',
     prompt: '9. Do they require prior year lodgements? Enter # of returns.',

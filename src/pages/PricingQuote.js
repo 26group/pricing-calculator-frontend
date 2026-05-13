@@ -119,7 +119,7 @@ export default function PricingQuote() {
   // Check if tax services are included (based on q4, q5, q6, q16, q17)
   const hasTaxServices =
     (questionResponses.q4 && questionResponses.q4 !== 'no') ||
-    (questionResponses.q5 && questionResponses.q5 !== 'no') ||
+    (questionResponses.q5 && parseInt(questionResponses.q5, 10) > 0) ||
     (questionResponses.q6 && questionResponses.q6 !== 'no') ||
     (questionResponses.q16 && questionResponses.q16 !== 'no') ||
     (questionResponses.q17 && questionResponses.q17 !== 'no');
@@ -135,7 +135,7 @@ export default function PricingQuote() {
 
   // Check if tax planning services are included (based on q18, q19)
   const hasTaxPlanning =
-    (questionResponses.q18 && questionResponses.q18 !== 'no') ||
+    (questionResponses.q18 && parseInt(questionResponses.q18, 10) > 0) ||
     (questionResponses.q19 && questionResponses.q19 !== 'no');
 
   // Check if reporting services are included (based on q20, q21, q22)

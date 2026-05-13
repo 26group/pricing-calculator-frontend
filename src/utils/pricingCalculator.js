@@ -53,25 +53,29 @@ export const calculateComplianceOnlyPrice = (responses, pricingModifier = 200) =
     }
   }
 
-  // q2a/q2b: Individual return extras (based on q2a selection)
-  if (responses.q2a && responses.q2b && typeof responses.q2b === 'object') {
-    const summaryType = responses.q2a;
+  // q2b: Individual return extras (per-item summary toggle)
+  if (responses.q2b && typeof responses.q2b === 'object') {
     const extras = serviceValuesAccounting.taxServices.individualReturnExtras;
-    
+
     Object.entries(responses.q2b).forEach(([extraKey, value]) => {
       if (extraKey === 'none' || extraKey === 'returnNotNecessary' || !value) return;
-      
+
       const extraPricing = extras[extraKey];
-      // Check for summary type first, then fall back to 'all' for flat-rate items
-      const pricingTier = extraPricing?.[summaryType] || extraPricing?.all;
-      if (pricingTier) {
-        if (typeof value === 'boolean' && value === true) {
-          total += pricingTier.monthly;
-        } else {
-          const quantity = parseInt(value, 10);
-          if (!isNaN(quantity) && quantity > 0) {
-            total += pricingTier.monthly * quantity;
-          }
+      if (!extraPricing) return;
+
+      const isSummaryShape = typeof value === 'object' && value !== null && 'count' in value;
+      const rawCount = isSummaryShape ? value.count : value;
+      const summaryType = isSummaryShape ? value.summary : null;
+
+      const pricingTier = extraPricing.all || (summaryType && extraPricing[summaryType]);
+      if (!pricingTier) return;
+
+      if (typeof rawCount === 'boolean' && rawCount === true) {
+        total += pricingTier.monthly;
+      } else {
+        const quantity = parseInt(rawCount, 10);
+        if (!isNaN(quantity) && quantity > 0) {
+          total += pricingTier.monthly * quantity;
         }
       }
     });
@@ -88,17 +92,29 @@ export const calculateComplianceOnlyPrice = (responses, pricingModifier = 200) =
     }
   }
 
+  // q3b: Number of NON trading business entities - YES in Bronze
+  if (responses.q3b && responses.q3b !== '' && segment) {
+    const nonTradingCount = parseInt(responses.q3b, 10);
+    if (!isNaN(nonTradingCount) && nonTradingCount > 0) {
+      const nonTradingReturn = serviceValuesAccounting.taxServices.nonTradingReturns?.[segment];
+      if (nonTradingReturn) {
+        total += nonTradingReturn.monthly * nonTradingCount;
+      }
+    }
+  }
+
   // q4: SMSF - NO in Bronze (excluded)
   // q5: FBT return - NO in Bronze (excluded)
 
   // q6: BAS (quarterly or monthly) - YES in Bronze
   if (responses.q6 && responses.q6 !== 'no' && segment) {
     const basService = serviceValuesAccounting.taxServices.bas[segment];
+    const basEntities = Math.max(1, parseInt(responses.q6_entities, 10) || 1);
     if (basService) {
       if (responses.q6 === 'quarterly') {
-        total += basService.quarterlyMonthly || basService.monthly;
+        total += (basService.quarterlyMonthly || basService.monthly) * basEntities;
       } else if (responses.q6 === 'monthly') {
-        total += basService.monthlyMonthly || basService.monthly;
+        total += (basService.monthlyMonthly || basService.monthly) * basEntities;
       }
     }
   }
@@ -106,8 +122,9 @@ export const calculateComplianceOnlyPrice = (responses, pricingModifier = 200) =
   // q7: IAS - YES in Bronze
   if (responses.q7 === 'yes' && segment) {
     const iasService = serviceValuesAccounting.taxServices.ias[segment];
+    const iasEntities = Math.max(1, parseInt(responses.q7_entities, 10) || 1);
     if (iasService) {
-      total += iasService.monthly;
+      total += iasService.monthly * iasEntities;
     }
   }
 
@@ -119,6 +136,15 @@ export const calculateComplianceOnlyPrice = (responses, pricingModifier = 200) =
       if (tparService) {
         total += tparService.monthly * supplierCount;
       }
+    }
+  }
+
+  // ==================== SUPPORT SERVICES ====================
+  // Bronze: only add Team support price when the selected option includes Team
+  if ((responses.q24 === 'emailTeam' || responses.q24 === 'emailPhoneTeamCsm') && segment) {
+    const teamSupport = serviceValuesAccounting.support.emailOnlyTeam?.[segment];
+    if (teamSupport) {
+      total += teamSupport.monthly;
     }
   }
 
@@ -202,6 +228,14 @@ export const calculateComplianceOnlyPrice = (responses, pricingModifier = 200) =
     }
   }
 
+  // q13b: Payroll Reconciliation and STP Reporting - YES in Bronze
+  if (responses.q13b === 'yes' && segment) {
+    const reconcService = serviceValuesAccounting.payrollServices.payrollReconciliation?.[segment];
+    if (reconcService) {
+      total += reconcService.monthly;
+    }
+  }
+
   // q14: Long service leave (LSL Construction Reporting) - YES in Bronze
   if (responses.q14 === 'yes' && segment) {
     const lslService = serviceValuesAccounting.payrollServices.lslReporting?.[segment];
@@ -225,10 +259,13 @@ export const calculateComplianceOnlyPrice = (responses, pricingModifier = 200) =
   // ==================== REPORTING (Bronze: YES for FS Tax; NO for Management FS) ====================
 
   // q18: Financial statements for tax - YES in Bronze
-  if (responses.q18 === 'yes' && segment) {
-    const fsService = serviceValuesAccounting.reporting.financialStatementsTax?.[segment];
-    if (fsService) {
-      total += fsService.monthly;
+  if (responses.q18 && responses.q18 !== '' && segment) {
+    const fsCount = parseInt(responses.q18, 10);
+    if (!isNaN(fsCount) && fsCount > 0) {
+      const fsService = serviceValuesAccounting.reporting.financialStatementsTax?.[segment];
+      if (fsService) {
+        total += fsService.monthly * fsCount;
+      }
     }
   }
 
@@ -245,17 +282,6 @@ export const calculateComplianceOnlyPrice = (responses, pricingModifier = 200) =
     }
   }
 
-  // ==================== SUPPORT SERVICES (Bronze: YES for Team/Email only) ====================
-
-  // q24: Support - Bronze only includes Team/Email support
-  if (responses.q24 && responses.q24 !== '' && responses.q24 !== 'no' && segment) {
-    // Bronze always uses Team/Email support rate regardless of what user selected
-    const teamSupport = serviceValuesAccounting.support.emailOnlyTeam?.[segment];
-    if (teamSupport) {
-      total += teamSupport.monthly;
-    }
-  }
-
   // ==================== CORPORATE SECRETARIAL (Bronze: YES) ====================
 
   // q25: ASIC company secretarial work - YES in Bronze
@@ -263,25 +289,44 @@ export const calculateComplianceOnlyPrice = (responses, pricingModifier = 200) =
     if (Array.isArray(responses.q25)) {
       if (responses.q25.includes('annualReturns')) {
         const asicService = serviceValuesAccounting.corporateSecretarial.asicAnnualReturn;
+        const asicCount = Math.max(1, parseInt(responses.q25b, 10) || 1);
         if (asicService) {
-          total += asicService.monthly;
+          total += asicService.monthly * asicCount;
         }
       }
     } else if (typeof responses.q25 === 'object' && responses.q25 !== null) {
       if (responses.q25.annualReturns) {
         const asicService = serviceValuesAccounting.corporateSecretarial.asicAnnualReturn;
+        const asicCount = Math.max(1, parseInt(responses.q25b, 10) || 1);
         if (asicService) {
-          total += asicService.monthly;
+          total += asicService.monthly * asicCount;
         }
       }
     } else if (responses.q25 !== '' && responses.q25 !== 'no') {
       if (responses.q25 === 'annualReturns' || responses.q25 === 'yes') {
         const asicService = serviceValuesAccounting.corporateSecretarial.asicAnnualReturn;
+        const asicCount = Math.max(1, parseInt(responses.q25b, 10) || 1);
         if (asicService) {
-          total += asicService.monthly;
+          total += asicService.monthly * asicCount;
         }
       }
     }
+  }
+
+  // q28: Accounting Software Disbursement - pass-through monthly fee
+  if (responses.q28 && responses.q28 !== 'no' && responses.q28 !== '') {
+    const disbursementFee = parseFloat(responses.q28_price) || 0;
+    if (disbursementFee > 0) {
+      total += disbursementFee;
+    }
+  }
+
+  // q29: Other Disbursements - pass-through monthly fees (array of {description, price})
+  if (Array.isArray(responses.q29)) {
+    responses.q29.forEach((row) => {
+      const fee = parseFloat(row && row.price) || 0;
+      if (fee > 0) total += fee;
+    });
   }
 
   // Apply pricing modifier
@@ -350,28 +395,30 @@ export const calculateTotalMonthlyPrice = (responses, pricingModifier = 200) => 
     }
   }
 
-  // q2a/q2b: Individual return extras (based on q2a selection)
-  if (responses.q2a && responses.q2b && typeof responses.q2b === 'object') {
-    const summaryType = responses.q2a; // 'providedByClient' or 'preparedByFirm'
+  // q2b: Individual return extras (per-item summary toggle)
+  if (responses.q2b && typeof responses.q2b === 'object') {
     const extras = serviceValuesAccounting.taxServices.individualReturnExtras;
-    
+
     Object.entries(responses.q2b).forEach(([extraKey, value]) => {
       // Skip 'none' button, empty values, and returnNotNecessary (handled in once-off fees)
       if (extraKey === 'none' || extraKey === 'returnNotNecessary' || !value) return;
-      
+
       const extraPricing = extras[extraKey];
-      // Check for summary type first, then fall back to 'all' for flat-rate items
-      const pricingTier = extraPricing?.[summaryType] || extraPricing?.all;
-      if (pricingTier) {
-        // For checkbox (deductionsMoreThan3Standard), value is true/false
-        if (typeof value === 'boolean' && value === true) {
-          total += pricingTier.monthly;
-        } else {
-          // For number inputs, multiply by quantity
-          const quantity = parseInt(value, 10);
-          if (!isNaN(quantity) && quantity > 0) {
-            total += pricingTier.monthly * quantity;
-          }
+      if (!extraPricing) return;
+
+      const isSummaryShape = typeof value === 'object' && value !== null && 'count' in value;
+      const rawCount = isSummaryShape ? value.count : value;
+      const summaryType = isSummaryShape ? value.summary : null;
+
+      const pricingTier = extraPricing.all || (summaryType && extraPricing[summaryType]);
+      if (!pricingTier) return;
+
+      if (typeof rawCount === 'boolean' && rawCount === true) {
+        total += pricingTier.monthly;
+      } else {
+        const quantity = parseInt(rawCount, 10);
+        if (!isNaN(quantity) && quantity > 0) {
+          total += pricingTier.monthly * quantity;
         }
       }
     });
@@ -385,6 +432,17 @@ export const calculateTotalMonthlyPrice = (responses, pricingModifier = 200) => 
       const businessReturn = serviceValuesAccounting.taxServices.businessReturns[segment];
       if (businessReturn) {
         total += businessReturn.monthly * businessCount;
+      }
+    }
+  }
+
+  // q3b: Number of NON trading business entities
+  if (responses.q3b && responses.q3b !== '' && segment) {
+    const nonTradingCount = parseInt(responses.q3b, 10);
+    if (!isNaN(nonTradingCount) && nonTradingCount > 0) {
+      const nonTradingReturn = serviceValuesAccounting.taxServices.nonTradingReturns?.[segment];
+      if (nonTradingReturn) {
+        total += nonTradingReturn.monthly * nonTradingCount;
       }
     }
   }
@@ -406,22 +464,26 @@ export const calculateTotalMonthlyPrice = (responses, pricingModifier = 200) => 
   }
 
   // q5: FBT return
-  if (responses.q5 === 'yes' && segment) {
-    const fbtService = serviceValuesAccounting.taxServices.fbtReturns?.[segment];
-    if (fbtService) {
-      total += fbtService.monthly;
+  if (responses.q5 && responses.q5 !== '' && segment) {
+    const fbtCount = parseInt(responses.q5, 10);
+    if (!isNaN(fbtCount) && fbtCount > 0) {
+      const fbtService = serviceValuesAccounting.taxServices.fbtReturns?.[segment];
+      if (fbtService) {
+        total += fbtService.monthly * fbtCount;
+      }
     }
   }
 
   // q6: BAS (quarterly or monthly)
   if (responses.q6 && responses.q6 !== 'no' && segment) {
     const basService = serviceValuesAccounting.taxServices.bas[segment];
+    const basEntities = Math.max(1, parseInt(responses.q6_entities, 10) || 1);
     if (basService) {
       // Use the appropriate monthly rate based on frequency
       if (responses.q6 === 'quarterly') {
-        total += basService.quarterlyMonthly || basService.monthly;
+        total += (basService.quarterlyMonthly || basService.monthly) * basEntities;
       } else if (responses.q6 === 'monthly') {
-        total += basService.monthlyMonthly || basService.monthly;
+        total += (basService.monthlyMonthly || basService.monthly) * basEntities;
       }
     }
   }
@@ -429,8 +491,9 @@ export const calculateTotalMonthlyPrice = (responses, pricingModifier = 200) => 
   // q7: IAS
   if (responses.q7 === 'yes' && segment) {
     const iasService = serviceValuesAccounting.taxServices.ias[segment];
+    const iasEntities = Math.max(1, parseInt(responses.q7_entities, 10) || 1);
     if (iasService) {
-      total += iasService.monthly;
+      total += iasService.monthly * iasEntities;
     }
   }
 
@@ -534,6 +597,14 @@ export const calculateTotalMonthlyPrice = (responses, pricingModifier = 200) => 
     }
   }
 
+  // q13b: Payroll Reconciliation and STP Reporting
+  if (responses.q13b === 'yes' && segment) {
+    const reconcService = serviceValuesAccounting.payrollServices.payrollReconciliation?.[segment];
+    if (reconcService) {
+      total += reconcService.monthly;
+    }
+  }
+
   // q14: Long service leave (LSL Construction Reporting)
   if (responses.q14 === 'yes' && segment) {
     const lslService = serviceValuesAccounting.payrollServices.lslReporting?.[segment];
@@ -565,10 +636,13 @@ export const calculateTotalMonthlyPrice = (responses, pricingModifier = 200) => 
   }
 
   // q18: Financial statements
-  if (responses.q18 === 'yes' && segment) {
-    const fsService = serviceValuesAccounting.reporting.financialStatementsTax?.[segment];
-    if (fsService) {
-      total += fsService.monthly;
+  if (responses.q18 && responses.q18 !== '' && segment) {
+    const fsCount = parseInt(responses.q18, 10);
+    if (!isNaN(fsCount) && fsCount > 0) {
+      const fsService = serviceValuesAccounting.reporting.financialStatementsTax?.[segment];
+      if (fsService) {
+        total += fsService.monthly * fsCount;
+      }
     }
   }
 
@@ -621,6 +695,8 @@ export const calculateTotalMonthlyPrice = (responses, pricingModifier = 200) => 
       // Use quarterly or monthly rate based on selection
       if (responses.q23 === 'quarterly') {
         total += businessMeetings.quarterlyMonthly || businessMeetings.monthly;
+      } else if (responses.q23 === 'biannually') {
+        total += businessMeetings.biannuallyMonthly || businessMeetings.monthly;
       } else if (responses.q23 === 'monthly') {
         total += businessMeetings.monthlyMonthly || businessMeetings.monthly;
       }
@@ -655,8 +731,9 @@ export const calculateTotalMonthlyPrice = (responses, pricingModifier = 200) => 
     if (Array.isArray(responses.q25)) {
       if (responses.q25.includes('annualReturns')) {
         const asicService = serviceValuesAccounting.corporateSecretarial.asicAnnualReturn;
+        const asicCount = Math.max(1, parseInt(responses.q25b, 10) || 1);
         if (asicService) {
-          total += asicService.monthly;
+          total += asicService.monthly * asicCount;
         }
       }
       // formLodgements is handled in calculateTotalOnceOffFee
@@ -665,8 +742,9 @@ export const calculateTotalMonthlyPrice = (responses, pricingModifier = 200) => 
     else if (typeof responses.q25 === 'object' && responses.q25 !== null) {
       if (responses.q25.annualReturns) {
         const asicService = serviceValuesAccounting.corporateSecretarial.asicAnnualReturn;
+        const asicCount = Math.max(1, parseInt(responses.q25b, 10) || 1);
         if (asicService) {
-          total += asicService.monthly;
+          total += asicService.monthly * asicCount;
         }
       }
       // formLodgements is handled in calculateTotalOnceOffFee
@@ -675,8 +753,9 @@ export const calculateTotalMonthlyPrice = (responses, pricingModifier = 200) => 
     else if (responses.q25 !== '' && responses.q25 !== 'no') {
       if (responses.q25 === 'annualReturns') {
         const asicService = serviceValuesAccounting.corporateSecretarial.asicAnnualReturn;
+        const asicCount = Math.max(1, parseInt(responses.q25b, 10) || 1);
         if (asicService) {
-          total += asicService.monthly;
+          total += asicService.monthly * asicCount;
         }
       }
       // detailChanges/formLodgements handled in calculateTotalOnceOffFee
@@ -685,6 +764,22 @@ export const calculateTotalMonthlyPrice = (responses, pricingModifier = 200) => 
 
   // q26: ATO payment plans (changed from q25b) - once-off only, no monthly
   // (handled in calculateTotalOnceOffFee)
+
+  // q28: Accounting Software Disbursement - pass-through monthly fee
+  if (responses.q28 && responses.q28 !== 'no' && responses.q28 !== '') {
+    const disbursementFee = parseFloat(responses.q28_price) || 0;
+    if (disbursementFee > 0) {
+      total += disbursementFee;
+    }
+  }
+
+  // q29: Other Disbursements - pass-through monthly fees (array of {description, price})
+  if (Array.isArray(responses.q29)) {
+    responses.q29.forEach((row) => {
+      const fee = parseFloat(row && row.price) || 0;
+      if (fee > 0) total += fee;
+    });
+  }
 
   const adjustedTotal = Math.round(total * multiplier * 100) / 100;
   return adjustedTotal; // Round to 2 decimal places with pricing modifier applied

@@ -98,7 +98,7 @@ export default function BookkeepingQuote() {
     try {
       const revenueSegmentValue = bookkeepingResponses?.q1 || '';
       const priceData = {
-        priceType: 'bookkeeping',
+        serviceType: 'bookkeeping',
         questionResponses: bookkeepingResponses,
         revenueSegment: revenueSegmentValue,
         questionsPricing: silverMonthly,
@@ -271,11 +271,11 @@ export default function BookkeepingQuote() {
     { feature: 'Year End', isCategory: true },
     { feature: 'EOFY Workpapers', bronze: bookkeepingResponses.q21 === 'microSmall' ? <CheckMark /> : <NotIncluded />, silver: hasEOFY ? <CheckMark /> : <NotIncluded />, gold: hasEOFY ? <CheckMark /> : <NotIncluded /> },
     
-    // SUPPORT SERVICES CATEGORY - Q14: Email only YES in Bronze (hard-coded per tier)
+    // SUPPORT SERVICES CATEGORY - based on Q20 selection
     { feature: 'Support Services', isCategory: true },
-    { feature: 'Team / Email Support', bronze: <CheckMark />, silver: <NotIncluded />, gold: <NotIncluded /> },
-    { feature: 'Client Service Manager', bronze: <NotIncluded />, silver: <CheckMark />, gold: <NotIncluded /> },
-    { feature: 'Principal / Owner', bronze: <NotIncluded />, silver: <NotIncluded />, gold: <CheckMark /> },
+    { feature: 'Team / Email Support', bronze: (bookkeepingResponses.q20 === 'emailOnly' || bookkeepingResponses.q20 === 'emailPhoneTeamCsm') ? <CheckMark /> : <NotIncluded />, silver: <NotIncluded />, gold: <NotIncluded /> },
+    { feature: 'Client Service Manager', bronze: <NotIncluded />, silver: (bookkeepingResponses.q20 === 'emailPhoneTeamCsm' || bookkeepingResponses.q20 === 'emailPhoneCsmOwner') ? <CheckMark /> : <NotIncluded />, gold: <NotIncluded /> },
+    { feature: 'Principal / Owner', bronze: <NotIncluded />, silver: <NotIncluded />, gold: bookkeepingResponses.q20 === 'emailPhoneCsmOwner' ? <CheckMark /> : <NotIncluded /> },
   ];
 
   return (
