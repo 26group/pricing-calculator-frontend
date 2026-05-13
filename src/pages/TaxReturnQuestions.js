@@ -51,11 +51,21 @@ const buildInitialState = () => {
       }
     } else if (question.type === 'number' || question.type === 'text') {
       acc[question.id] = '';
+      if (question.summary) {
+        acc[`${question.id}_summary`] = 'byClient';
+      }
     } else if (question.type === 'inputGroup') {
       acc[question.id] = question.options.reduce((g, opt) => {
         g[opt.value] = '';
         return g;
       }, {});
+      question.options.forEach((opt) => {
+        if (opt.summary) {
+          acc[`${question.id}_${opt.value}_summary`] = 'byClient';
+        }
+      });
+    } else if (question.type === 'group') {
+      // group is a layout-only container; nothing to initialize at this level
     } else {
       acc[question.id] = '';
     }
@@ -204,6 +214,43 @@ export default function TaxReturnQuestions() {
     }));
   };
 
+  const handleSummaryChange = (summaryKey) => (_event, newValue) => {
+    if (!newValue) return;
+    setResponses((prev) => ({ ...prev, [summaryKey]: newValue }));
+  };
+
+  const renderSummaryToggle = (summaryKey) => {
+    const value = responses[summaryKey] || 'byClient';
+    return (
+      <ToggleButtonGroup
+        value={value}
+        exclusive
+        size="small"
+        onChange={handleSummaryChange(summaryKey)}
+        sx={{
+          flexShrink: 0,
+          '& .MuiToggleButton-root': {
+            textTransform: 'none',
+            fontSize: '0.75rem',
+            px: 1.25,
+            py: 0.5,
+            whiteSpace: 'nowrap',
+            color: '#666',
+            borderColor: '#d0d0d0',
+            '&.Mui-selected': {
+              backgroundColor: '#002060',
+              color: '#fff',
+              '&:hover': { backgroundColor: '#001a47' },
+            },
+          },
+        }}
+      >
+        <ToggleButton value="byClient">Summary by Client</ToggleButton>
+        <ToggleButton value="byFirm">Firm to prepare</ToggleButton>
+      </ToggleButtonGroup>
+    );
+  };
+
   const renderQuestion = (question, depth = 0, questionNumber = null) => {
     if (question.showWhen && !question.showWhen(responses)) return null;
 
@@ -211,7 +258,110 @@ export default function TaxReturnQuestions() {
       ? `${questionNumber}. ${question.prompt}`
       : question.prompt;
 
-    // 'info' type: renders as a section header card with children as inline sub-fields
+    // 'group' type: renders a single card with a header and inline child inputs,
+    // each carrying its own optional summary (byClient / byFirm) toggle.
+    if (question.type === 'group') {
+      return (
+        <div key={question.id} style={{ marginLeft: depth > 0 ? `${depth * 32}px` : 0, marginTop: depth > 0 ? '8px' : '20px' }}>
+          <Paper
+            elevation={0}
+            sx={{
+              p: 2,
+              borderRadius: '12px',
+              backgroundColor: '#ffffff',
+              transition: 'all 0.2s ease-in-out',
+              '&:hover': {
+                boxShadow: '14px 17px 40px 4px rgba(112, 144, 176, 0.12)',
+              },
+            }}
+          >
+            <Stack spacing={1.5}>
+              <Typography variant="subtitle1" sx={{ fontWeight: 700, color: 'text.primary', fontSize: '1rem' }}>
+                {displayPrompt}
+              </Typography>
+              {question.children && question.children.map((child) => {
+                if (child.showWhen && !child.showWhen(responses)) return null;
+
+                if (child.type === 'number') {
+                  return (
+                    <Stack
+                      key={child.id}
+                      direction={{ xs: 'column', sm: child.summary ? 'row' : 'column' }}
+                      spacing={1}
+                      alignItems={{ xs: 'stretch', sm: child.summary ? 'center' : 'stretch' }}
+                      sx={{ maxWidth: child.summary ? '720px' : '600px' }}
+                    >
+                      <TextField
+                        type="number"
+                        inputProps={{ min: 0 }}
+                        label={child.prompt}
+                        value={responses[child.id] || ''}
+                        onChange={(e) => handleNumberChange(child.id)(e)}
+                        onFocus={() => setFocusedQuestion(question.id)}
+                        size="small"
+                        variant="outlined"
+                        sx={{
+                          width: '100%',
+                          flex: child.summary ? 1 : undefined,
+                          minWidth: child.summary ? 140 : undefined,
+                          '& .MuiOutlinedInput-root': { backgroundColor: '#ffffff' },
+                        }}
+                      />
+                      {child.summary && renderSummaryToggle(`${child.id}_summary`)}
+                    </Stack>
+                  );
+                }
+
+                if (child.type === 'inputGroup') {
+                  return (
+                    <Stack key={child.id} spacing={1.5}>
+                      {child.prompt && (
+                        <Typography variant="body2" sx={{ fontWeight: 600, color: 'text.secondary', fontSize: '0.875rem' }}>
+                          {child.prompt}
+                        </Typography>
+                      )}
+                      {child.options.map((option) => (
+                        <Stack
+                          key={option.value}
+                          direction={{ xs: 'column', sm: option.summary ? 'row' : 'column' }}
+                          spacing={1}
+                          alignItems={{ xs: 'stretch', sm: option.summary ? 'center' : 'stretch' }}
+                          sx={{ width: '100%', maxWidth: option.summary ? '720px' : '400px' }}
+                        >
+                          <TextField
+                            type="number"
+                            inputProps={{ min: 0 }}
+                            label={option.label}
+                            value={responses[child.id]?.[option.value] || ''}
+                            onChange={(e) => {
+                              setFocusedQuestion(question.id);
+                              handleInputGroupChange(child.id, option.value)(e);
+                            }}
+                            onFocus={() => setFocusedQuestion(question.id)}
+                            size="small"
+                            variant="outlined"
+                            sx={{
+                              width: '100%',
+                              flex: option.summary ? 1 : undefined,
+                              minWidth: option.summary ? 140 : undefined,
+                              '& .MuiOutlinedInput-root': { backgroundColor: '#ffffff' },
+                            }}
+                          />
+                          {option.summary && renderSummaryToggle(`${child.id}_${option.value}_summary`)}
+                        </Stack>
+                      ))}
+                    </Stack>
+                  );
+                }
+
+                return null;
+              })}
+            </Stack>
+          </Paper>
+        </div>
+      );
+    }
+
     if (question.type === 'info') {
       return (
         <div key={question.id} style={{ marginLeft: depth > 0 ? `${depth * 32}px` : 0, marginTop: depth > 0 ? '8px' : '20px' }}>
@@ -404,7 +554,12 @@ export default function TaxReturnQuestions() {
             )}
 
             {question.type === 'number' && (
-              <div style={{ display: 'inline-block', marginTop: question.description ? '24px' : undefined }}>
+              <Stack
+                direction={{ xs: 'column', sm: question.summary ? 'row' : 'column' }}
+                spacing={1}
+                alignItems={{ xs: 'stretch', sm: question.summary ? 'center' : 'stretch' }}
+                sx={{ marginTop: question.description ? '24px' : undefined, maxWidth: question.summary ? '820px' : '600px' }}
+              >
                 <TextField
                   type="number"
                   inputProps={{ min: 0 }}
@@ -415,7 +570,8 @@ export default function TaxReturnQuestions() {
                   size="small"
                   variant="outlined"
                   sx={{
-                    width: '80%',
+                    width: question.summary ? '100%' : '80%',
+                    flex: question.summary ? 1 : undefined,
                     maxWidth: '600px',
                     '& .MuiOutlinedInput-root': {
                       backgroundColor: '#ffffff',
@@ -423,7 +579,8 @@ export default function TaxReturnQuestions() {
                     },
                   }}
                 />
-              </div>
+                {question.summary && renderSummaryToggle(`${question.id}_summary`)}
+              </Stack>
             )}
 
             {question.type === 'inputGroup' && (

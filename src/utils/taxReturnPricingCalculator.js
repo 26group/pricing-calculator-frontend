@@ -75,93 +75,98 @@ const buildLineItems = (responses) => {
   const SILVER_GOLD = ['silver', 'gold'];
   const GOLD_ONLY = ['gold'];
 
+  // Per-field summary lookup. Each numeric input has its own
+  // <fieldId>_summary in responses (default 'byClient'). Legacy data
+  // stored the delivery as the parent radio (e.g. r.q2 === 'byClient'); we
+  // fall back to that for backward compatibility.
+  const summaryFor = (fieldId, legacyParentId) => {
+    const v1 = r[`${fieldId}_summary`];
+    if (v1 === 'byClient' || v1 === 'byFirm') return v1;
+    if (legacyParentId) {
+      const v2 = r[legacyParentId];
+      if (v2 === 'byClient' || v2 === 'byFirm') return v2;
+    }
+    return 'byClient';
+  };
+
   // ── Q1: Individual Returns (Bronze/Silver/Gold) ────────────────────────
   {
     const n = int0(r.q1);
     if (n > 0) {
       push(`Individual Tax Returns (x${n})`, v.individualReturns.annualRate * n, { tiers: ALL_TIERS });
-      const wp = r.q1_workpaper;
-      if (wp === 'byClient' || wp === 'byFirm') {
-        const w = v.individualReturns.workpaper[wp];
-        push(`${w.inclusion} (x${n})`, w.annualRate * n, { tiers: ALL_TIERS });
-      }
+      // q1_workpaper (legacy) → q1_summary (new)
+      const wp = summaryFor('q1', 'q1_workpaper');
+      const w = v.individualReturns.workpaper[wp];
+      if (w) push(`${w.inclusion} (x${n})`, w.annualRate * n, { tiers: ALL_TIERS });
     }
   }
 
   // ── Q2: Income Items ───────────────────────────────────────────────────
   {
-    const d = r.q2;
-    if (d && d !== 'none') {
-      const entries = [
-        ['q2_dividends',      'dividends',      ALL_TIERS],
-        ['q2_interest',       'interest',       ALL_TIERS],
-        ['q2_managedFunds',   'managedFunds',   ALL_TIERS],
-        ['q2_rentalProperty', 'rentalProperty', SILVER_GOLD], // CSV: Bronze=NO for rental
-      ];
-      entries.forEach(([fieldId, key, tiers]) => {
-        const n = int0(r[fieldId]);
-        if (n > 0) {
-          const svc = v.incomeItems[key]?.[d];
-          if (svc) push(`${svc.inclusion} (x${n})`, svc.annualRate * n, { tiers });
-        }
-      });
-    }
+    const entries = [
+      ['q2_dividends',      'dividends',      ALL_TIERS],
+      ['q2_interest',       'interest',       ALL_TIERS],
+      ['q2_managedFunds',   'managedFunds',   ALL_TIERS],
+      ['q2_rentalProperty', 'rentalProperty', SILVER_GOLD], // CSV: Bronze=NO for rental
+    ];
+    entries.forEach(([fieldId, key, tiers]) => {
+      const n = int0(r[fieldId]);
+      if (n > 0) {
+        const d = summaryFor(fieldId, 'q2');
+        const svc = v.incomeItems[key]?.[d];
+        if (svc) push(`${svc.inclusion} (x${n})`, svc.annualRate * n, { tiers });
+      }
+    });
   }
 
   // ── Q3: Capital Gains ──────────────────────────────────────────────────
   {
-    const d = r.q3;
-    if (d && d !== 'none') {
-      const entries = [
-        ['q3_cgtShares',     'cgtShares',     ALL_TIERS],     // Bronze=YES
-        ['q3_cgtProperty',   'cgtProperty',   SILVER_GOLD],   // Bronze=NO
-        ['q3_balancingAdj',  'balancingAdj',  SILVER_GOLD],   // Bronze=NO
-      ];
-      entries.forEach(([fieldId, key, tiers]) => {
-        const n = int0(r[fieldId]);
-        if (n > 0) {
-          const svc = v.capitalGains[key]?.[d];
-          if (svc) push(`${svc.inclusion} (x${n})`, svc.annualRate * n, { tiers });
-        }
-      });
-    }
+    const entries = [
+      ['q3_cgtShares',     'cgtShares',     ALL_TIERS],     // Bronze=YES
+      ['q3_cgtProperty',   'cgtProperty',   SILVER_GOLD],   // Bronze=NO
+      ['q3_balancingAdj',  'balancingAdj',  SILVER_GOLD],   // Bronze=NO
+    ];
+    entries.forEach(([fieldId, key, tiers]) => {
+      const n = int0(r[fieldId]);
+      if (n > 0) {
+        const d = summaryFor(fieldId, 'q3');
+        const svc = v.capitalGains[key]?.[d];
+        if (svc) push(`${svc.inclusion} (x${n})`, svc.annualRate * n, { tiers });
+      }
+    });
   }
 
   // ── Q4: Business Schedules (Silver/Gold) ───────────────────────────────
   {
-    const d = r.q4;
-    if (d && d !== 'none') {
-      const entries = [
-        ['q4_noGst',   'noGst'],
-        ['q4_withGst', 'withGst'],
-      ];
-      entries.forEach(([fieldId, key]) => {
-        const n = int0(r[fieldId]);
-        if (n > 0) {
-          const svc = v.businessSchedules[key]?.[d];
-          if (svc) push(`${svc.inclusion} (x${n})`, svc.annualRate * n, { tiers: SILVER_GOLD });
-        }
-      });
-    }
+    const entries = [
+      ['q4_noGst',   'noGst'],
+      ['q4_withGst', 'withGst'],
+    ];
+    entries.forEach(([fieldId, key]) => {
+      const n = int0(r[fieldId]);
+      if (n > 0) {
+        const d = summaryFor(fieldId, 'q4');
+        const svc = v.businessSchedules[key]?.[d];
+        if (svc) push(`${svc.inclusion} (x${n})`, svc.annualRate * n, { tiers: SILVER_GOLD });
+      }
+    });
   }
 
   // ── Q5: Deductions (Bronze/Silver/Gold) ────────────────────────────────
   {
-    const d = r.q5;
-    if (d && d !== 'none') {
-      const entries = [
-        ['q5_standard',      'moreThan3Standard'],
-        ['q5_motorLogBook',  'motorVehicleLogBook'],
-        ['q5_motorCPK',      'motorVehicleCPK'],
-      ];
-      entries.forEach(([fieldId, key]) => {
-        const n = int0(r[fieldId]);
-        if (n > 0) {
-          const svc = v.deductions[key]?.[d];
-          if (svc) push(`${svc.inclusion} (x${n})`, svc.annualRate * n, { tiers: ALL_TIERS });
-        }
-      });
-    }
+    const entries = [
+      ['q5_standard',      'moreThan3Standard'],
+      ['q5_motorLogBook',  'motorVehicleLogBook'],
+      ['q5_motorCPK',      'motorVehicleCPK'],
+    ];
+    entries.forEach(([fieldId, key]) => {
+      const n = int0(r[fieldId]);
+      if (n > 0) {
+        const d = summaryFor(fieldId, 'q5');
+        const svc = v.deductions[key]?.[d];
+        if (svc) push(`${svc.inclusion} (x${n})`, svc.annualRate * n, { tiers: ALL_TIERS });
+      }
+    });
   }
 
   // ── Q6: BAS (Silver/Gold) ──────────────────────────────────────────────
@@ -179,9 +184,9 @@ const buildLineItems = (responses) => {
 
   // ── Q7: TPAR (Silver/Gold) ─────────────────────────────────────────────
   {
-    const d = r.q7;
-    if (d && d !== 'none') {
-      const n = Math.max(int0(r.q7_suppliers), 1);
+    const n = int0(r.q7_suppliers);
+    if (n > 0) {
+      const d = summaryFor('q7_suppliers', 'q7');
       const svc = v.tpar?.[d];
       if (svc) push(n > 1 ? `${svc.inclusion} (x${n})` : svc.inclusion, svc.annualRate * n, { tiers: SILVER_GOLD });
     }
@@ -189,31 +194,31 @@ const buildLineItems = (responses) => {
 
   // ── Q8: Workers Comp (Bronze/Silver/Gold) ──────────────────────────────
   {
-    const d = r.q8;
-    if (d && d !== 'none') {
-      const n = Math.max(int0(r.q8_count), 1);
+    const n = int0(r.q8_count);
+    if (n > 0) {
+      const d = summaryFor('q8_count', 'q8');
       const svc = v.workersComp?.[d];
       if (svc) push(n > 1 ? `${svc.inclusion} (x${n})` : svc.inclusion, svc.annualRate * n, { tiers: ALL_TIERS });
     }
   }
 
   // ── Q9: Payroll Processing — Salary ONLY / Timesheet ONLY (Silver/Gold) ─
-  const pushPayroll = (deliveryKey, countsKey, ratesNode) => {
-    const d = r[deliveryKey];
+  //   Each pay-run frequency carries its own per-field summary toggle.
+  const pushPayroll = (countsKey, ratesNode, legacyParentId) => {
     const counts = r[countsKey];
-    if (!d || d === 'none' || !counts || typeof counts !== 'object') return;
-    const rates = ratesNode?.[d];
-    if (!rates) return;
+    if (!counts || typeof counts !== 'object') return;
     Object.keys(FREQ_MAP).forEach((freqKey) => {
-      if (!rates[freqKey]) return;
       const n = int0(counts[freqKey]);
       if (n === 0) return;
-      const annual = rates[freqKey].ratePerEmployee * n * rates[freqKey].frequency;
-      push(`${rates[freqKey].inclusion} (x${n})`, annual, { tiers: SILVER_GOLD });
+      const d = summaryFor(`${countsKey}_${freqKey}`, legacyParentId);
+      const rate = ratesNode?.[d]?.[freqKey];
+      if (!rate) return;
+      const annual = rate.ratePerEmployee * n * rate.frequency;
+      push(`${rate.inclusion} (x${n})`, annual, { tiers: SILVER_GOLD });
     });
   };
-  pushPayroll('q9_salary',    'q9_salaryCounts',    v.payrollSalary);
-  pushPayroll('q9_timesheet', 'q9_timesheetCounts', v.payrollTimesheet);
+  pushPayroll('q9_salaryCounts',    v.payrollSalary,    'q9_salary');
+  pushPayroll('q9_timesheetCounts', v.payrollTimesheet, 'q9_timesheet');
 
   // ── Q10: Super Prep & Lodgement (Silver/Gold) ──────────────────────────
   {

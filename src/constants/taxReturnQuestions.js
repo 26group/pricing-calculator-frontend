@@ -5,9 +5,10 @@
 //   - Items described in the CSV with a "Unit" (count) => number input field
 //   - Items described with a Frequency (weekly/fortnightly/monthly/quarterly/
 //     annual) => frequency radio buttons
-//   - "Summary provided by Client" / "Firm to prepare workpaper" => delivery radio with "No"
-//     as the off state; child counts/frequency only appear once a delivery
-//     option is selected
+//   - "Summary provided by Client" / "Firm to prepare workpaper" =>
+//     rendered as an inline per-field toggle (summary: true) sitting next to
+//     each count/input. Stored as <fieldId>_summary in responses with
+//     default 'byClient'. A count of 0 means the service is not selected.
 //
 // Pricing model (see utils/taxReturnPricingCalculator.js):
 //   - Bronze / Silver / Gold: monthly fee = annualAmount / 12 × multiplier
@@ -28,19 +29,8 @@ export const taxReturnQuestionData = [
     prompt: 'How many Individuals do they want tax returns lodged for?',
     description: 'Individual Returns — Basic ATO portal and less than 3 deductible items',
     type: 'number',
+    summary: true,
     countLabel: 'Number of individuals',
-    children: [
-      {
-        id: 'q1_workpaper',
-        prompt: 'How are the workpapers provided?',
-        type: 'radio',
-        options: [
-          { label: 'Summary provided by Client', value: 'byClient' },
-          { label: 'Firm to prepare workpaper',  value: 'byFirm' },
-        ],
-        showWhen: (r) => Number(r.q1) > 0,
-      },
-    ],
   },
 
   // ────────────────────────────────────────────────────────────────────
@@ -48,38 +38,13 @@ export const taxReturnQuestionData = [
   // ────────────────────────────────────────────────────────────────────
   {
     id: 'q2',
-    prompt: 'Do they have Investment income items — how are these prepared?',
-    type: 'radio',
-    options: [
-      { label: 'Summary provided by Client', value: 'byClient' },
-      { label: 'Firm to prepare workpaper',   value: 'byFirm' },
-      { label: 'No',                value: 'none' },
-    ],
+    prompt: 'Investment Income Items — quantity per type',
+    type: 'group',
     children: [
-      {
-        id: 'q2_dividends',
-        prompt: 'Dividends not reported to ATO — quantity',
-        type: 'number',
-        showWhen: (r) => r.q2 && r.q2 !== 'none',
-      },
-      {
-        id: 'q2_interest',
-        prompt: 'Interest not reported to ATO — quantity',
-        type: 'number',
-        showWhen: (r) => r.q2 && r.q2 !== 'none',
-      },
-      {
-        id: 'q2_managedFunds',
-        prompt: 'Managed Funds — quantity',
-        type: 'number',
-        showWhen: (r) => r.q2 && r.q2 !== 'none',
-      },
-      {
-        id: 'q2_rentalProperty',
-        prompt: 'Rental Property — quantity',
-        type: 'number',
-        showWhen: (r) => r.q2 && r.q2 !== 'none',
-      },
+      { id: 'q2_dividends',      prompt: 'Dividends not reported to ATO — quantity', type: 'number', summary: true },
+      { id: 'q2_interest',       prompt: 'Interest not reported to ATO — quantity',  type: 'number', summary: true },
+      { id: 'q2_managedFunds',   prompt: 'Managed Funds — quantity',                 type: 'number', summary: true },
+      { id: 'q2_rentalProperty', prompt: 'Rental Property — quantity',               type: 'number', summary: true },
     ],
   },
 
@@ -88,32 +53,12 @@ export const taxReturnQuestionData = [
   // ────────────────────────────────────────────────────────────────────
   {
     id: 'q3',
-    prompt: 'Did they sell a capital asset for gain and require a schedule?',
-    type: 'radio',
-    options: [
-      { label: 'Summary provided by Client', value: 'byClient' },
-      { label: 'Firm to prepare workpaper',   value: 'byFirm' },
-      { label: 'No',                value: 'none' },
-    ],
+    prompt: 'Capital Gains Schedules — quantity per type',
+    type: 'group',
     children: [
-      {
-        id: 'q3_cgtShares',
-        prompt: 'CGT — Shares and equities — quantity',
-        type: 'number',
-        showWhen: (r) => r.q3 && r.q3 !== 'none',
-      },
-      {
-        id: 'q3_cgtProperty',
-        prompt: 'CGT — Property sales — quantity',
-        type: 'number',
-        showWhen: (r) => r.q3 && r.q3 !== 'none',
-      },
-      {
-        id: 'q3_balancingAdj',
-        prompt: 'Balancing adjustment — sale of business asset — quantity',
-        type: 'number',
-        showWhen: (r) => r.q3 && r.q3 !== 'none',
-      },
+      { id: 'q3_cgtShares',    prompt: 'CGT — Shares and equities — quantity',                  type: 'number', summary: true },
+      { id: 'q3_cgtProperty',  prompt: 'CGT — Property sales — quantity',                       type: 'number', summary: true },
+      { id: 'q3_balancingAdj', prompt: 'Balancing adjustment — sale of business asset — quantity', type: 'number', summary: true },
     ],
   },
 
@@ -122,26 +67,11 @@ export const taxReturnQuestionData = [
   // ────────────────────────────────────────────────────────────────────
   {
     id: 'q4',
-    prompt: 'Do they have a business to report?',
-    type: 'radio',
-    options: [
-      { label: 'Summary provided by Client', value: 'byClient' },
-      { label: 'Firm to prepare workpaper',   value: 'byFirm' },
-      { label: 'No',                value: 'none' },
-    ],
+    prompt: 'Business Schedules — quantity per type',
+    type: 'group',
     children: [
-      {
-        id: 'q4_noGst',
-        prompt: 'Business Schedule — no GST — quantity',
-        type: 'number',
-        showWhen: (r) => r.q4 && r.q4 !== 'none',
-      },
-      {
-        id: 'q4_withGst',
-        prompt: 'Business Schedule — with GST — quantity',
-        type: 'number',
-        showWhen: (r) => r.q4 && r.q4 !== 'none',
-      },
+      { id: 'q4_noGst',   prompt: 'Business Schedule — no GST — quantity',   type: 'number', summary: true },
+      { id: 'q4_withGst', prompt: 'Business Schedule — with GST — quantity', type: 'number', summary: true },
     ],
   },
 
@@ -150,32 +80,12 @@ export const taxReturnQuestionData = [
   // ────────────────────────────────────────────────────────────────────
   {
     id: 'q5',
-    prompt: 'Do they have deductions to claim?',
-    type: 'radio',
-    options: [
-      { label: 'Summary provided by Client', value: 'byClient' },
-      { label: 'Firm to prepare workpaper',   value: 'byFirm' },
-      { label: 'No',                value: 'none' },
-    ],
+    prompt: 'Deductions — quantity per type',
+    type: 'group',
     children: [
-      {
-        id: 'q5_standard',
-        prompt: 'Deductions — more than 3 standard expenses — quantity',
-        type: 'number',
-        showWhen: (r) => r.q5 && r.q5 !== 'none',
-      },
-      {
-        id: 'q5_motorLogBook',
-        prompt: 'Motor Vehicle — log book method — quantity',
-        type: 'number',
-        showWhen: (r) => r.q5 && r.q5 !== 'none',
-      },
-      {
-        id: 'q5_motorCPK',
-        prompt: 'Motor Vehicle — Cents per kilometre method — quantity',
-        type: 'number',
-        showWhen: (r) => r.q5 && r.q5 !== 'none',
-      },
+      { id: 'q5_standard',     prompt: 'Deductions — more than 3 standard expenses — quantity', type: 'number', summary: true },
+      { id: 'q5_motorLogBook', prompt: 'Motor Vehicle — log book method — quantity',            type: 'number', summary: true },
+      { id: 'q5_motorCPK',     prompt: 'Motor Vehicle — Cents per kilometre method — quantity', type: 'number', summary: true },
     ],
   },
 
@@ -210,20 +120,10 @@ export const taxReturnQuestionData = [
   // ────────────────────────────────────────────────────────────────────
   {
     id: 'q7',
-    prompt: 'TPAR — does the client require TPAR?',
-    type: 'radio',
-    options: [
-      { label: 'Summary provided by Client', value: 'byClient' },
-      { label: 'Firm to prepare workpaper',   value: 'byFirm' },
-      { label: 'No',                value: 'none' },
-    ],
+    prompt: 'TPAR — Taxable Payments Annual Report',
+    type: 'group',
     children: [
-      {
-        id: 'q7_suppliers',
-        prompt: 'Number of suppliers',
-        type: 'number',
-        showWhen: (r) => r.q7 && r.q7 !== 'none',
-      },
+      { id: 'q7_suppliers', prompt: 'Number of suppliers', type: 'number', summary: true },
     ],
   },
 
@@ -233,74 +133,50 @@ export const taxReturnQuestionData = [
   {
     id: 'q8',
     sectionTitle: 'Payroll Services',
-    prompt: 'Workers Compensation — do they want you to lodge Workers Compensation forms?',
-    type: 'radio',
-    options: [
-      { label: 'Summary provided by Client', value: 'byClient' },
-      { label: 'Firm to prepare workpaper',   value: 'byFirm' },
-      { label: 'No',                value: 'none' },
-    ],
+    prompt: 'Workers Compensation lodgements',
+    type: 'group',
     children: [
-      {
-        id: 'q8_count',
-        prompt: 'Number of lodgements per year',
-        type: 'number',
-        showWhen: (r) => r.q8 && r.q8 !== 'none',
-      },
+      { id: 'q8_count', prompt: 'Number of lodgements per year', type: 'number', summary: true },
     ],
   },
 
   // ────────────────────────────────────────────────────────────────────
   // Q9 — Payroll Processing
-  //   Salary ONLY employees × pay-run frequency (per CSV)
-  //   Timesheet ONLY employees × pay-run frequency (per CSV)
   // ────────────────────────────────────────────────────────────────────
   {
     id: 'q9_salary',
-    prompt: 'Payroll Processing — Salary ONLY employees: how is this prepared?',
-    type: 'radio',
-    options: [
-      { label: 'Summary provided by Client', value: 'byClient' },
-      { label: 'Firm to prepare workpaper',   value: 'byFirm' },
-      { label: 'No',                value: 'none' },
-    ],
+    prompt: 'Payroll Processing — Salary ONLY employees per pay-run frequency',
+    type: 'group',
     children: [
       {
         id: 'q9_salaryCounts',
         prompt: 'Enter number of salary-only employees per pay-run frequency',
         type: 'inputGroup',
-        showWhen: (r) => r.q9_salary && r.q9_salary !== 'none',
         options: [
-          { label: 'Weekly (×52)',      value: 'weekly',      control: 'number' },
-          { label: 'Fortnightly (×26)', value: 'fortnightly', control: 'number' },
-          { label: 'Monthly (×12)',     value: 'monthly',     control: 'number' },
-          { label: 'Quarterly (×4)',    value: 'quarterly',   control: 'number' },
-          { label: 'Annual (×1)',       value: 'annual',      control: 'number' },
+          { label: 'Weekly (×52)',      value: 'weekly',      control: 'number', summary: true },
+          { label: 'Fortnightly (×26)', value: 'fortnightly', control: 'number', summary: true },
+          { label: 'Monthly (×12)',     value: 'monthly',     control: 'number', summary: true },
+          { label: 'Quarterly (×4)',    value: 'quarterly',   control: 'number', summary: true },
+          { label: 'Annual (×1)',       value: 'annual',      control: 'number', summary: true },
         ],
       },
     ],
   },
   {
     id: 'q9_timesheet',
-    prompt: 'Payroll Processing — Timesheet ONLY employees: how is this prepared?',
-    type: 'radio',
-    options: [
-      { label: 'Summary provided by Client', value: 'byClient' },
-      { label: 'Firm to prepare workpaper',   value: 'byFirm' },
-      { label: 'No',                value: 'none' },
-    ],
+    prompt: 'Payroll Processing — Timesheet ONLY employees per pay-run frequency',
+    type: 'group',
     children: [
       {
         id: 'q9_timesheetCounts',
         prompt: 'Enter number of timesheet-only employees per pay-run frequency',
         type: 'inputGroup',
-        showWhen: (r) => r.q9_timesheet && r.q9_timesheet !== 'none',
         options: [
-          { label: 'Weekly (×52)',      value: 'weekly',      control: 'number' },
-          { label: 'Fortnightly (×26)', value: 'fortnightly', control: 'number' },
-          { label: 'Monthly (×12)',     value: 'monthly',     control: 'number' },
-          { label: 'Quarterly (×4)',    value: 'quarterly',   control: 'number' },
-          { label: 'Annual (×1)',       value: 'annual',      control: 'number' },
+          { label: 'Weekly (×52)',      value: 'weekly',      control: 'number', summary: true },
+          { label: 'Fortnightly (×26)', value: 'fortnightly', control: 'number', summary: true },
+          { label: 'Monthly (×12)',     value: 'monthly',     control: 'number', summary: true },
+          { label: 'Quarterly (×4)',    value: 'quarterly',   control: 'number', summary: true },
+          { label: 'Annual (×1)',       value: 'annual',      control: 'number', summary: true },
         ],
       },
     ],
