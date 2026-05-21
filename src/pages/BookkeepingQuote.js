@@ -273,8 +273,8 @@ export default function BookkeepingQuote() {
     
     // SUPPORT SERVICES CATEGORY - based on Q20 selection
     { feature: 'Support Services', isCategory: true },
-    { feature: 'Team / Email Support', bronze: (bookkeepingResponses.q20 === 'emailOnly' || bookkeepingResponses.q20 === 'emailPhoneTeamCsm') ? <CheckMark /> : <NotIncluded />, silver: <NotIncluded />, gold: <NotIncluded /> },
-    { feature: 'Client Service Manager', bronze: <NotIncluded />, silver: (bookkeepingResponses.q20 === 'emailPhoneTeamCsm' || bookkeepingResponses.q20 === 'emailPhoneCsmOwner') ? <CheckMark /> : <NotIncluded />, gold: <NotIncluded /> },
+    { feature: 'Team / Email Support', bronze: (bookkeepingResponses.q20 === 'emailOnly' || bookkeepingResponses.q20 === 'emailPhoneTeamCsm' || bookkeepingResponses.q20 === 'emailPhoneCsmOwner') ? <CheckMark /> : <NotIncluded />, silver: (bookkeepingResponses.q20 === 'emailOnly' || bookkeepingResponses.q20 === 'emailPhoneTeamCsm' || bookkeepingResponses.q20 === 'emailPhoneCsmOwner') ? <CheckMark /> : <NotIncluded />, gold: (bookkeepingResponses.q20 === 'emailOnly' || bookkeepingResponses.q20 === 'emailPhoneTeamCsm' || bookkeepingResponses.q20 === 'emailPhoneCsmOwner') ? <CheckMark /> : <NotIncluded /> },
+    { feature: 'Client Service Manager', bronze: <NotIncluded />, silver: (bookkeepingResponses.q20 === 'emailPhoneTeamCsm' || bookkeepingResponses.q20 === 'emailPhoneCsmOwner') ? <CheckMark /> : <NotIncluded />, gold: (bookkeepingResponses.q20 === 'emailPhoneTeamCsm' || bookkeepingResponses.q20 === 'emailPhoneCsmOwner') ? <CheckMark /> : <NotIncluded /> },
     { feature: 'Principal / Owner', bronze: <NotIncluded />, silver: <NotIncluded />, gold: bookkeepingResponses.q20 === 'emailPhoneCsmOwner' ? <CheckMark /> : <NotIncluded /> },
   ];
 

@@ -140,8 +140,8 @@ export const calculateComplianceOnlyPrice = (responses, pricingModifier = 200) =
   }
 
   // ==================== SUPPORT SERVICES ====================
-  // Bronze: only add Team support price when the selected option includes Team
-  if ((responses.q24 === 'emailTeam' || responses.q24 === 'emailPhoneTeamCsm') && segment) {
+  // Bronze: add Team support fee when any support option is selected
+  if (responses.q24 && responses.q24 !== '' && responses.q24 !== 'no' && segment) {
     const teamSupport = serviceValuesAccounting.support.emailOnlyTeam?.[segment];
     if (teamSupport) {
       total += teamSupport.monthly;
@@ -703,25 +703,11 @@ export const calculateTotalMonthlyPrice = (responses, pricingModifier = 200) => 
     }
   }
 
-  // q24: Support level (each option is a standalone value, not cumulative)
+  // q24: Support level (each tier applies its corresponding fee when any option is selected)
   if (responses.q24 && responses.q24 !== '' && responses.q24 !== 'no' && segment) {
-    if (responses.q24 === 'emailTeam') {
-      const teamSupport = serviceValuesAccounting.support.emailOnlyTeam?.[segment];
-      if (teamSupport) {
-        total += teamSupport.monthly;
-      }
-    } else if (responses.q24 === 'emailPhoneTeamCsm') {
-      // Email/Phone Team + CSM - use CSM value only (standalone tier)
-      const csmSupport = serviceValuesAccounting.support.clientServiceManager?.[segment];
-      if (csmSupport) {
-        total += csmSupport.monthly;
-      }
-    } else if (responses.q24 === 'emailPhoneCsmOwner') {
-      // CSM + Owner - use Owner value only (standalone tier)
-      const ownerSupport = serviceValuesAccounting.support.principalOwner?.[segment];
-      if (ownerSupport) {
-        total += ownerSupport.monthly;
-      }
+    const teamSupport = serviceValuesAccounting.support.emailOnlyTeam?.[segment];
+    if (teamSupport) {
+      total += teamSupport.monthly;
     }
   }
 
