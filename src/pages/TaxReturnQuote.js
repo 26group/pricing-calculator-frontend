@@ -338,9 +338,9 @@ export default function TaxReturnQuote() {
 
     // ── SUPPORT ───────────────────────────────────────────────────────────────
     { feature: 'Support Services', isCategory: true },
-    { feature: 'Team / Email Support',  bronze: <CheckMark />, silver: <NotIncluded />, gold: <NotIncluded /> },
-    { feature: 'Client Service Manager', bronze: <NotIncluded />, silver: <CheckMark />, gold: <NotIncluded /> },
-    { feature: 'Principal / Owner',      bronze: <NotIncluded />, silver: <NotIncluded />, gold: <CheckMark /> },
+    { feature: 'Team / Email Support', bronze: (r.q25 === 'emailTeam' || r.q25 === 'emailPhoneTeamCsm' || r.q25 === 'emailPhoneCsmOwner') ? <CheckMark /> : <NotIncluded />, silver: (r.q25 === 'emailTeam' || r.q25 === 'emailPhoneTeamCsm' || r.q25 === 'emailPhoneCsmOwner') ? <CheckMark /> : <NotIncluded />, gold: (r.q25 === 'emailTeam' || r.q25 === 'emailPhoneTeamCsm' || r.q25 === 'emailPhoneCsmOwner') ? <CheckMark /> : <NotIncluded /> },
+    { feature: 'Client Service Manager', bronze: <NotIncluded />, silver: (r.q25 === 'emailPhoneTeamCsm' || r.q25 === 'emailPhoneCsmOwner') ? <CheckMark /> : <NotIncluded />, gold: (r.q25 === 'emailPhoneTeamCsm' || r.q25 === 'emailPhoneCsmOwner') ? <CheckMark /> : <NotIncluded /> },
+    { feature: 'Principal / Owner', bronze: <NotIncluded />, silver: <NotIncluded />, gold: r.q25 === 'emailPhoneCsmOwner' ? <CheckMark /> : <NotIncluded /> },
   ];
 
   return (
@@ -414,15 +414,15 @@ export default function TaxReturnQuote() {
                 )
               )}
               <TableRow sx={{ backgroundColor: '#f5f5f5', fontWeight: 'bold' }}>
-                <TableCell sx={{ fontWeight: 'bold', fontSize: '1rem', py: 1 }}>Annual Price</TableCell>
+                <TableCell sx={{ fontWeight: 'bold', fontSize: '1rem', py: 1 }}>Monthly Price</TableCell>
                 <TableCell align="center" sx={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#CD7F32', py: 1 }}>
-                  {formatCurrency(bronzeAnnual)}
+                  {formatCurrency(bronzeMonthly)}
                 </TableCell>
                 <TableCell align="center" sx={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#757575', py: 1 }}>
-                  {formatCurrency(silverAnnual)}
+                  {formatCurrency(silverMonthly)}
                 </TableCell>
                 <TableCell align="center" sx={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#DAA520', py: 1 }}>
-                  {formatCurrency(goldAnnual)}
+                  {formatCurrency(goldMonthly)}
                 </TableCell>
               </TableRow>
             </TableBody>

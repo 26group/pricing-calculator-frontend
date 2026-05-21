@@ -270,7 +270,8 @@ const buildLineItems = (responses) => {
 
   // ── Q16: Advice Meeting (Silver/Gold) ──────────────────────────────────
   if (r.q16 === 'yes') {
-    push(v.adviceMeeting.inclusion, v.adviceMeeting.annualRate, { tiers: SILVER_GOLD });
+    const count = Math.max(1, parseInt(r.q16_count, 10) || 1);
+    push(v.adviceMeeting.inclusion, v.adviceMeeting.annualRate * count, { tiers: SILVER_GOLD });
   }
 
   // ── Q17: ATO Payment Plans (true once-off) ─────────────────────────────
@@ -345,14 +346,18 @@ const tierMonthly = (responses, tier, pricingModifier) => {
     if (!it.tiers.includes(tier)) return;
     total += (it.amount / 12) * m;
   });
-  // Support Services (hard-coded by tier — Upfront=NO, monthly-only)
+  // Support Services (Q25) — only applied when a support level is selected.
+  // Pricing is tier-specific: Bronze=Team, Silver=CSM, Gold=Owner.
   const v = serviceValuesTaxReturn;
-  const support = tier === 'bronze'
-    ? v.supportServices.team.monthly
-    : tier === 'silver'
-      ? v.supportServices.csm.monthly
-      : v.supportServices.owner.monthly;
-  total += support * m;
+  const supportSel = responses.q25;
+  if (supportSel && supportSel !== '' && supportSel !== 'no') {
+    const support = tier === 'bronze'
+      ? v.supportServices.team.monthly
+      : tier === 'silver'
+        ? v.supportServices.csm.monthly
+        : v.supportServices.owner.monthly;
+    total += support * m;
+  }
   return total;
 };
 

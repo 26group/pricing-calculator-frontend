@@ -303,11 +303,34 @@ export const taxReturnQuestionData = [
       { label: 'Yes', value: 'yes' },
       { label: 'No',  value: 'no' },
     ],
+    children: [
+      {
+        id: 'q16_count',
+        prompt: 'Number of Advice Meetings',
+        type: 'number',
+        showWhen: (r) => r.q16 === 'yes',
+      },
+    ],
+  },
+
+  // ════════════════════════════════════════════════════════════════════
+  // Q25 — SUPPORT SERVICES
+  // ════════════════════════════════════════════════════════════════════
+  {
+    id: 'q25',
+    sectionTitle: 'Support Services',
+    prompt: 'Do you offer them support?',
+    type: 'radio',
+    options: [
+      { label: 'Email only — Team', value: 'emailTeam' },
+      { label: 'Email & Phone — Team & CSM', value: 'emailPhoneTeamCsm' },
+      { label: 'Email & Phone — CSM & Owner', value: 'emailPhoneCsmOwner' },
+      { label: 'No support', value: 'no' },
+    ],
   },
 
   // ════════════════════════════════════════════════════════════════════
   // Q17 — ATO PAYMENT PLANS (once-off)
-  // Support Services are applied automatically by tier (no question)
   // ════════════════════════════════════════════════════════════════════
   {
     id: 'q17',

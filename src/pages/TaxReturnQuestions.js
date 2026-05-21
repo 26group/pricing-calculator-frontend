@@ -93,11 +93,12 @@ export default function TaxReturnQuestions() {
 
   const initialState = useMemo(() => {
     const built = buildInitialState();
-    // Only restore from storage/Redux when editing an existing saved price
-    if (activePriceId) {
-      const storedResponses = loadResponsesFromStorage();
-      if (Object.keys(storedResponses).length) return { ...built, ...storedResponses };
-      if (storeResponses && Object.keys(storeResponses).length) return { ...built, ...storeResponses };
+    // Restore from localStorage (or Redux) so values persist across navigation,
+    // both for new quotes in-progress and when editing an existing saved price.
+    const storedResponses = loadResponsesFromStorage();
+    if (Object.keys(storedResponses).length) return { ...built, ...storedResponses };
+    if (activePriceId && storeResponses && Object.keys(storeResponses).length) {
+      return { ...built, ...storeResponses };
     }
     return built;
   }, [storeResponses]);
