@@ -785,8 +785,8 @@ export const calculateBookkeepingBronzePrice = (responses, pricingModifier = 100
     total += payrollTaxReturn.rate * lodgementCount / 12;
   }
 
-  // Q20: Support - Bronze adds Team/Email price only when selection includes Team
-  if (responses.q20 === 'emailOnly' || responses.q20 === 'emailPhoneTeamCsm') {
+  // Q20: Support - Bronze adds Team/Email price when any support option selected
+  if (responses.q20 && responses.q20 !== '' && responses.q20 !== 'no') {
     total += values.support.emailOnly.monthly;
   }
 
@@ -1095,8 +1095,8 @@ export const calculateBookkeepingSilverPrice = (responses, pricingModifier = 100
     total += payrollTaxReturn.rate * lodgementCount / 12;
   }
 
-  // Q20: Support - Silver adds CSM price only when selection includes CSM
-  if (responses.q20 === 'emailPhoneTeamCsm' || responses.q20 === 'emailPhoneCsmOwner') {
+  // Q20: Support - Silver adds CSM price when any support option selected
+  if (responses.q20 && responses.q20 !== '' && responses.q20 !== 'no') {
     total += values.support.emailPhoneTeamCsm.monthly;
   }
 
@@ -1404,8 +1404,8 @@ export const calculateBookkeepingGoldPrice = (responses, pricingModifier = 100) 
     total += payrollTaxReturn.rate * lodgementCount / 12;
   }
 
-  // Q20: Support - Gold adds Owner/Partner price only when selection includes Owner
-  if (responses.q20 === 'emailPhoneCsmOwner') {
+  // Q20: Support - Gold adds Owner/Partner price when any support option selected
+  if (responses.q20 && responses.q20 !== '' && responses.q20 !== 'no') {
     total += values.support.emailPhoneCsmOwner.monthly;
   }
 

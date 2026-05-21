@@ -352,8 +352,8 @@ export const calculateGoldMonthlyPricing = (responses, pricingModifier = 200) =>
   }
 
   // ==================== SUPPORT SERVICES ====================
-  // Gold: only add Owner support price when the selected option includes Owner
-  if (responses.q24 === 'emailPhoneCsmOwner') {
+  // Gold: add Owner support fee when any support option is selected
+  if (responses.q24 && responses.q24 !== '' && responses.q24 !== 'no') {
     const ownerSupport = serviceValuesAccounting.support.principalOwner?.[segment];
     if (ownerSupport) {
       total += ownerSupport.monthly;
@@ -747,8 +747,8 @@ export const calculateSilverMonthlyPricing = (responses, pricingModifier = 200) 
   }
 
   // ==================== SUPPORT SERVICES ====================
-  // Silver: only add CSM support price when the selected option includes CSM
-  if (responses.q24 === 'emailPhoneTeamCsm' || responses.q24 === 'emailPhoneCsmOwner') {
+  // Silver: add CSM support fee when any support option is selected
+  if (responses.q24 && responses.q24 !== '' && responses.q24 !== 'no') {
     const csmSupport = serviceValuesAccounting.support.clientServiceManager?.[segment];
     if (csmSupport) {
       total += csmSupport.monthly;

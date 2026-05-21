@@ -991,7 +991,7 @@ export default function Questions() {
         payload.reviewNumbersCandidate = serviceValues.meetings.reviewNumbers?.[segment];
       }
 
-      const supportSelection = responses.q25;
+      const supportSelection = responses.q24;
       if (supportSelection && segment) {
         if (supportSelection === 'emailTeam' || supportSelection === 'emailPhoneTeamCsm') {
           payload.supportTeamCandidate = serviceValues.supportServices.teamOrEmail?.[segment];
