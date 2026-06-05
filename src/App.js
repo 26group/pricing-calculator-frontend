@@ -39,6 +39,7 @@ function AppContent() {
   const storedUser = useSelector((state) => state.auth.user);
   const organisation = useSelector((state) => state.auth.organisation);
   const isOwner = useSelector((state) => state.auth.isOwner);
+  const requiresPayment = useSelector((state) => state.subscription.requiresPayment);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
@@ -239,6 +240,10 @@ function AppContent() {
   };
 
   const handleNewPriceClick = () => {
+    if (requiresPayment) {
+      navigate(isOwner ? '/settings/billing' : '/payment-required');
+      return;
+    }
     // For bookkeeper plan, automatically set service type to bookkeeping
     if (isBookkeeper) {
       setServiceType('bookkeeping');

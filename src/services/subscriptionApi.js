@@ -84,3 +84,16 @@ export const createPortalSession = async () => {
   if (!response.ok) throw new Error('Failed to create portal session');
   return response.json();
 };
+
+export const applyCoupon = async (code) => {
+  const response = await fetch(`${API_URL}/subscriptions/coupon`, {
+    method: 'POST',
+    headers: getAuthHeaders(),
+    body: JSON.stringify({ code }),
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(data?.message || 'Failed to apply coupon');
+  }
+  return data;
+};

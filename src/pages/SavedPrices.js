@@ -35,6 +35,7 @@ import {
 import DeleteIcon from '@mui/icons-material/Delete';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import VisibilityIcon from '@mui/icons-material/Visibility';
+import LockIcon from '@mui/icons-material/Lock';
 import posthog from 'posthog-js';
 import { getPrices, deletePrice, getPrice, createPrice } from '../services/priceApi';
 import { loadSavedPrice, setClientName, setActivePriceId, resetPriceState, updateResponse } from '../features/questions/responsesSlice';
@@ -73,6 +74,7 @@ export default function SavedPrices() {
   const organisation = useSelector((state) => state.auth.organisation);
   const isOwner = useSelector((state) => state.auth.isOwner);
   const isManager = useSelector((state) => state.auth.isManager);
+  const requiresPayment = useSelector((state) => state.subscription.requiresPayment);
   const canSeeAllQuotes = isOwner || isManager; // Owners and managers can see all quotes
   const isBookkeeper = organisation?.planType === 'bookkeeper';
   const [prices, setPrices] = useState([]);
@@ -266,6 +268,10 @@ export default function SavedPrices() {
   };
 
   const handleOpenCreateDialog = () => {
+    if (requiresPayment) {
+      navigate(isOwner ? '/settings/billing' : '/payment-required');
+      return;
+    }
     if (isBookkeeper) {
       setServiceType('bookkeeping');
     }
@@ -404,6 +410,38 @@ export default function SavedPrices() {
         </Alert>
       )}
 
+      {requiresPayment ? (
+        <Paper sx={{ p: 6, textAlign: 'center', borderRadius: '20px' }}>
+          <Box
+            sx={{
+              width: 80,
+              height: 80,
+              borderRadius: '50%',
+              backgroundColor: '#ffebee',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: '0 auto 24px',
+            }}
+          >
+            <LockIcon sx={{ fontSize: 32, color: '#f44336' }} />
+          </Box>
+          <Typography variant="h6" sx={{ mb: 1, fontWeight: 600 }}>
+            Subscription required
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 3, maxWidth: 480, mx: 'auto' }}>
+            {isOwner
+              ? 'Your trial has ended. Add a payment method to continue creating and managing proposals.'
+              : 'Your organisation\u2019s trial has ended. Please ask the owner to add a payment method to continue.'}
+          </Typography>
+          {isOwner && (
+            <Button variant="contained" onClick={() => navigate('/settings/billing')}>
+              Go to Billing
+            </Button>
+          )}
+        </Paper>
+      ) : (
+        <>
       {prices.length > 0 && (
         <Box sx={{ mb: 3 }}>
           <TextField
@@ -642,6 +680,8 @@ export default function SavedPrices() {
             }}
           />
         </Paper>
+      )}
+        </>
       )}
 
       {/* Delete Confirmation Dialog */}

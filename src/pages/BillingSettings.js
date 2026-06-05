@@ -14,9 +14,11 @@ import {
   DialogContent,
   DialogActions,
   Box,
+  TextField,
 } from '@mui/material';
 import CreditCardIcon from '@mui/icons-material/CreditCard';
 import SettingsIcon from '@mui/icons-material/Settings';
+import LocalOfferIcon from '@mui/icons-material/LocalOffer';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import posthog from 'posthog-js';
@@ -63,6 +65,10 @@ export default function BillingSettings() {
   const [actionError, setActionError] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+  const [couponCode, setCouponCode] = useState('');
+  const [couponLoading, setCouponLoading] = useState(false);
+  const [couponError, setCouponError] = useState(null);
+  const [couponSuccess, setCouponSuccess] = useState(null);
 
   // Check if current user is the organisation owner
   const { isOwner } = useSelector((state) => state.auth);
@@ -130,6 +136,58 @@ export default function BillingSettings() {
       setActionError(err.message);
     } finally {
       setActionLoading(false);
+    }
+  };
+
+  const handleApplyCoupon = async () => {
+    const code = couponCode.trim();
+    if (!code) {
+      setCouponError('Please enter a coupon code.');
+      return;
+    }
+    setCouponLoading(true);
+    setCouponError(null);
+    setCouponSuccess(null);
+    try {
+      const result = await subscriptionApi.applyCoupon(code);
+      const discount = result?.discount;
+      const isPending = !!result?.pending;
+      const isActivated = !!result?.activated;
+      const needsPmLater = !!result?.requiresPaymentMethodLater;
+
+      const discountLabel = discount?.percentOff
+        ? `${discount.percentOff}% off`
+        : discount?.amountOff
+        ? `${formatCurrency(discount.amountOff, discount.currency)} off`
+        : '';
+
+      let message;
+      if (isActivated) {
+        message = discountLabel
+          ? `Coupon applied (${discountLabel}). Your subscription is now active.`
+          : 'Coupon applied. Your subscription is now active.';
+        if (needsPmLater) {
+          message += ' Add a payment method before the discount ends to avoid interruption.';
+        }
+      } else if (isPending) {
+        message = discountLabel
+          ? `Coupon saved (${discountLabel}). It will be applied when you add your payment method.`
+          : 'Coupon saved. It will be applied when you add your payment method.';
+      } else {
+        message = discountLabel ? `Coupon applied: ${discountLabel}.` : 'Coupon applied successfully.';
+      }
+      posthog.capture('subscription_coupon_applied', {
+        coupon_code: code,
+        plan_name: subscription?.plan?.name,
+      });
+      setCouponSuccess(message);
+      setCouponCode('');
+      dispatch(fetchSubscription());
+    } catch (err) {
+      posthog.captureException(err, { $exception_source: 'BillingSettings.handleApplyCoupon' });
+      setCouponError(err.message || 'Failed to apply coupon.');
+    } finally {
+      setCouponLoading(false);
     }
   };
 
@@ -289,6 +347,58 @@ export default function BillingSettings() {
             </Stack>
           </Stack>
         </Paper>
+
+        {/* Promo / Coupon */}
+        {isOwner && (
+          <Paper elevation={2} sx={{ p: 3 }}>
+            <Stack spacing={3}>
+              <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                Promo Code
+              </Typography>
+
+              <Divider />
+
+              {couponSuccess && (
+                <Alert severity="success" onClose={() => setCouponSuccess(null)}>
+                  {couponSuccess}
+                </Alert>
+              )}
+
+              {couponError && (
+                <Alert severity="error" onClose={() => setCouponError(null)}>
+                  {couponError}
+                </Alert>
+              )}
+
+              {!subscription?.stripeSubscriptionId && (
+                <Alert severity="info">
+                  You can also enter a promo code on the Stripe checkout screen when adding your payment method.
+                </Alert>
+              )}
+
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems={{ sm: 'flex-start' }}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  label="Coupon code"
+                  placeholder="e.g. SUMMER25"
+                  value={couponCode}
+                  onChange={(e) => setCouponCode(e.target.value)}
+                  disabled={couponLoading}
+                  inputProps={{ autoCapitalize: 'characters' }}
+                />
+                <Button
+                  variant="contained"
+                  startIcon={!couponLoading && <LocalOfferIcon />}
+                  onClick={handleApplyCoupon}
+                  disabled={couponLoading || !couponCode.trim()}
+                >
+                  {couponLoading ? <CircularProgress size={20} /> : 'Apply'}
+                </Button>
+              </Stack>
+            </Stack>
+          </Paper>
+        )}
 
         {/* Actions */}
         {isOwner && subscription?.stripeSubscriptionId && !subscription?.cancelAtPeriodEnd && (
