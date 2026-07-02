@@ -507,12 +507,6 @@ export const calculateBookkeepingOnceOffFee = (responses, pricingModifier = 100)
     }
   }
 
-  // Q26a: Monthly Software Training Support ($80 × 12 once-off)
-  if (responses.q26 === 'yes' && responses.q26a && responses.q26a.monthlySupport) {
-    const ast = values.accountingSoftwareSetupTraining;
-    total += ast.monthlyTrainingSupport.ratePerMonth * ast.monthlyTrainingSupport.months;
-  }
-
   // Apply pricing modifier and round to 2 decimal places
   return Math.round(total * multiplier * 100) / 100;
 };
@@ -591,13 +585,6 @@ export const getBookkeepingOnceOffBreakdown = (responses, pricingModifier = 100)
         items.push({ label, amount });
       }
     }
-  }
-
-  // Q26a: Monthly Software Training Support ($80 × 12 once-off)
-  if (responses.q26 === 'yes' && responses.q26a && responses.q26a.monthlySupport) {
-    const ast = values.accountingSoftwareSetupTraining;
-    const amount = Math.round(ast.monthlyTrainingSupport.ratePerMonth * ast.monthlyTrainingSupport.months * multiplier * 100) / 100;
-    items.push({ label: 'Monthly Software Training Support (12 months)', amount });
   }
 
   return items;

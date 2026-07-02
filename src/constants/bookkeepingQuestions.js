@@ -441,7 +441,6 @@ export const bookkeepingQuestionData = [
         options: [
           { label: '# Online Training Sessions (30 min per month)', value: 'sessions30min', control: 'number' },
           { label: '# Online Training Sessions (60 min per month)', value: 'sessions60min', control: 'number' },
-          { label: 'Monthly Software Training Support', value: 'monthlySupport', control: 'checkbox' },
         ],
       },
     ],

@@ -6,7 +6,7 @@ import posthog from 'posthog-js';
 import { store } from './app/store';
 import App from './App';
 
-if (process.env.REACT_APP_POSTHOG_KEY) {
+if (process.env.NODE_ENV === 'production' && process.env.REACT_APP_POSTHOG_KEY) {
   posthog.init(process.env.REACT_APP_POSTHOG_KEY, {
     api_host: process.env.REACT_APP_POSTHOG_HOST || 'https://app.posthog.com',
     person_profiles: 'identified_only',
