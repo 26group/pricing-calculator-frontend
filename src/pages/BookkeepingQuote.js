@@ -155,6 +155,12 @@ export default function BookkeepingQuote() {
   const hasCompliance = bookkeepingResponses.q19 && 
     (bookkeepingResponses.q19.basQuarterly || bookkeepingResponses.q19.basMonthly || bookkeepingResponses.q19.ias);
   const hasEOFY = bookkeepingResponses.q21 && bookkeepingResponses.q21 !== 'no';
+  const sessions30min = (bookkeepingResponses.q26 === 'yes' && bookkeepingResponses.q26a)
+    ? parseInt(bookkeepingResponses.q26a.sessions30min, 10) || 0
+    : 0;
+  const sessions60min = (bookkeepingResponses.q26 === 'yes' && bookkeepingResponses.q26a)
+    ? parseInt(bookkeepingResponses.q26a.sessions60min, 10) || 0
+    : 0;
 
   const handleOpenSaveDialog = () => {
     setSaveError('');
@@ -276,6 +282,11 @@ export default function BookkeepingQuote() {
     { feature: 'Team / Email Support', bronze: (bookkeepingResponses.q20 === 'emailOnly' || bookkeepingResponses.q20 === 'emailPhoneTeamCsm' || bookkeepingResponses.q20 === 'emailPhoneCsmOwner') ? <CheckMark /> : <NotIncluded />, silver: (bookkeepingResponses.q20 === 'emailOnly' || bookkeepingResponses.q20 === 'emailPhoneTeamCsm' || bookkeepingResponses.q20 === 'emailPhoneCsmOwner') ? <CheckMark /> : <NotIncluded />, gold: (bookkeepingResponses.q20 === 'emailOnly' || bookkeepingResponses.q20 === 'emailPhoneTeamCsm' || bookkeepingResponses.q20 === 'emailPhoneCsmOwner') ? <CheckMark /> : <NotIncluded /> },
     { feature: 'Client Service Manager', bronze: <NotIncluded />, silver: (bookkeepingResponses.q20 === 'emailPhoneTeamCsm' || bookkeepingResponses.q20 === 'emailPhoneCsmOwner') ? <CheckMark /> : <NotIncluded />, gold: (bookkeepingResponses.q20 === 'emailPhoneTeamCsm' || bookkeepingResponses.q20 === 'emailPhoneCsmOwner') ? <CheckMark /> : <NotIncluded /> },
     { feature: 'Principal / Owner', bronze: <NotIncluded />, silver: <NotIncluded />, gold: bookkeepingResponses.q20 === 'emailPhoneCsmOwner' ? <CheckMark /> : <NotIncluded /> },
+
+    // Q26: Ongoing Accounting Software Support and Training - included in all tiers
+    { feature: 'Accounting Software Support & Training', isCategory: true },
+    { feature: 'Ongoing Online Training (30 min / month)', bronze: sessions30min > 0 ? <Typography variant="body2">{`${sessions30min} sessions`}</Typography> : <NotIncluded />, silver: sessions30min > 0 ? <Typography variant="body2">{`${sessions30min} sessions`}</Typography> : <NotIncluded />, gold: sessions30min > 0 ? <Typography variant="body2">{`${sessions30min} sessions`}</Typography> : <NotIncluded /> },
+    { feature: 'Ongoing Online Training (60 min / month)', bronze: sessions60min > 0 ? <Typography variant="body2">{`${sessions60min} sessions`}</Typography> : <NotIncluded />, silver: sessions60min > 0 ? <Typography variant="body2">{`${sessions60min} sessions`}</Typography> : <NotIncluded />, gold: sessions60min > 0 ? <Typography variant="body2">{`${sessions60min} sessions`}</Typography> : <NotIncluded /> },
   ];
 
   return (
