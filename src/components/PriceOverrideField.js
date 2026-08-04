@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect } from 'react';
-import { Paper, Stack, Typography, TextField, IconButton, Tooltip, InputAdornment } from '@mui/material';
+import { Paper, Stack, Typography, TextField, Button, Tooltip, InputAdornment } from '@mui/material';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import LockOpenIcon from '@mui/icons-material/LockOpen';
 import LockIcon from '@mui/icons-material/Lock';
@@ -138,11 +138,51 @@ export default function PriceOverrideField({
             '& .MuiOutlinedInput-root': { borderRadius: '6px' },
           }}
         />
-        {hasOverride && (
+        {hasOverride ? (
           <Tooltip title={`Reset to calculated value ($${formatDollars(formulaValue)})`}>
-            <IconButton size="small" onClick={handleReset} sx={{ color: '#8a6d1f' }}>
-              <RestartAltIcon fontSize="small" />
-            </IconButton>
+            <Button
+              size="small"
+              variant="outlined"
+              startIcon={<RestartAltIcon fontSize="small" />}
+              onClick={handleReset}
+              sx={{
+                textTransform: 'none',
+                fontSize: '0.75rem',
+                py: 0.25,
+                px: 1,
+                minWidth: 0,
+                color: '#8a6d1f',
+                borderColor: '#f0c76a',
+                backgroundColor: '#fff',
+                '&:hover': {
+                  borderColor: '#d9a83f',
+                  backgroundColor: '#fff4d1',
+                },
+              }}
+            >
+              Reset
+            </Button>
+          </Tooltip>
+        ) : (
+          <Tooltip title="No override to reset">
+            <span>
+              <Button
+                size="small"
+                variant="outlined"
+                startIcon={<RestartAltIcon fontSize="small" />}
+                disabled
+                sx={{
+                  textTransform: 'none',
+                  fontSize: '0.75rem',
+                  py: 0.25,
+                  px: 1,
+                  minWidth: 0,
+                  backgroundColor: '#fff',
+                }}
+              >
+                Reset
+              </Button>
+            </span>
           </Tooltip>
         )}
         <Typography variant="caption" sx={{ color: '#8a94a6', ml: 'auto' }}>
