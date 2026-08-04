@@ -1,4 +1,5 @@
 import { serviceValuesBookkeeping } from '../constants/bookkeepingServicesValues';
+import { applyPriceOverrides } from './priceOverrides';
 
 // Base bookkeeping pricing modifier value (default hourly rate: $100/hr)
 const BASE_BOOKKEEPING_PRICING_MODIFIER = 100;
@@ -50,6 +51,10 @@ const getTotalEmployeeCount = (responses) => {
  * @returns {number} Total monthly cost
  */
 export const calculateBookkeepingMonthlyPrice = (responses, pricingModifier = 100) => {
+  return _calculateBookkeepingMonthlyPriceRaw(responses, pricingModifier);
+};
+
+const _calculateBookkeepingMonthlyPriceRaw = (responses, pricingModifier = 100) => {
   let total = 0;
   const values = serviceValuesBookkeeping;
   const multiplier = getPricingMultiplier(pricingModifier);
@@ -462,7 +467,7 @@ export const calculateBookkeepingMonthlyPrice = (responses, pricingModifier = 10
  * @param {number} pricingModifier - Optional pricing modifier from organisation (default 100)
  * @returns {number} Total once-off fee
  */
-export const calculateBookkeepingOnceOffFee = (responses, pricingModifier = 100) => {
+const _calculateBookkeepingOnceOffFeeRaw = (responses, pricingModifier = 100) => {
   let total = 0;
   const values = serviceValuesBookkeeping;
   const multiplier = getPricingMultiplier(pricingModifier);
@@ -601,7 +606,7 @@ export const getBookkeepingOnceOffBreakdown = (responses, pricingModifier = 100)
  * @param {number} pricingModifier - Optional pricing modifier from organisation (default 100)
  * @returns {number} Bronze tier monthly cost
  */
-export const calculateBookkeepingBronzePrice = (responses, pricingModifier = 100) => {
+const _calculateBookkeepingBronzePriceRaw = (responses, pricingModifier = 100) => {
   let total = 0;
   const values = serviceValuesBookkeeping;
   const multiplier = getPricingMultiplier(pricingModifier);
@@ -828,7 +833,7 @@ export const calculateBookkeepingBronzePrice = (responses, pricingModifier = 100
  * @param {number} pricingModifier - Optional pricing modifier from organisation (default 100)
  * @returns {number} Silver tier monthly cost
  */
-export const calculateBookkeepingSilverPrice = (responses, pricingModifier = 100) => {
+const _calculateBookkeepingSilverPriceRaw = (responses, pricingModifier = 100) => {
   let total = 0;
   const values = serviceValuesBookkeeping;
   const multiplier = getPricingMultiplier(pricingModifier);
@@ -1143,7 +1148,7 @@ export const calculateBookkeepingSilverPrice = (responses, pricingModifier = 100
  * @param {number} pricingModifier - Optional pricing modifier from organisation (default 100)
  * @returns {number} Gold tier monthly cost
  */
-export const calculateBookkeepingGoldPrice = (responses, pricingModifier = 100) => {
+const _calculateBookkeepingGoldPriceRaw = (responses, pricingModifier = 100) => {
   let total = 0;
   const values = serviceValuesBookkeeping;
   const multiplier = getPricingMultiplier(pricingModifier);
@@ -1439,4 +1444,91 @@ export const calculateBookkeepingGoldPrice = (responses, pricingModifier = 100) 
   }
 
   return Math.round(total * multiplier * 100) / 100;
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Per-question override system
+//
+// Bookkeeping's calculator is large and interleaved, so instead of tagging
+// every `total += X` line with a question ID, we compute per-question
+// contributions via a diff strategy: run the raw calculator once with the
+// question's response fields cleared and take the delta from the baseline.
+//
+// A "question's fields" are: the key itself AND any keys starting with `${qId}_`.
+// This safely clears q3 + q3_setup + q3_price without touching q30.
+// ─────────────────────────────────────────────────────────────────────────────
+const clearQuestionFields = (responses, questionId) => {
+  if (!responses || !questionId) return responses;
+  const cleared = { ...responses };
+  const prefix = `${questionId}_`;
+  Object.keys(cleared).forEach((k) => {
+    // A key belongs to this question if it exactly matches the ID, starts
+    // with `${qId}_` (e.g. q3_setup, q3_price), or starts with `${qId}`
+    // followed by a letter (e.g. q3a, q6a, q25b). The letter-follow rule
+    // catches sub-question IDs used in bookkeeping/accounting question
+    // trees while still keeping q3 distinct from q30/q31.
+    const isOwnedByQuestion =
+      k === questionId
+      || k.startsWith(prefix)
+      || (k.length > questionId.length
+          && k.startsWith(questionId)
+          && /[a-zA-Z]/.test(k.charAt(questionId.length)));
+    if (isOwnedByQuestion) {
+      cleared[k] = Array.isArray(cleared[k]) ? [] : typeof cleared[k] === 'object' && cleared[k] !== null ? {} : '';
+    }
+  });
+  return cleared;
+};
+
+const diffContribution = (rawFn, responses, pricingModifier, questionId) => {
+  const baseline = rawFn(responses, pricingModifier);
+  const withoutQ = rawFn(clearQuestionFields(responses, questionId), pricingModifier);
+  const delta = baseline - withoutQ;
+  return Math.round(delta * 100) / 100;
+};
+
+const applyBookkeepingOverrides = (rawFn, responses, pricingModifier, kind) => {
+  const baseTotal = rawFn(responses, pricingModifier);
+  const overrides = responses?._priceOverrides?.[kind] || {};
+  const overrideIds = Object.keys(overrides);
+  if (overrideIds.length === 0) return baseTotal;
+
+  // Build a per-question contributions map for this tier via diff.
+  const contribs = {};
+  overrideIds.forEach((qId) => {
+    contribs[qId] = diffContribution(rawFn, responses, pricingModifier, qId);
+  });
+  return applyPriceOverrides(baseTotal, contribs, responses, kind);
+};
+
+// Public wrappers ────────────────────────────────────────────────────────────
+export const calculateBookkeepingBronzePrice = (responses, pricingModifier = 100) =>
+  applyBookkeepingOverrides(_calculateBookkeepingBronzePriceRaw, responses, pricingModifier, 'monthly');
+
+export const calculateBookkeepingSilverPrice = (responses, pricingModifier = 100) =>
+  applyBookkeepingOverrides(_calculateBookkeepingSilverPriceRaw, responses, pricingModifier, 'monthly');
+
+export const calculateBookkeepingGoldPrice = (responses, pricingModifier = 100) =>
+  applyBookkeepingOverrides(_calculateBookkeepingGoldPriceRaw, responses, pricingModifier, 'monthly');
+
+export const calculateBookkeepingOnceOffFee = (responses, pricingModifier = 100) =>
+  applyBookkeepingOverrides(_calculateBookkeepingOnceOffFeeRaw, responses, pricingModifier, 'onceOff');
+
+// Per-question monthly contribution for the questions-page UI. Uses the Silver
+// tier as the primary tier for display; if Silver contributes nothing (e.g.
+// question is Bronze-only or Gold-only), falls back to whichever tier has
+// the largest non-zero contribution.
+export const getBookkeepingQuestionMonthlyContribution = (questionId, responses, pricingModifier = 100) => {
+  if (!questionId) return 0;
+  const silver = diffContribution(_calculateBookkeepingSilverPriceRaw, responses, pricingModifier, questionId);
+  if (silver > 0) return silver;
+  const gold = diffContribution(_calculateBookkeepingGoldPriceRaw, responses, pricingModifier, questionId);
+  if (gold > 0) return gold;
+  const bronze = diffContribution(_calculateBookkeepingBronzePriceRaw, responses, pricingModifier, questionId);
+  return Math.max(0, bronze);
+};
+
+export const getBookkeepingQuestionOnceOffContribution = (questionId, responses, pricingModifier = 100) => {
+  if (!questionId) return 0;
+  return Math.max(0, diffContribution(_calculateBookkeepingOnceOffFeeRaw, responses, pricingModifier, questionId));
 };

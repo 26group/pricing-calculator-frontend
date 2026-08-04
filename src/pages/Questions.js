@@ -38,6 +38,7 @@ import { calculateSilverMonthlyPricing, calculateGoldMonthlyPricing } from '../u
 const DEFAULT_PRICING_MODIFIER = 200;
 import { updatePrice } from '../services/priceApi';
 import { accountingQuestionData } from '../constants/accountingQuestions';
+import PriceOverrideField from '../components/PriceOverrideField';
 const questionData = accountingQuestionData;
 
 const formatCurrency = (amount) =>
@@ -2330,6 +2331,17 @@ export default function Questions() {
             // Render the question
             const rendered = renderQuestion(question);
             if (rendered) {
+              const overrideField = question.id === 'q1' ? null : (
+                <div style={{ marginTop: 8 }}>
+                  <PriceOverrideField
+                    proposalType="accounting"
+                    questionId={question.id}
+                    responses={responses}
+                    setResponses={setResponses}
+                    pricingModifier={pricingModifier}
+                  />
+                </div>
+              );
               if (section) {
                 // Wrap category header and first question together to avoid Stack spacing
                 elements.push(
@@ -2349,10 +2361,16 @@ export default function Questions() {
                       {section.number} {section.title}
                     </Typography>
                     {rendered}
+                    {overrideField}
                   </div>
                 );
               } else {
-                elements.push(rendered);
+                elements.push(
+                  <React.Fragment key={`q-${question.id}`}>
+                    {rendered}
+                    {overrideField}
+                  </React.Fragment>
+                );
               }
             }
           });

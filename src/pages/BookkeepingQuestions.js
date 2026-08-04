@@ -33,6 +33,7 @@ import { setOrganisation } from '../features/auth/authSlice';
 import { updatePrice } from '../services/priceApi';
 import { bookkeepingQuestionData } from '../constants/bookkeepingQuestions';
 import { calculateBookkeepingBronzePrice, calculateBookkeepingSilverPrice, calculateBookkeepingGoldPrice, calculateBookkeepingOnceOffFee } from '../utils/bookkeepingPricingCalculator';
+import PriceOverrideField from '../components/PriceOverrideField';
 
 // Default bookkeeping pricing modifier (base hourly rate: $100/hr)
 const DEFAULT_BOOKKEEPING_PRICING_MODIFIER = 100;
@@ -1097,9 +1098,35 @@ export default function BookkeepingQuestions() {
                         {question.sectionTitle}
                       </Typography>
                       {renderQuestion(question, 0, questionNumber)}
+                      {question.id !== 'q1' && (
+                        <div style={{ marginTop: 8 }}>
+                          <PriceOverrideField
+                            proposalType="bookkeeping"
+                            questionId={question.id}
+                            responses={responses}
+                            setResponses={setResponses}
+                            pricingModifier={bookkeepingPricingModifier}
+                          />
+                        </div>
+                      )}
                     </div>
                   )}
-                  {!showSectionTitle && renderQuestion(question, 0, questionNumber)}
+                  {!showSectionTitle && (
+                    <>
+                      {renderQuestion(question, 0, questionNumber)}
+                      {question.id !== 'q1' && (
+                        <div style={{ marginTop: 8 }}>
+                          <PriceOverrideField
+                            proposalType="bookkeeping"
+                            questionId={question.id}
+                            responses={responses}
+                            setResponses={setResponses}
+                            pricingModifier={bookkeepingPricingModifier}
+                          />
+                        </div>
+                      )}
+                    </>
+                  )}
                 </React.Fragment>
               );
             });

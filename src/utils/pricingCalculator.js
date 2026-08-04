@@ -1,4 +1,5 @@
 import { serviceValuesAccounting } from '../constants/accountingServicesValues';
+import { applyPriceOverrides } from './priceOverrides';
 
 // Base pricing modifier value (center of slider)
 const BASE_PRICING_MODIFIER = 200;
@@ -15,6 +16,48 @@ const getPricingMultiplier = (pricingModifier) => {
   return pricingModifier / BASE_PRICING_MODIFIER;
 };
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Per-question override system (diff strategy)
+// See bookkeepingPricingCalculator.js for the rationale — same pattern here.
+// ─────────────────────────────────────────────────────────────────────────────
+// A "question's fields" match: exact qId, or qId + '_...', or qId + [letter]...
+// This handles both `q10_setup` style AND `Q1a`, `Q2b`, `q17a` style sub-IDs.
+const clearAccountingQuestionFields = (responses, questionId) => {
+  if (!responses || !questionId) return responses;
+  const cleared = { ...responses };
+  const prefix = `${questionId}_`;
+  Object.keys(cleared).forEach((k) => {
+    const isOwnedByQuestion =
+      k === questionId
+      || k.startsWith(prefix)
+      || (k.length > questionId.length
+          && k.startsWith(questionId)
+          && /[a-zA-Z]/.test(k.charAt(questionId.length)));
+    if (isOwnedByQuestion) {
+      cleared[k] = Array.isArray(cleared[k]) ? [] : typeof cleared[k] === 'object' && cleared[k] !== null ? {} : '';
+    }
+  });
+  return cleared;
+};
+
+const diffAccountingContribution = (rawFn, responses, pricingModifier, questionId) => {
+  const baseline = rawFn(responses, pricingModifier);
+  const withoutQ = rawFn(clearAccountingQuestionFields(responses, questionId), pricingModifier);
+  return Math.round((baseline - withoutQ) * 100) / 100;
+};
+
+const applyAccountingOverrides = (rawFn, responses, pricingModifier, kind) => {
+  const baseTotal = rawFn(responses, pricingModifier);
+  const overrides = responses?._priceOverrides?.[kind] || {};
+  const ids = Object.keys(overrides);
+  if (ids.length === 0) return baseTotal;
+  const contribs = {};
+  ids.forEach((qId) => {
+    contribs[qId] = diffAccountingContribution(rawFn, responses, pricingModifier, qId);
+  });
+  return applyPriceOverrides(baseTotal, contribs, responses, kind);
+};
+
 /**
  * Calculates Bronze package pricing
  * Bronze includes: Tax Services (no SMSF/FBT), Payroll (no Payroll Tax), 
@@ -23,7 +66,10 @@ const getPricingMultiplier = (pricingModifier) => {
  * @param {number} pricingModifier - Optional pricing modifier from organisation (default 200)
  * @returns {number} Bronze tier monthly cost
  */
-export const calculateComplianceOnlyPrice = (responses, pricingModifier = 200) => {
+export const calculateComplianceOnlyPrice = (responses, pricingModifier = 200) =>
+  applyAccountingOverrides(_calculateComplianceOnlyPriceRaw, responses, pricingModifier, 'monthly');
+
+const _calculateComplianceOnlyPriceRaw = (responses, pricingModifier = 200) => {
   let total = 0;
   const multiplier = getPricingMultiplier(pricingModifier);
 
@@ -367,7 +413,10 @@ export const calculateComplianceOnlyPrice = (responses, pricingModifier = 200) =
  * @param {number} pricingModifier - Optional pricing modifier from organisation (default 200)
  * @returns {number} Total monthly cost
  */
-export const calculateTotalMonthlyPrice = (responses, pricingModifier = 200) => {
+export const calculateTotalMonthlyPrice = (responses, pricingModifier = 200) =>
+  applyAccountingOverrides(_calculateTotalMonthlyPriceRaw, responses, pricingModifier, 'monthly');
+
+const _calculateTotalMonthlyPriceRaw = (responses, pricingModifier = 200) => {
   let total = 0;
   const multiplier = getPricingMultiplier(pricingModifier);
 
@@ -782,7 +831,10 @@ export const calculateTotalMonthlyPrice = (responses, pricingModifier = 200) => 
  * @param {number} pricingModifier - Optional pricing modifier from organisation (default 200)
  * @returns {number} Total once-off fee
  */
-export const calculateTotalOnceOffFee = (responses, pricingModifier = 200) => {
+export const calculateTotalOnceOffFee = (responses, pricingModifier = 200) =>
+  applyAccountingOverrides(_calculateTotalOnceOffFeeRaw, responses, pricingModifier, 'onceOff');
+
+const _calculateTotalOnceOffFeeRaw = (responses, pricingModifier = 200) => {
   let total = 0;
   const multiplier = getPricingMultiplier(pricingModifier);
 
@@ -1271,4 +1323,22 @@ export const getAccountingOnceOffBreakdown = (responses, pricingModifier = 200) 
   }
 
   return items;
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Per-question monthly contribution for the accounting questions-page UI.
+// Uses Silver tier (calculateTotalMonthlyPrice) as the primary; falls back to
+// Bronze (compliance) if the question doesn't contribute to Silver.
+// ─────────────────────────────────────────────────────────────────────────────
+export const getAccountingQuestionMonthlyContribution = (questionId, responses, pricingModifier = 200) => {
+  if (!questionId) return 0;
+  const silver = diffAccountingContribution(_calculateTotalMonthlyPriceRaw, responses, pricingModifier, questionId);
+  if (silver > 0) return silver;
+  const bronze = diffAccountingContribution(_calculateComplianceOnlyPriceRaw, responses, pricingModifier, questionId);
+  return Math.max(0, bronze);
+};
+
+export const getAccountingQuestionOnceOffContribution = (questionId, responses, pricingModifier = 200) => {
+  if (!questionId) return 0;
+  return Math.max(0, diffAccountingContribution(_calculateTotalOnceOffFeeRaw, responses, pricingModifier, questionId));
 };

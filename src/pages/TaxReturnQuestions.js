@@ -26,6 +26,7 @@ import {
   calculateTaxReturnOnceOffFee,
   calculateTaxReturnUpfrontAnnualFee,
 } from '../utils/taxReturnPricingCalculator';
+import PriceOverrideField from '../components/PriceOverrideField';
 
 const DEFAULT_PRICING_MODIFIER = 200;
 
@@ -729,9 +730,31 @@ export default function TaxReturnQuestions() {
                         {question.sectionTitle}
                       </Typography>
                       {renderQuestion(question, 0, questionNumber)}
+                      <div style={{ marginTop: 8 }}>
+                        <PriceOverrideField
+                          proposalType="taxReturn"
+                          questionId={question.id}
+                          responses={responses}
+                          setResponses={setResponses}
+                          pricingModifier={pricingModifier}
+                        />
+                      </div>
                     </div>
                   )}
-                  {!showSectionTitle && renderQuestion(question, 0, questionNumber)}
+                  {!showSectionTitle && (
+                    <>
+                      {renderQuestion(question, 0, questionNumber)}
+                      <div style={{ marginTop: 8 }}>
+                        <PriceOverrideField
+                          proposalType="taxReturn"
+                          questionId={question.id}
+                          responses={responses}
+                          setResponses={setResponses}
+                          pricingModifier={pricingModifier}
+                        />
+                      </div>
+                    </>
+                  )}
                 </React.Fragment>
               );
             });
