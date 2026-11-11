@@ -363,6 +363,12 @@ function AppContent() {
                 User Management
               </MenuItem>
             )}
+            <MenuItem component="a" href="https://accountable.is/privacy" target="_blank" rel="noopener noreferrer">
+              Privacy Policy
+            </MenuItem>
+            <MenuItem component="a" href="https://accountable.is/terms" target="_blank" rel="noopener noreferrer">
+              Terms of Service
+            </MenuItem>
             <MenuItem onClick={() => { handleSettingsClose(); handleLogout(); }}>
               Logout
             </MenuItem>
